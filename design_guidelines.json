@@ -1,0 +1,104 @@
+{
+  "theme": "DARK",
+  "archetype": "Archetype 4 (Swiss & High-Contrast) - Dark Variant",
+  "design_philosophy": {
+    "core_principles": [
+      "Authority meets Music: Combine the precision of legal tech software with the dark, focused aesthetic of a music producer's DAW (Digital Audio Workstation).",
+      "Single-Metric Focus: The plagiarism similarity score is the focal point. Everything else is secondary and supports this metric.",
+      "High Contrast for Legal Clarity: Use bright reds/ambers for warnings, strict white for text to ensure highly readable data."
+    ],
+    "mood": "Professional, authoritative, high-tech, secure, and cinematic."
+  },
+  "typography": {
+    "headings": {
+      "font_family": "Cabinet Grotesk, sans-serif",
+      "weights": ["800", "900"],
+      "tracking": "tracking-tighter",
+      "rules": "Never use Inter for headings. Keep line height extremely tight (leading-none)."
+    },
+    "body": {
+      "font_family": "Manrope, sans-serif",
+      "weights": ["400", "500", "600"],
+      "rules": "Use for clear, legible body text and explanations of copyright laws."
+    },
+    "data_and_code": {
+      "font_family": "IBM Plex Mono, monospace",
+      "usage": "MANDATORY for similarity scores, percentages, timestamps, and legal threshold data to give a technical, precise feel."
+    }
+  },
+  "colors": {
+    "backgrounds": {
+      "app": "#0A0A0E",
+      "surface": "#121216",
+      "surface_elevated": "#1A1A20"
+    },
+    "text": {
+      "primary": "#FFFFFF",
+      "secondary": "#A1A1AA",
+      "disabled": "#52525B",
+      "contrast_rules": "Always check contrast against #0A0A0E. Normal text min 4.5:1."
+    },
+    "accents": {
+      "primary": "#3B82F6",
+      "warning": "#EF4444",
+      "success": "#10B981",
+      "brand": "#4F46E5"
+    },
+    "rules": "No pure black. Always tint backgrounds slightly. Use colored drop shadows for flagged waveform segments to make them pop."
+  },
+  "spacing_and_layout": {
+    "marketing_page": {
+      "spacing": "Generous spacing (py-24, gap-12, p-8).",
+      "grid": "Tetris grid layout for feature highlights. Prioritize asymmetry and bold overlays.",
+      "hero": "Max overlay bg-black/50 to let the background image breathe."
+    },
+    "dashboard": {
+      "spacing": "Tight spacing (p-4, gap-4).",
+      "grid": "Control Room grid structure. Every pixel utilized.",
+      "surfaces": "1px visible borders (border-white/10). No soft shadows, strictly 1px inner highlights for a technical look."
+    },
+    "border_radius": "rounded-md (subtle roundness, max 8px). Avoid fully rounded pills except for status badges."
+  },
+  "components": {
+    "buttons": "Flat background with 1px border. On hover, translate-y-[-1px] with a sharp colored shadow.",
+    "cards": "Marketing cards use 'Tracing Beam' effect. Dashboard widgets use strict 1px grid borders.",
+    "nav": "Glassmorphism: backdrop-blur-xl bg-black/60 with 1px bottom border border-white/10. Sticky top with z-50.",
+    "visualizer": "Use canvas or heavily stylized flex bars for waveforms. Segment colors match plagiarism status (Red for flagged, Blue/Green for safe).",
+    "forms": "Heavily customized Shadcn inputs with dark backgrounds and high-focus ring contrast."
+  },
+  "media": {
+    "image_urls": [
+      {
+        "url": "https://images.unsplash.com/photo-1621947081720-86970823b77a?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2OTF8MHwxfHNlYXJjaHwxfHxhYnN0cmFjdCUyMHNvdW5kJTIwd2F2ZSUyMGJhY2tncm91bmQlMjBkYXJrfGVufDB8fHx8MTc4Mjg1NzcyNnww&ixlib=rb-4.1.0&q=85",
+        "description": "Abstract sound wave background dark (Deep Blue)",
+        "category": "hero_background"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1636226570637-3fbda7ca09dc?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjY2NjV8MHwxfHNlYXJjaHwzfHxtdXNpYyUyMHByb2R1Y2VyJTIwc3R1ZGlvfGVufDB8fHx8MTc4Mjg1NzcyNnww&ixlib=rb-4.1.0&q=85",
+        "description": "High-end Music producer studio desk with monitors",
+        "category": "marketing_feature"
+      },
+      {
+        "url": "https://images.pexels.com/photos/21898300/pexels-photo-21898300.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+        "description": "Abstract White Logo 1 (Pexels)",
+        "category": "partner_logo"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1705988142466-e468bc654eeb?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjY2NzF8MHwxfHNlYXJjaHwxfHxjb21wYW55JTIwbG9nbyUyMHdoaXRlJTIwYmFja2dyb3VuZHxlbnwwfHx8fDE3ODI4MzU2ODB8MA&ixlib=rb-4.1.0&q=85",
+        "description": "Abstract Logo 2",
+        "category": "partner_logo"
+      }
+    ],
+    "icon_library": "@phosphor-icons/react",
+    "icon_instructions": "Use duotone weight for high-end look."
+  },
+  "instructions_to_main_agent": [
+    "Use pure HTML+Tailwind for the landing page layout to achieve asymmetry. Do not force Shadcn components into the hero section.",
+    "Use Shadcn UI for the dashboard, tables, and forms, deeply customizing them to match the dark archetype (remove defaults, use #121216 backgrounds).",
+    "Ensure all interactive elements have data-testid attributes (kebab-case, role-based).",
+    "Never use pure black; use the provided #0A0A0E.",
+    "Plagiarism scores above the regional threshold must immediately draw the eye using the warning accent (#EF4444).",
+    "Use a dark, 'Control Room' grid for the scan results dashboard.",
+    "Implement explicit text colors on all hover states (e.g., hover:bg-white/10 hover:text-white)."
+  ]
+}
