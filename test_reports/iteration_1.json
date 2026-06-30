@@ -1,0 +1,50 @@
+{
+  "summary": "First-finish smoke test of SonicCheck MVP. Backend (regions/plans/auth/scans/quota/checkout) and core frontend flows (landing, register, login, pricing, protected-route, logout) all work. Two missing data-testids on Dashboard and one backend validation gap discovered.",
+  "tested_scope": ["frontend", "backend", "auth", "integration"],
+  "passed": [
+    "GET /api/regions returns 8 regions with correct codes (US,EU,UK,CA,AU,JP,IN,BR) and thresholds",
+    "GET /api/plans returns 3 plans (artist_pro $19, producer_pro $49, student $8) with features",
+    "POST /api/auth/register creates user, sets httpOnly cookies, returns user JSON (200)",
+    "POST /api/auth/login with admin@soniccheck.io / Admin@Sonic2026 succeeds (200) and persists via /api/auth/me",
+    "GET /api/auth/me without cookies returns 401 (unauth protection works)",
+    "PATCH /api/auth/region updates region to EU (200)",
+    "POST /api/scans creates scan with deterministic result for free user",
+    "Free quota enforced: 4th scan attempt returns 402 with 'Free quota reached — upgrade to continue scanning'",
+    "POST /api/checkout/session with plan_id+origin_url returns valid Stripe checkout URL (cs_test_...) — payment NOT completed",
+    "POST /api/auth/logout returns ok:true",
+    "Landing page (/) loads with hero 'Settle it before the lawsuit', SonicCheck branding, pricing/how-it-works/jurisdictions nav",
+    "Register UI flow → redirects to /dashboard, dashboard shows 'Welcome, QA', FREE TIER badge, 'New scan' button",
+    "Admin login UI flow → redirects to /dashboard successfully",
+    "/pricing renders 3 pricing-plan-card with 3 pricing-checkout-btn testids",
+    "Protected route guard: visiting /dashboard while logged out redirects to /login",
+    "nav-logout-btn testid present and functional"
+  ],
+  "failed": [
+    {
+      "area": "Frontend / Dashboard.jsx",
+      "issue": "Missing data-testid='dashboard-empty-state' on Dashboard empty-state element. Count=0 found on freshly-registered user dashboard where 'Recent scans' panel shows empty.",
+      "evidence": "page.locator('[data-testid=\"dashboard-empty-state\"]').count() == 0 even though UI shows 'Recent scans' panel with no items",
+      "priority": "MEDIUM"
+    },
+    {
+      "area": "Frontend / Dashboard.jsx",
+      "issue": "Missing data-testid='dashboard-region-selector' on the visible region selector dropdown next to FREE TIER badge / New scan button.",
+      "evidence": "Selector visible in UI (see screenshot) but page.locator('[data-testid=\"dashboard-region-selector\"]').count() == 0",
+      "priority": "MEDIUM"
+    },
+    {
+      "area": "Backend / POST /api/scans",
+      "issue": "Backend accepts scan submission with empty lyrics AND no audio file — returns 200 with verdict CLEAR. Spec says 'Cannot submit scan without lyrics OR audio'. Backend should return 400/422. Frontend may guard via toast, but server-side validation is missing.",
+      "evidence": "curl POST /api/scans with body {\"title\":\"Empty\",\"region\":\"US\"} → HTTP 200, counted against quota",
+      "priority": "MEDIUM"
+    }
+  ],
+  "action_items": [
+    "Add data-testid='dashboard-empty-state' to Dashboard empty-state JSX (when scans.length === 0)",
+    "Add data-testid='dashboard-region-selector' to the region <Select> trigger on Dashboard",
+    "Add server-side validation in POST /api/scans: reject with 400 if both lyrics is empty/whitespace AND no audio file provided"
+  ],
+  "success_rate": {"backend": "92%", "frontend": "85%"},
+  "retest_needed": true,
+  "full_testing_deferred": true
+}
