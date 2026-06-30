@@ -1,0 +1,15 @@
+{
+  "summary": "Iteration 2 retest of 3 issues from iteration_1. All three fixes verified: dashboard-region-selector testid on SelectTrigger, dashboard-empty-state testid on empty-state div, and backend POST /api/scans validation returning 400 when neither lyrics nor audio is provided.",
+  "tested_scope": ["frontend", "backend", "integration"],
+  "passed": [
+    "RETEST 1: Admin login (admin@soniccheck.io) -> /dashboard renders; data-testid='dashboard-region-selector' present (count=1, visible=true) on the SelectTrigger next to FREE TIER badge",
+    "RETEST 2: Fresh user registration (tester_e2e_<rand>@soniccheck.io) -> /dashboard; after loading completes, data-testid='dashboard-empty-state' is present (count=1, visible=true) with 'No scans yet' message",
+    "RETEST 3: POST /api/scans with body {\"title\":\"Empty\",\"region\":\"US\"} (no lyrics, no audio_filename) returns HTTP 400 with detail 'Provide lyrics or upload an audio file'. Validation occurs BEFORE quota increment (db.users.update_one only runs after successful scan creation in server.py)."
+  ],
+  "failed": [],
+  "action_items": [],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "retest_needed": false,
+  "full_testing_deferred": true,
+  "notes": "Backend validation order in server.py POST /api/scans: quota check -> region check -> lyrics/audio check -> mock analysis -> insert scan -> increment scans_used. Therefore a 400 from the lyrics/audio check correctly does NOT count against quota. Mocked: plagiarism engine."
+}

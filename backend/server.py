@@ -366,6 +366,8 @@ async def create_scan(payload: ScanCreate, user: dict = Depends(get_current_user
         raise HTTPException(status_code=402, detail="Plan quota reached for this month")
     if payload.region not in REGIONS:
         raise HTTPException(status_code=400, detail="Invalid region")
+    if not (payload.lyrics and payload.lyrics.strip()) and not payload.audio_filename:
+        raise HTTPException(status_code=400, detail="Provide lyrics or upload an audio file")
 
     result_data = run_mock_analysis(payload.title, payload.lyrics or "", payload.audio_filename, payload.region)
 

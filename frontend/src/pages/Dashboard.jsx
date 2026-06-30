@@ -56,9 +56,9 @@ export default function Dashboard() {
           <Badge data-testid={DASH.planBadge} className="rounded-full border border-white/15 bg-white/5 px-3 py-1 text-white font-mono-data uppercase tracking-widest">
             {user.plan === "free" ? "Free tier" : user.plan.replace("_", " ")}
           </Badge>
-          <div data-testid={DASH.regionSelector}>
+          <div>
             <Select value={user.region} onValueChange={handleRegionChange}>
-              <SelectTrigger className="w-[180px] border-white/10 bg-[#121216] text-white">
+              <SelectTrigger data-testid={DASH.regionSelector} className="w-[180px] border-white/10 bg-[#121216] text-white">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="border-white/10 bg-[#121216] text-white">
