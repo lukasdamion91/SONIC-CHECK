@@ -42,14 +42,22 @@
 - ✅ E2E testing passed (iteration_2 — 100% backend, 100% frontend)
 
 ## Iteration 3 (Feb 2026) — ACRCloud REAL Fingerprinting
-- ✅ ACRCloud API integration (HMAC-SHA1 signing, /v1/identify multipart) — LIVE credentials in .env
-- ✅ Backend `/app/backend/acr.py` — sign_request, identify_bytes, identify_url, parse_tracks, error mapping
-- ✅ New endpoint POST /api/scans/upload — multipart file upload OR audio URL
-- ✅ Real matches include title, artist, album, label, ISRC, confidence, play_offset_ms, acrid
-- ✅ Graceful fallback: no-match (1001), bad audio (2004), network errors — all still return mock analysis
-- ✅ Frontend NewScan: added URL input tab; uploads file as multipart
-- ✅ Frontend ScanResult: ACRCloud panel with match cards + retains regional verdict + mock analysis
-- ✅ E2E testing passed (iteration_3 — 100% backend, 100% frontend, LIVE ACRCloud verified)
+- ✅ ACRCloud API integration (now FALLBACK only — see Iteration 5)
+
+## Iteration 4 (Feb 2026) — UI Palette + Code Review
+- ✅ Custom palette: charcoal grey, electric cobalt blue (#0047FF), fluorescent lime (#D4FF00), vanilla cream (#F0E9D6)
+- ✅ Code review fixes (deps, React keys, lint)
+
+## Iteration 5 (Jun 2026) — FREE API Stack Migration ($100 budget)
+- ✅ Removed mock engine — real analysis pipeline in `run_analysis()` (server.py)
+- ✅ Audio fingerprinting: Chromaprint `fpcalc` + AcoustID API (key in .env) + MusicBrainz metadata (`/app/backend/fingerprint.py`) — FREE
+- ✅ Real waveform extraction via ffmpeg PCM RMS (60 bars)
+- ✅ ACRCloud demoted to fallback (only when AcoustID finds nothing)
+- ✅ Lyric candidates via Genius API search (`/app/backend/lyrics_free.py`) — page scraping is Cloudflare-403-blocked, candidates fall back to metadata-only (expected)
+- ✅ AI semantic lyric similarity via Emergent LLM key, gpt-5.4 (`/app/backend/semantic.py`) — returns per-candidate similarity, snippets, originality score, summary
+- ✅ Email verification: console-logged links (user chose free tier, no SMTP). Endpoints: POST /api/auth/verify-email, POST /api/auth/resend-verification. Frontend: /verify-email page + dashboard banner with resend
+- ✅ .edu student eligibility: `student_eligible` on register; Student plan checkout gated (403 without .edu)
+- ✅ E2E tested (iteration_5 — 19/19 backend, 100% frontend). Regression suite: /app/backend/tests/test_soniccheck.py
 
 ## Test Credentials
 See `/app/memory/test_credentials.md`. Admin: `admin@soniccheck.io / Admin@Sonic2026`.
@@ -57,21 +65,22 @@ See `/app/memory/test_credentials.md`. Admin: `admin@soniccheck.io / Admin@Sonic
 ## Backlog (P0 / P1 / P2)
 
 ### P0 (next session)
-- Real audio fingerprinting integration (ACRCloud / AudD / Pex API)
 - PDF report export with signed timestamps for legal admissibility
-- Email verification on registration
 
 ### P1
+- Gmail SMTP email delivery (currently console-logged; needs user's Gmail app password)
 - Stem separation (vocals / instrumental) for finer-grained matching
 - Bulk catalog scanning for label accounts
-- Educational tier email verification (.edu)
 - Real Spotify / YouTube reference database licensing path
 
 ### P2
+- "Verified by SonicCheck" embeddable badge
 - Forensic audit trail (immutable scan log)
 - Producer collaboration / multi-user studio accounts
 - API access for music attorneys & A&R teams
 - Mobile-responsive optimizations + native app
 
 ## Notes
-- MOCK plagiarism engine: deterministic — same input → same output. Reference catalog of 8 popular tracks. Not connected to any real audio fingerprint DB.
+- BUDGET: strict $100 total — all analysis APIs are free (AcoustID, MusicBrainz, Genius, Emergent LLM key included with account). Stripe is only for ACCEPTING payments.
+- Genius lyric page scraping returns 403 (Cloudflare) — handled; LLM compares using its own knowledge of candidate songs.
+- LLM lyric scans take 15-60s per scan.

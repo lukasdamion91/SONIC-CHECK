@@ -43,7 +43,7 @@ export default function NewScan() {
     try {
       let data;
       if (file || form.audio_url.trim()) {
-        // multipart flow with ACRCloud fingerprinting
+        // multipart flow with audio fingerprinting
         const fd = new FormData();
         fd.append("title", form.title);
         fd.append("artist_name", form.artist_name);
@@ -193,6 +193,10 @@ export default function NewScan() {
           </div>
         </aside>
       </form>
+    </div>
+  );
+}
+    </form>
     </div>
   );
 }

@@ -43,8 +43,8 @@ export default function ScanResult() {
 
   const result = scan.result || {};
   const V = verdictMap[result.verdict] || verdictMap.REVIEW;
-  const fpBlock = result.fingerprint;
-  const fpEngine = fpBlock?.engine || "";
+  const fpBlock = result.fingerprint || result.acr;
+  const fpEngine = fpBlock?.engine || "ACRCloud";
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-12" data-testid={SCAN.resultCard}>
