@@ -35,7 +35,7 @@
 }
 
 html, body, #root {
-  background: #0A0A0E;
+  background: #1C1C22;
   color: #FFFFFF;
   font-family: 'Manrope', sans-serif;
   margin: 0;
@@ -47,7 +47,7 @@ body {
   background:
     radial-gradient(1200px 600px at 80% -10%, rgba(59,130,246,0.10), transparent 60%),
     radial-gradient(900px 500px at 0% 100%, rgba(239,68,68,0.06), transparent 60%),
-    #0A0A0E;
+    #1C1C22;
   min-height: 100vh;
 }
 
@@ -65,12 +65,12 @@ body {
 }
 
 /* Custom selection */
-::selection { background: #EF4444; color: white; }
+::selection { background: #D4FF00; color: #1C1C22; }
 
 /* Scrollbar */
 ::-webkit-scrollbar { width: 10px; height: 10px; }
-::-webkit-scrollbar-track { background: #0A0A0E; }
-::-webkit-scrollbar-thumb { background: #1A1A20; border-radius: 8px; }
+::-webkit-scrollbar-track { background: #1C1C22; }
+::-webkit-scrollbar-thumb { background: #2E2E38; border-radius: 8px; }
 ::-webkit-scrollbar-thumb:hover { background: #2A2A30; }
 
 /* Waveform bar animation */
@@ -84,7 +84,7 @@ body {
 /* Tracing beam border for marketing cards */
 .beam-card {
   position: relative;
-  background: #121216;
+  background: #24242C;
   border: 1px solid rgba(255,255,255,0.08);
   border-radius: 8px;
   overflow: hidden;

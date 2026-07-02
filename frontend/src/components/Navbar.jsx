@@ -15,13 +15,13 @@ export default function Navbar() {
   };
 
   const linkClass = (path) =>
-    `text-sm transition-colors ${pathname === path ? "text-white" : "text-zinc-400 hover:text-white"}`;
+    `text-sm transition-colors ${pathname === path ? "text-[#F0E9D6]" : "text-[#F0E9D6]/65 hover:text-[#F0E9D6]"}`;
 
   return (
     <header className="sticky top-0 z-50 border-b border-white/10 bg-black/60 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
-        <Link to="/" data-testid={NAV.logo} className="flex items-center gap-2 text-white">
-          <div className="grid h-8 w-8 place-items-center rounded-md bg-white text-black">
+        <Link to="/" data-testid={NAV.logo} className="flex items-center gap-2 text-[#F0E9D6]">
+          <div className="grid h-8 w-8 place-items-center rounded-md bg-[#D4FF00] text-[#1C1C22]">
             <Radio className="h-4 w-4" strokeWidth={2.5} />
           </div>
           <span className="font-display text-xl tracking-tighter">SonicCheck</span>
@@ -37,8 +37,8 @@ export default function Navbar() {
           ) : (
             <>
               <Link to="/pricing" data-testid={NAV.pricingLink} className={linkClass("/pricing")}>Pricing</Link>
-              <a href="#how-it-works" className="text-sm text-zinc-400 hover:text-white">How it works</a>
-              <a href="#regions" className="text-sm text-zinc-400 hover:text-white">Jurisdictions</a>
+              <a href="#how-it-works" className="text-sm text-[#F0E9D6]/65 hover:text-[#F0E9D6]">How it works</a>
+              <a href="#regions" className="text-sm text-[#F0E9D6]/65 hover:text-[#F0E9D6]">Jurisdictions</a>
             </>
           )}
         </nav>
@@ -46,12 +46,12 @@ export default function Navbar() {
         <div className="flex items-center gap-3">
           {user ? (
             <>
-              <span className="hidden text-xs text-zinc-400 sm:inline font-mono-data">{user.email}</span>
+              <span className="hidden text-xs text-[#F0E9D6]/65 sm:inline font-mono-data">{user.email}</span>
               <Button
                 data-testid={NAV.logoutBtn}
                 onClick={handleLogout}
                 variant="ghost"
-                className="text-zinc-300 hover:bg-white/10 hover:text-white"
+                className="text-[#F0E9D6]/85 hover:bg-white/10 hover:text-[#F0E9D6]"
               >
                 <LogOut className="mr-2 h-4 w-4" />
                 Logout
@@ -60,10 +60,10 @@ export default function Navbar() {
           ) : (
             <>
               <Link to="/login" data-testid={NAV.loginLink}>
-                <Button variant="ghost" className="text-zinc-300 hover:bg-white/10 hover:text-white">Sign in</Button>
+                <Button variant="ghost" className="text-[#F0E9D6]/85 hover:bg-white/10 hover:text-[#F0E9D6]">Sign in</Button>
               </Link>
               <Link to="/register" data-testid={NAV.signupLink}>
-                <Button className="bg-white text-black btn-lift hover:bg-zinc-200">Get started</Button>
+                <Button className="bg-[#D4FF00] text-[#1C1C22] btn-lift hover:bg-[#D4FF00]/85">Get started</Button>
               </Link>
             </>
           )}

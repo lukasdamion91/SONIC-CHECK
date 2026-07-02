@@ -53,28 +53,28 @@ export default function PaymentSuccess() {
 
   return (
     <div className="mx-auto grid min-h-[60vh] max-w-2xl place-items-center px-6 py-12 text-center">
-      <div className="w-full rounded-md border border-white/10 bg-[#121216] p-12">
+      <div className="w-full rounded-md border border-white/10 bg-[#24242C] p-12">
         {status === "polling" && (
           <>
-            <Loader2 className="mx-auto h-10 w-10 animate-spin text-blue-400" />
-            <h1 className="mt-6 font-display text-4xl text-white">Confirming payment…</h1>
-            <p className="mt-3 text-zinc-400">This usually takes a few seconds.</p>
+            <Loader2 className="mx-auto h-10 w-10 animate-spin text-[#0047FF]" />
+            <h1 className="mt-6 font-display text-4xl text-[#F0E9D6]">Confirming payment…</h1>
+            <p className="mt-3 text-[#F0E9D6]/65">This usually takes a few seconds.</p>
           </>
         )}
         {status === "paid" && (
           <>
-            <CheckCircle2 className="mx-auto h-10 w-10 text-emerald-400" />
-            <h1 className="mt-6 font-display text-4xl text-white">Plan activated.</h1>
-            <p className="mt-3 text-zinc-400">Welcome to the studio. Run unlimited scans now.</p>
-            <Button onClick={() => navigate("/dashboard")} className="mt-8 h-11 rounded-md bg-white px-6 text-black btn-lift hover:bg-zinc-200">Go to dashboard</Button>
+            <CheckCircle2 className="mx-auto h-10 w-10 text-[#0047FF]" />
+            <h1 className="mt-6 font-display text-4xl text-[#F0E9D6]">Plan activated.</h1>
+            <p className="mt-3 text-[#F0E9D6]/65">Welcome to the studio. Run unlimited scans now.</p>
+            <Button onClick={() => navigate("/dashboard")} className="mt-8 h-11 rounded-md bg-white px-6 text-black btn-lift hover:bg-[#D4FF00]/85">Go to dashboard</Button>
           </>
         )}
         {(status === "failed" || status === "expired") && (
           <>
-            <AlertCircle className="mx-auto h-10 w-10 text-amber-400" />
-            <h1 className="mt-6 font-display text-4xl text-white">Payment {status}</h1>
-            <p className="mt-3 text-zinc-400">Please try again or contact support.</p>
-            <Button onClick={() => navigate("/pricing")} className="mt-8 h-11 rounded-md bg-white px-6 text-black btn-lift hover:bg-zinc-200">Back to pricing</Button>
+            <AlertCircle className="mx-auto h-10 w-10 text-[#F0E9D6]" />
+            <h1 className="mt-6 font-display text-4xl text-[#F0E9D6]">Payment {status}</h1>
+            <p className="mt-3 text-[#F0E9D6]/65">Please try again or contact support.</p>
+            <Button onClick={() => navigate("/pricing")} className="mt-8 h-11 rounded-md bg-white px-6 text-black btn-lift hover:bg-[#D4FF00]/85">Back to pricing</Button>
           </>
         )}
       </div>

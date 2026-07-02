@@ -70,50 +70,50 @@ export default function NewScan() {
 
   return (
     <div className="mx-auto max-w-5xl px-6 py-12">
-      <div className="mb-2 text-[10px] uppercase tracking-widest text-zinc-500 font-mono-data">New scan</div>
-      <h1 className="font-display text-5xl text-white">Run analysis.</h1>
-      <p className="mt-3 max-w-xl text-zinc-400">Upload an audio file, paste lyrics, or both. Pick the jurisdiction you intend to release in.</p>
+      <div className="mb-2 text-[10px] uppercase tracking-widest text-[#F0E9D6]/50 font-mono-data">New scan</div>
+      <h1 className="font-display text-5xl text-[#F0E9D6]">Run analysis.</h1>
+      <p className="mt-3 max-w-xl text-[#F0E9D6]/65">Upload an audio file, paste lyrics, or both. Pick the jurisdiction you intend to release in.</p>
 
       <form onSubmit={onSubmit} className="mt-10 grid gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
-          <div className="rounded-md border border-white/10 bg-[#121216] p-6">
-            <Label className="text-zinc-300">Track title</Label>
+          <div className="rounded-md border border-white/10 bg-[#24242C] p-6">
+            <Label className="text-[#F0E9D6]/85">Track title</Label>
             <Input
               data-testid={SCAN.titleInput}
               value={form.title}
               onChange={(e) => setForm({ ...form, title: e.target.value })}
-              className="mt-2 border-white/10 bg-[#0A0A0E] text-white"
+              className="mt-2 border-white/10 bg-[#1C1C22] text-[#F0E9D6]"
               placeholder="e.g. Midnight Skyline"
             />
-            <Label className="mt-5 block text-zinc-300">Artist name</Label>
+            <Label className="mt-5 block text-[#F0E9D6]/85">Artist name</Label>
             <Input
               data-testid={SCAN.artistInput}
               value={form.artist_name}
               onChange={(e) => setForm({ ...form, artist_name: e.target.value })}
-              className="mt-2 border-white/10 bg-[#0A0A0E] text-white"
+              className="mt-2 border-white/10 bg-[#1C1C22] text-[#F0E9D6]"
               placeholder="Stage / legal name"
             />
           </div>
 
-          <div className="rounded-md border border-white/10 bg-[#121216] p-6">
-            <Label className="text-zinc-300">Lyrics (optional)</Label>
+          <div className="rounded-md border border-white/10 bg-[#24242C] p-6">
+            <Label className="text-[#F0E9D6]/85">Lyrics (optional)</Label>
             <Textarea
               data-testid={SCAN.lyricsInput}
               value={form.lyrics}
               onChange={(e) => setForm({ ...form, lyrics: e.target.value })}
               rows={8}
-              className="mt-2 border-white/10 bg-[#0A0A0E] text-white font-mono-data text-sm"
+              className="mt-2 border-white/10 bg-[#1C1C22] text-[#F0E9D6] font-mono-data text-sm"
               placeholder="Paste your full lyrics here…"
             />
-            <p className="mt-2 text-xs text-zinc-500">We scan against millions of registered lyrics. Catches direct lifts and paraphrased hooks.</p>
+            <p className="mt-2 text-xs text-[#F0E9D6]/50">We scan against millions of registered lyrics. Catches direct lifts and paraphrased hooks.</p>
           </div>
 
-          <div className="rounded-md border border-white/10 bg-[#121216] p-6">
-            <Label className="text-zinc-300">Audio file (optional)</Label>
-            <label className="mt-2 flex cursor-pointer items-center justify-center gap-3 rounded-md border border-dashed border-white/15 bg-[#0A0A0E] px-6 py-10 text-zinc-400 hover:border-white/30 hover:text-white">
+          <div className="rounded-md border border-white/10 bg-[#24242C] p-6">
+            <Label className="text-[#F0E9D6]/85">Audio file (optional)</Label>
+            <label className="mt-2 flex cursor-pointer items-center justify-center gap-3 rounded-md border border-dashed border-white/15 bg-[#1C1C22] px-6 py-10 text-[#F0E9D6]/65 hover:border-white/30 hover:text-[#F0E9D6]">
               {file ? (
                 <>
-                  <FileAudio2 className="h-5 w-5 text-blue-400" />
+                  <FileAudio2 className="h-5 w-5 text-[#0047FF]" />
                   <span className="font-mono-data text-sm">{file.name} · {(file.size/1024/1024).toFixed(2)} MB</span>
                 </>
               ) : (
@@ -132,30 +132,30 @@ export default function NewScan() {
             </label>
             <div className="mt-4 flex items-center gap-3">
               <div className="h-px flex-1 bg-white/10" />
-              <span className="text-[10px] uppercase tracking-widest text-zinc-500 font-mono-data">or</span>
+              <span className="text-[10px] uppercase tracking-widest text-[#F0E9D6]/50 font-mono-data">or</span>
               <div className="h-px flex-1 bg-white/10" />
             </div>
-            <Label className="mt-4 block text-zinc-300">Paste direct audio URL</Label>
+            <Label className="mt-4 block text-[#F0E9D6]/85">Paste direct audio URL</Label>
             <Input
               data-testid="scan-audio-url-input"
               value={form.audio_url}
               onChange={(e) => setForm({ ...form, audio_url: e.target.value })}
-              className="mt-2 border-white/10 bg-[#0A0A0E] text-white font-mono-data text-sm"
+              className="mt-2 border-white/10 bg-[#1C1C22] text-[#F0E9D6] font-mono-data text-sm"
               placeholder="https://... direct .mp3/.wav link"
             />
-            <p className="mt-2 text-xs text-zinc-500">Real fingerprinting via ACRCloud — matches against 90M+ licensed tracks with ISRC codes.</p>
+            <p className="mt-2 text-xs text-[#F0E9D6]/50">Real fingerprinting via ACRCloud — matches against 90M+ licensed tracks with ISRC codes.</p>
           </div>
         </div>
 
         <aside className="space-y-6">
-          <div className="rounded-md border border-white/10 bg-[#121216] p-6">
-            <Label className="text-zinc-300">Jurisdiction</Label>
+          <div className="rounded-md border border-white/10 bg-[#24242C] p-6">
+            <Label className="text-[#F0E9D6]/85">Jurisdiction</Label>
             <div data-testid={SCAN.regionSelect} className="mt-2">
               <Select value={form.region} onValueChange={(v) => setForm({ ...form, region: v })}>
-                <SelectTrigger className="border-white/10 bg-[#0A0A0E] text-white">
+                <SelectTrigger className="border-white/10 bg-[#1C1C22] text-[#F0E9D6]">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="max-h-72 border-white/10 bg-[#121216] text-white">
+                <SelectContent className="max-h-72 border-white/10 bg-[#24242C] text-[#F0E9D6]">
                   {regions.map((r) => (
                     <SelectItem key={r.code} value={r.code}>
                       {r.code} — {r.name}
@@ -165,14 +165,14 @@ export default function NewScan() {
               </Select>
             </div>
             {regions.find((r) => r.code === form.region) && (
-              <div className="mt-4 space-y-2 text-xs text-zinc-400">
-                <div className="font-mono-data text-zinc-500">Doctrine</div>
-                <div className="text-white">{regions.find((r) => r.code === form.region).doctrine}</div>
-                <div className="font-mono-data text-zinc-500 mt-3">Lyric threshold</div>
-                <div className="font-mono-data text-2xl text-white">{regions.find((r) => r.code === form.region).lyric_threshold}%</div>
-                <div className="font-mono-data text-zinc-500 mt-3">Melody threshold</div>
-                <div className="font-mono-data text-2xl text-white">{regions.find((r) => r.code === form.region).melody_threshold}%</div>
-                <p className="mt-3 text-zinc-500">{regions.find((r) => r.code === form.region).notes}</p>
+              <div className="mt-4 space-y-2 text-xs text-[#F0E9D6]/65">
+                <div className="font-mono-data text-[#F0E9D6]/50">Doctrine</div>
+                <div className="text-[#F0E9D6]">{regions.find((r) => r.code === form.region).doctrine}</div>
+                <div className="font-mono-data text-[#F0E9D6]/50 mt-3">Lyric threshold</div>
+                <div className="font-mono-data text-2xl text-[#F0E9D6]">{regions.find((r) => r.code === form.region).lyric_threshold}%</div>
+                <div className="font-mono-data text-[#F0E9D6]/50 mt-3">Melody threshold</div>
+                <div className="font-mono-data text-2xl text-[#F0E9D6]">{regions.find((r) => r.code === form.region).melody_threshold}%</div>
+                <p className="mt-3 text-[#F0E9D6]/50">{regions.find((r) => r.code === form.region).notes}</p>
               </div>
             )}
           </div>
@@ -181,14 +181,14 @@ export default function NewScan() {
             type="submit"
             disabled={submitting}
             data-testid={SCAN.submitBtn}
-            className="h-12 w-full rounded-md bg-white text-black btn-lift hover:bg-zinc-200"
+            className="h-12 w-full rounded-md bg-[#D4FF00] text-[#1C1C22] btn-lift hover:bg-[#D4FF00]/85"
           >
             <ScanSearch className="mr-2 h-4 w-4" />
             {submitting ? "Analyzing…" : "Run scan"}
           </Button>
 
-          <div className="rounded-md border border-blue-400/20 bg-blue-400/5 p-4 text-xs text-blue-200">
-            <strong className="font-mono-data uppercase tracking-widest text-blue-300">Quota</strong>
+          <div className="rounded-md border border-blue-400/20 bg-blue-400/5 p-4 text-xs text-[#0047FF]/90">
+            <strong className="font-mono-data uppercase tracking-widest text-[#0047FF]">Quota</strong>
             <p className="mt-1 text-blue-100/80">Used {user?.scans_used} scans on {user?.plan === "free" ? "Free (3 included)" : user?.plan?.replace("_", " ")}.</p>
           </div>
         </aside>
