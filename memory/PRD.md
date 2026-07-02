@@ -41,6 +41,16 @@
 - ✅ Backend validation (lyrics OR audio required, region whitelist, plan whitelist)
 - ✅ E2E testing passed (iteration_2 — 100% backend, 100% frontend)
 
+## Iteration 3 (Feb 2026) — ACRCloud REAL Fingerprinting
+- ✅ ACRCloud API integration (HMAC-SHA1 signing, /v1/identify multipart) — LIVE credentials in .env
+- ✅ Backend `/app/backend/acr.py` — sign_request, identify_bytes, identify_url, parse_tracks, error mapping
+- ✅ New endpoint POST /api/scans/upload — multipart file upload OR audio URL
+- ✅ Real matches include title, artist, album, label, ISRC, confidence, play_offset_ms, acrid
+- ✅ Graceful fallback: no-match (1001), bad audio (2004), network errors — all still return mock analysis
+- ✅ Frontend NewScan: added URL input tab; uploads file as multipart
+- ✅ Frontend ScanResult: ACRCloud panel with match cards + retains regional verdict + mock analysis
+- ✅ E2E testing passed (iteration_3 — 100% backend, 100% frontend, LIVE ACRCloud verified)
+
 ## Test Credentials
 See `/app/memory/test_credentials.md`. Admin: `admin@soniccheck.io / Admin@Sonic2026`.
 
