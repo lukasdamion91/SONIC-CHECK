@@ -1,0 +1,28 @@
+{
+  "summary": "Iteration 4 regression smoke test after code review fixes (overall=0.0 init, AuthContext error logs, stable list keys). Backend + frontend core flows verified end-to-end with LIVE ACRCloud. No regressions detected.",
+  "tested_scope": ["backend", "frontend", "auth", "integration"],
+  "passed": [
+    "POST /api/auth/login (admin@soniccheck.io) → 200 with user JSON",
+    "GET /api/auth/me → 200",
+    "PATCH /api/auth/region → 200, region updated US→EU",
+    "POST /api/auth/logout → 200 {ok:true}",
+    "POST /api/scans lyrics-only → 200, overall_score=5.2 (non-zero, confirms FIX 1 init)",
+    "POST /api/scans/upload with audio_url=sample-15s.mp3 → 200, acr.status_code=0, 3 real ACRCloud matches, overall_score=99",
+    "POST /api/scans/upload empty → 400 'Provide lyrics, upload audio, or paste an audio URL'",
+    "DELETE /api/scans/{id} → 200 {ok:true}",
+    "POST /api/checkout/session (plan_id=artist_pro) → 200 with real Stripe checkout URL",
+    "Frontend login → /dashboard redirect works",
+    "Scan detail /scan/:id renders data-testid='scan-acr-panel' + 3 'scan-acr-match' cards + 5 match rows + overall 99%",
+    "Landing page loads clean",
+    "Logout button clears session (post-logout /me returns 401 as expected)",
+    "FIX 3 verified: 0 React 'unique key' warnings across dashboard, scan detail, landing",
+    "FIX 2 verified: no runtime issues from AuthContext error logging; auth flows all pass",
+    "0 non-401 console errors across visited pages"
+  ],
+  "failed": [],
+  "action_items": [],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "retest_needed": false,
+  "full_testing_deferred": true,
+  "notes": "Route for scan detail is /scan/:id (singular). Stripe checkout uses plan_id (not plan). Both are pre-existing contracts, not regressions. Waveform selector not probed with data-testid; no console errors from it, so treated as non-blocking."
+}

@@ -99,7 +99,7 @@ export default function Landing() {
           <div className="mb-4 text-[10px] uppercase tracking-widest text-zinc-500 font-mono-data">Trusted reference catalogs</div>
           <div className="marquee">
             {[...partners, ...partners].map((p, i) => (
-              <div key={i} className="font-display whitespace-nowrap text-2xl text-zinc-600">{p}</div>
+              <div key={`${p}-${i}`} className="font-display whitespace-nowrap text-2xl text-zinc-600">{p}</div>
             ))}
           </div>
         </div>
@@ -112,7 +112,7 @@ export default function Landing() {
             <div className="mb-3 text-[10px] uppercase tracking-widest text-zinc-500 font-mono-data">How it works</div>
             <h2 className="font-display text-5xl text-white sm:text-6xl">Forensic-grade<br/>music analysis.</h2>
           </div>
-          <p className="hidden max-w-md text-zinc-400 lg:block">Three engines, one verdict. Upload an audio file, paste lyrics, or both — we run them through lyric, melodic, and chord analyzers, then apply your region's copyright doctrine.</p>
+          <p className="hidden max-w-md text-zinc-400 lg:block">Three engines, one verdict. Upload an audio file, paste lyrics, or both — we run them through lyric, melodic, and chord analyzers, then apply your region&apos;s copyright doctrine.</p>
         </div>
 
         <div className="tetris-grid">
@@ -122,7 +122,7 @@ export default function Landing() {
             <p className="mt-3 text-sm text-zinc-400 max-w-md">Catches paraphrased hooks, verse echoes, and direct lifts using sliding n-gram windows and semantic similarity against millions of registered lyrics.</p>
             <div className="mt-6 grid grid-cols-3 gap-2">
               {Array.from({ length: 18 }).map((_, i) => (
-                <div key={i} className="h-2 rounded-sm" style={{ background: i % 5 === 0 ? "#EF4444" : "rgba(255,255,255,0.08)" }} />
+                <div key={`ngram-${i}`} className="h-2 rounded-sm" style={{ background: i % 5 === 0 ? "#EF4444" : "rgba(255,255,255,0.08)" }} />
               ))}
             </div>
           </div>

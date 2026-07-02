@@ -237,6 +237,7 @@ def run_mock_analysis(title: str, lyrics: str, audio_filename: Optional[str], re
     matches.sort(key=lambda m: m["lyric_similarity"] + m["melodic_similarity"] + m["chord_progression_similarity"], reverse=True)
 
     # Overall scores
+    overall = 0.0
     if has_audio and has_lyrics:
         overall = round(max(m["lyric_similarity"] for m in matches) * 0.4 + max(m["melodic_similarity"] for m in matches) * 0.35 + max(m["chord_progression_similarity"] for m in matches) * 0.25, 1)
     elif has_audio:

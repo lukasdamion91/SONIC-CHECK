@@ -8,7 +8,7 @@ export default function Waveform({ bars = [], flagged = [], height = 96 }) {
           const isFlagged = flaggedSet.has(i);
           return (
             <div
-              key={i}
+              key={`bar-${i}-${v}`}
               className="wave-bar flex-1 rounded-[2px]"
               style={{
                 height: `${Math.max(8, v * 100)}%`,

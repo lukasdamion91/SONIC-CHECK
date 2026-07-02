@@ -7,16 +7,17 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const refresh = useCallback(async () => {
-    try {
-      const { data } = await api.get("/auth/me");
-      setUser(data);
-    } catch {
-      setUser(false);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+    const refresh = useCallback(async () => {
+      try {
+        const { data } = await api.get("/auth/me");
+        setUser(data);
+      } catch (error) {
+        console.debug("Auth /me: not authenticated", error?.response?.status);
+        setUser(false);
+      } finally {
+        setLoading(false);
+      }
+    }, []);
 
   useEffect(() => { refresh(); }, [refresh]);
 
@@ -32,10 +33,14 @@ export function AuthProvider({ children }) {
     return data;
   };
 
-  const logout = async () => {
-    try { await api.post("/auth/logout"); } catch { /* ignore */ }
-    setUser(false);
-  };
+    const logout = async () => {
+      try {
+        await api.post("/auth/logout");
+      } catch (error) {
+        console.error("Logout error:", error?.response?.status);
+      }
+      setUser(false);
+    };
 
   const updateRegion = async (region) => {
     const { data } = await api.patch("/auth/region", { region });

@@ -120,7 +120,7 @@ export default function ScanResult() {
             {result.acr.matches?.length > 0 ? (
               <div className="grid gap-3">
                 {result.acr.matches.map((t, i) => (
-                  <div key={i} data-testid="scan-acr-match" className="rounded-md border border-red-400/30 bg-red-400/5 p-4">
+                  <div key={t.acrid || `acr-${i}-${t.title}`} data-testid="scan-acr-match" className="rounded-md border border-red-400/30 bg-red-400/5 p-4">
                     <div className="grid gap-2 sm:grid-cols-12 items-center">
                       <div className="sm:col-span-5">
                         <div className="font-display text-lg text-white">{t.title}</div>
