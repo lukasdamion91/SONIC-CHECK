@@ -1,0 +1,21 @@
+{
+  "summary": "ACRCloud fingerprinting integration verified end-to-end. Backend: all 5 targeted /api/scans/upload cases pass (real audio URL returns status_code=0 + 3 matches; missing input returns 400; lyrics-only omits acr key; unreachable URL degrades gracefully with acr.status_code=4002 + mock analysis; JSON /api/scans merges ACR results). Frontend: NewScan page exposes scan-audio-url-input; submitting the sample MP3 URL navigates to /scan/:id and renders scan-acr-panel with 3 scan-acr-match cards alongside the existing regional verdict + mock similarity/verdict panel (graceful merge, not replacement).",
+  "tested_scope": ["backend", "frontend", "integration", "auth"],
+  "passed": [
+    "Admin login via /api/auth/login (HTTP 200, cookies set)",
+    "POST /api/scans/upload with audio_url=sample-15s.mp3 -> result.acr.status_code=0, 3 matches, first match has title/artist/confidence/acrid",
+    "POST /api/scans/upload with no lyrics/file/url -> HTTP 400 with expected message",
+    "POST /api/scans/upload with lyrics only -> HTTP 200, result has no 'acr' key",
+    "POST /api/scans/upload with unreachable URL -> HTTP 200, result.acr.status_code=4002, mock analysis (overall_score) still present",
+    "POST /api/scans (JSON) with audio_url -> ACR merged (status_code=0, 3 matches)",
+    "Frontend /scan/new shows scan-audio-url-input alongside file upload",
+    "Frontend scan submission with audio URL navigates to /scan/:id and renders scan-acr-panel with 3 scan-acr-match cards",
+    "Scan result page shows ACR panel + regional verdict (US Fair Use) + lyric/melody verdicts (graceful merge)"
+  ],
+  "failed": [],
+  "action_items": [],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "retest_needed": false,
+  "full_testing_deferred": true,
+  "notes": "Quota (402 -> /pricing) flow was NOT re-tested this iteration as admin has producer_pro plan; iteration_2 already covered it. ACRCloud credentials are LIVE and returning real matches."
+}

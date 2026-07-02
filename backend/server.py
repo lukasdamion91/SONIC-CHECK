@@ -28,6 +28,8 @@ from emergentintegrations.payments.stripe.checkout import (
     CheckoutSessionRequest,
 )
 
+from acr import identify_bytes as acr_identify_bytes, identify_url as acr_identify_url, parse_tracks as acr_parse_tracks, error_message as acr_error_message, is_configured as acr_configured
+
 # ----------------------------------------------------------------------------
 # Config
 # ----------------------------------------------------------------------------
@@ -170,6 +172,7 @@ class ScanCreate(BaseModel):
     region: str = "US"
     audio_filename: Optional[str] = None
     audio_size_bytes: Optional[int] = 0
+    audio_url: Optional[str] = None  # direct downloadable audio URL
 
 
 class CheckoutCreate(BaseModel):
@@ -354,6 +357,108 @@ async def get_plans():
 # ----------------------------------------------------------------------------
 # Scans
 # ----------------------------------------------------------------------------
+def merge_acr_into_result(result: Dict[str, Any], acr_response: Dict[str, Any]) -> Dict[str, Any]:
+    """Merge ACRCloud fingerprint matches into the mock analysis result."""
+    status = (acr_response or {}).get("status") or {}
+    code = status.get("code", 9999)
+    acr_tracks = acr_parse_tracks(acr_response) if code == 0 else []
+
+    result["acr"] = {
+        "enabled": acr_configured(),
+        "status_code": code,
+        "status_msg": acr_error_message(code) if code != 0 else "Success",
+        "matches": acr_tracks,
+        "match_count": len(acr_tracks),
+    }
+
+    if acr_tracks:
+        # Real match found — flag as VIOLATION and inject as top match
+        top = acr_tracks[0]
+        real_match = {
+            "reference_id": top.get("acrid") or "acr-1",
+            "reference_title": top.get("title") or "Unknown",
+            "reference_artist": top.get("artist") or "Unknown",
+            "reference_year": (top.get("release_date") or "").split("-")[0] or "—",
+            "genre": "Commercial catalog",
+            "lyric_similarity": 0,
+            "melodic_similarity": round(min(99, (top.get("confidence") or 90)), 1),
+            "chord_progression_similarity": round(min(95, (top.get("confidence") or 85)), 1),
+            "matched_snippet": f"ISRC {top.get('isrc') or 'n/a'} · {top.get('label') or 'unknown label'}",
+            "your_snippet": "(fingerprint match from ACRCloud)",
+            "timestamp_start_sec": int((top.get("play_offset_ms") or 0) / 1000),
+            "timestamp_end_sec": int((top.get("play_offset_ms") or 0) / 1000) + 10,
+            "confidence": round((top.get("confidence") or 90) / 100, 2),
+            "is_fingerprint_match": True,
+        }
+        result["matches"] = [real_match] + result.get("matches", [])
+        result["top_melody_similarity"] = real_match["melodic_similarity"]
+        result["overall_score"] = max(result.get("overall_score", 0), real_match["melodic_similarity"])
+        result["melody_verdict"] = "VIOLATION"
+        result["verdict"] = "VIOLATION"
+
+    return result
+
+
+@api.post("/scans/upload")
+async def create_scan_upload(
+    request: Request,
+    title: str = Form(...),
+    artist_name: str = Form(""),
+    lyrics: str = Form(""),
+    region: str = Form("US"),
+    audio_url: Optional[str] = Form(None),
+    file: Optional[UploadFile] = File(None),
+    user: dict = Depends(get_current_user),
+):
+    plan = user.get("plan", "free")
+    scans_used = user.get("scans_used", 0)
+    if plan == "free" and scans_used >= 3:
+        raise HTTPException(status_code=402, detail="Free quota reached — upgrade to continue scanning")
+    plan_limit = PLANS.get(plan, {}).get("scans_per_month")
+    if plan_limit is not None and scans_used >= plan_limit:
+        raise HTTPException(status_code=402, detail="Plan quota reached for this month")
+    if region not in REGIONS:
+        raise HTTPException(status_code=400, detail="Invalid region")
+    if not (lyrics and lyrics.strip()) and not file and not audio_url:
+        raise HTTPException(status_code=400, detail="Provide lyrics, upload audio, or paste an audio URL")
+
+    audio_filename = None
+    audio_size = 0
+    acr_response = None
+
+    if file is not None:
+        data = await file.read()
+        audio_filename = file.filename
+        audio_size = len(data)
+        if data:
+            acr_response = await acr_identify_bytes(data, file.filename or "sample.mp3", file.content_type or "audio/mpeg")
+    elif audio_url:
+        audio_filename = audio_url.rsplit("/", 1)[-1].split("?")[0] or "url-audio"
+        acr_response = await acr_identify_url(audio_url)
+
+    result = run_mock_analysis(title, lyrics or "", audio_filename, region)
+    if acr_response is not None:
+        result = merge_acr_into_result(result, acr_response)
+
+    scan_doc = {
+        "user_id": str(user["_id"]),
+        "title": title,
+        "artist_name": artist_name or user.get("name", ""),
+        "lyrics": lyrics or "",
+        "audio_filename": audio_filename,
+        "audio_size_bytes": audio_size,
+        "audio_url": audio_url,
+        "region": region,
+        "result": result,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    inserted = await db.scans.insert_one(scan_doc)
+    scan_doc["id"] = str(inserted.inserted_id)
+    scan_doc.pop("_id", None)
+    await db.users.update_one({"_id": user["_id"]}, {"$inc": {"scans_used": 1}})
+    return scan_doc
+
+
 @api.post("/scans")
 async def create_scan(payload: ScanCreate, user: dict = Depends(get_current_user)):
     # Free tier: 3 scans
@@ -366,10 +471,14 @@ async def create_scan(payload: ScanCreate, user: dict = Depends(get_current_user
         raise HTTPException(status_code=402, detail="Plan quota reached for this month")
     if payload.region not in REGIONS:
         raise HTTPException(status_code=400, detail="Invalid region")
-    if not (payload.lyrics and payload.lyrics.strip()) and not payload.audio_filename:
+    if not (payload.lyrics and payload.lyrics.strip()) and not payload.audio_filename and not payload.audio_url:
         raise HTTPException(status_code=400, detail="Provide lyrics or upload an audio file")
 
-    result_data = run_mock_analysis(payload.title, payload.lyrics or "", payload.audio_filename, payload.region)
+    result_data = run_mock_analysis(payload.title, payload.lyrics or "", payload.audio_filename or payload.audio_url, payload.region)
+
+    if payload.audio_url:
+        acr_response = await acr_identify_url(payload.audio_url)
+        result_data = merge_acr_into_result(result_data, acr_response)
 
     scan_doc = {
         "user_id": str(user["_id"]),

@@ -19,9 +19,9 @@ export default function NewScan() {
     artist_name: user?.name || "",
     lyrics: "",
     region: user?.region || "US",
-    audio_filename: null,
-    audio_size_bytes: 0,
+    audio_url: "",
   });
+  const [file, setFile] = useState(null);
   const [regions, setRegions] = useState([]);
   const [submitting, setSubmitting] = useState(false);
 
@@ -32,16 +32,31 @@ export default function NewScan() {
   const onFile = (e) => {
     const f = e.target.files?.[0];
     if (!f) return;
-    setForm((p) => ({ ...p, audio_filename: f.name, audio_size_bytes: f.size }));
+    setFile(f);
   };
 
   const onSubmit = async (e) => {
     e.preventDefault();
     if (!form.title.trim()) return toast.error("Title required");
-    if (!form.lyrics.trim() && !form.audio_filename) return toast.error("Provide lyrics or upload an audio file");
+    if (!form.lyrics.trim() && !file && !form.audio_url.trim()) return toast.error("Provide lyrics, upload audio, or paste an audio URL");
     setSubmitting(true);
     try {
-      const { data } = await api.post("/scans", form);
+      let data;
+      if (file || form.audio_url.trim()) {
+        // multipart flow with ACRCloud fingerprinting
+        const fd = new FormData();
+        fd.append("title", form.title);
+        fd.append("artist_name", form.artist_name);
+        fd.append("lyrics", form.lyrics);
+        fd.append("region", form.region);
+        if (form.audio_url.trim()) fd.append("audio_url", form.audio_url.trim());
+        if (file) fd.append("file", file);
+        const res = await api.post("/scans/upload", fd, { headers: { "Content-Type": "multipart/form-data" } });
+        data = res.data;
+      } else {
+        const res = await api.post("/scans", form);
+        data = res.data;
+      }
       toast.success("Scan complete");
       navigate(`/scan/${data.id}`);
     } catch (err) {
@@ -96,10 +111,10 @@ export default function NewScan() {
           <div className="rounded-md border border-white/10 bg-[#121216] p-6">
             <Label className="text-zinc-300">Audio file (optional)</Label>
             <label className="mt-2 flex cursor-pointer items-center justify-center gap-3 rounded-md border border-dashed border-white/15 bg-[#0A0A0E] px-6 py-10 text-zinc-400 hover:border-white/30 hover:text-white">
-              {form.audio_filename ? (
+              {file ? (
                 <>
                   <FileAudio2 className="h-5 w-5 text-blue-400" />
-                  <span className="font-mono-data text-sm">{form.audio_filename} · {(form.audio_size_bytes/1024/1024).toFixed(2)} MB</span>
+                  <span className="font-mono-data text-sm">{file.name} · {(file.size/1024/1024).toFixed(2)} MB</span>
                 </>
               ) : (
                 <>
@@ -115,7 +130,20 @@ export default function NewScan() {
                 className="hidden"
               />
             </label>
-            <p className="mt-2 text-xs text-zinc-500">In MVP we analyze metadata + filename. Stem-level fingerprinting available on Producer Pro.</p>
+            <div className="mt-4 flex items-center gap-3">
+              <div className="h-px flex-1 bg-white/10" />
+              <span className="text-[10px] uppercase tracking-widest text-zinc-500 font-mono-data">or</span>
+              <div className="h-px flex-1 bg-white/10" />
+            </div>
+            <Label className="mt-4 block text-zinc-300">Paste direct audio URL</Label>
+            <Input
+              data-testid="scan-audio-url-input"
+              value={form.audio_url}
+              onChange={(e) => setForm({ ...form, audio_url: e.target.value })}
+              className="mt-2 border-white/10 bg-[#0A0A0E] text-white font-mono-data text-sm"
+              placeholder="https://... direct .mp3/.wav link"
+            />
+            <p className="mt-2 text-xs text-zinc-500">Real fingerprinting via ACRCloud — matches against 90M+ licensed tracks with ISRC codes.</p>
           </div>
         </div>
 

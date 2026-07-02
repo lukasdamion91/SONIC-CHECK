@@ -97,6 +97,57 @@ export default function ScanResult() {
           <p className="mt-6 text-xs text-zinc-500 leading-relaxed">{result.regional_notes}</p>
         </div>
 
+        {/* ACRCloud fingerprint results */}
+        {result.acr && (
+          <div className="lg:col-span-12 rounded-md border border-white/10 bg-[#121216] p-6" data-testid="scan-acr-panel">
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <div className="text-[10px] uppercase tracking-widest text-zinc-500 font-mono-data">Fingerprint engine · ACRCloud</div>
+                <h3 className="font-display text-2xl text-white mt-1">
+                  {result.acr.match_count > 0
+                    ? `${result.acr.match_count} commercial match${result.acr.match_count === 1 ? "" : "es"} found`
+                    : "No commercial matches"}
+                </h3>
+              </div>
+              <div className={`rounded-full border px-3 py-1 text-xs font-mono-data uppercase tracking-widest ${
+                result.acr.status_code === 0 ? "border-red-400/40 bg-red-400/10 text-red-300" :
+                result.acr.status_code === 1001 ? "border-emerald-400/40 bg-emerald-400/10 text-emerald-300" :
+                "border-zinc-400/40 bg-zinc-400/10 text-zinc-300"
+              }`}>
+                {result.acr.status_msg}
+              </div>
+            </div>
+            {result.acr.matches?.length > 0 ? (
+              <div className="grid gap-3">
+                {result.acr.matches.map((t, i) => (
+                  <div key={i} data-testid="scan-acr-match" className="rounded-md border border-red-400/30 bg-red-400/5 p-4">
+                    <div className="grid gap-2 sm:grid-cols-12 items-center">
+                      <div className="sm:col-span-5">
+                        <div className="font-display text-lg text-white">{t.title}</div>
+                        <div className="text-xs text-zinc-400 font-mono-data uppercase tracking-widest">{t.artist} · {t.album || "—"}</div>
+                      </div>
+                      <div className="sm:col-span-4 text-xs text-zinc-500 font-mono-data">
+                        <div>ISRC: <span className="text-zinc-300">{t.isrc || "n/a"}</span></div>
+                        <div>Label: <span className="text-zinc-300">{t.label || "n/a"}</span></div>
+                      </div>
+                      <div className="sm:col-span-3 text-right">
+                        <div className="text-[10px] uppercase tracking-widest text-zinc-500 font-mono-data">Match score</div>
+                        <div className="font-mono-data text-2xl text-white">{t.confidence}%</div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-zinc-500">
+                {result.acr.status_code === 1001
+                  ? "No matches in the licensed catalog. This is expected for unreleased / draft tracks. Lyric & melody heuristics below still apply."
+                  : result.acr.status_msg}
+              </p>
+            )}
+          </div>
+        )}
+
         {/* Waveform */}
         {result.scan_modes?.audio && (
           <div className="lg:col-span-12 rounded-md border border-white/10 bg-[#121216] p-6">
