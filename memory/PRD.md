@@ -59,13 +59,21 @@
 - ✅ .edu student eligibility: `student_eligible` on register; Student plan checkout gated (403 without .edu)
 - ✅ E2E tested (iteration_5 — 19/19 backend, 100% frontend). Regression suite: /app/backend/tests/test_soniccheck.py
 
+## Iteration 6 (Jun 2026) — PDF Originality Report Export
+- ✅ GET /api/scans/{id}/report — generates branded PDF via reportlab (`/app/backend/report.py`)
+- ✅ Report contents: track/artist/scan ID, overall score + verdict, lyric/melody similarity vs regional limits, jurisdiction & doctrine assessment, fingerprint matches, AI lyric analysis + originality score, reference-match table, top-match snippet evidence, generation timestamp, SHA-256 integrity hash, legal disclaimer
+- ✅ Gated to paid plans (402 for free tier, admin exempt) — matches "PDF reports" Artist Pro feature copy
+- ✅ Frontend: "PDF report" button on ScanResult (data-testid='scan-download-report-btn') with blob download + upgrade toast on 402
+- ✅ Fixed corrupted NewScan.jsx (duplicated trailing JSX broke build) + updated fingerprint copy to AcoustID/MusicBrainz
+- ✅ Self-tested: curl (PDF headers/content via pypdf, 402 gate) + Playwright (button renders, download triggers, toast shows)
+
 ## Test Credentials
 See `/app/memory/test_credentials.md`. Admin: `admin@soniccheck.io / Admin@Sonic2026`.
 
 ## Backlog (P0 / P1 / P2)
 
 ### P0 (next session)
-- PDF report export with signed timestamps for legal admissibility
+- (none — PDF report export shipped in iteration 6)
 
 ### P1
 - Gmail SMTP email delivery (currently console-logged; needs user's Gmail app password)

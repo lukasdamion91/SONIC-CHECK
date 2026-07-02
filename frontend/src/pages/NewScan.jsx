@@ -143,7 +143,7 @@ export default function NewScan() {
               className="mt-2 border-white/10 bg-[#1C1C22] text-[#F0E9D6] font-mono-data text-sm"
               placeholder="https://... direct .mp3/.wav link"
             />
-            <p className="mt-2 text-xs text-[#F0E9D6]/50">Real fingerprinting via ACRCloud — matches against 90M+ licensed tracks with ISRC codes.</p>
+            <p className="mt-2 text-xs text-[#F0E9D6]/50">Real fingerprinting via AcoustID + MusicBrainz — matched against the open music catalog, with ACRCloud as fallback.</p>
           </div>
         </div>
 
@@ -193,10 +193,6 @@ export default function NewScan() {
           </div>
         </aside>
       </form>
-    </div>
-  );
-}
-    </form>
     </div>
   );
 }

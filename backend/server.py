@@ -30,6 +30,7 @@ from acr import identify_bytes as acr_identify_bytes, parse_tracks as acr_parse_
 import fingerprint as fp_engine
 import lyrics_free
 import semantic
+import report as report_pdf
 import asyncio
 
 # ----------------------------------------------------------------------------
@@ -575,6 +576,29 @@ async def get_scan(scan_id: str, user: dict = Depends(get_current_user)):
         raise HTTPException(status_code=404, detail="Scan not found")
     doc["id"] = str(doc.pop("_id"))
     return doc
+
+
+@api.get("/scans/{scan_id}/report")
+async def download_report(scan_id: str, user: dict = Depends(get_current_user)):
+    if user.get("plan", "free") == "free" and user.get("role") != "admin":
+        raise HTTPException(status_code=402, detail="PDF reports are a Pro feature — upgrade to Artist Pro, Producer Pro or Student")
+    try:
+        doc = await db.scans.find_one({"_id": ObjectId(scan_id), "user_id": str(user["_id"])})
+    except Exception:
+        raise HTTPException(status_code=404, detail="Scan not found")
+    if not doc:
+        raise HTTPException(status_code=404, detail="Scan not found")
+    doc["id"] = str(doc.pop("_id"))
+    pdf_bytes, integrity_hash = await asyncio.to_thread(report_pdf.build_pdf, doc, user)
+    safe_title = "".join(c for c in (doc.get("title") or "scan") if c.isalnum() or c in " -_").strip().replace(" ", "_")[:40]
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="soniccheck_report_{safe_title}.pdf"',
+            "X-Integrity-Hash": integrity_hash,
+        },
+    )
 
 
 @api.delete("/scans/{scan_id}")

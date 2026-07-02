@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Waveform from "@/components/Waveform";
 import { SCAN } from "@/constants/testIds";
-import { AlertTriangle, Check, AlertCircle, Trash2, ArrowLeft, Scale } from "lucide-react";
+import { AlertTriangle, Check, AlertCircle, Trash2, ArrowLeft, Scale, FileDown, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 const verdictMap = {
@@ -19,6 +19,7 @@ export default function ScanResult() {
   const navigate = useNavigate();
   const [scan, setScan] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
     api.get(`/scans/${id}`).then((r) => setScan(r.data)).catch((e) => {
@@ -26,6 +27,33 @@ export default function ScanResult() {
       navigate("/dashboard");
     }).finally(() => setLoading(false));
   }, [id, navigate]);
+
+  const onDownloadReport = async () => {
+    setDownloading(true);
+    try {
+      const res = await api.get(`/scans/${id}/report`, { responseType: "blob" });
+      const url = URL.createObjectURL(res.data);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `soniccheck_report_${(scan?.title || "scan").replace(/[^a-zA-Z0-9 _-]/g, "").replace(/ /g, "_")}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      toast.success("PDF report downloaded");
+    } catch (e) {
+      if (e.response?.status === 402) {
+        toast.error("PDF reports are a Pro feature — upgrade to unlock", {
+          action: { label: "See plans", onClick: () => navigate("/pricing") },
+        });
+      } else {
+        const detail = e.response?.data instanceof Blob ? "Could not generate report" : formatApiErrorDetail(e.response?.data?.detail);
+        toast.error(detail || "Could not generate report");
+      }
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   const onDelete = async () => {
     if (!window.confirm("Delete this scan permanently?")) return;
@@ -52,14 +80,26 @@ export default function ScanResult() {
         <Link to="/dashboard" className="inline-flex items-center gap-2 text-sm text-[#F0E9D6]/65 hover:text-[#F0E9D6]">
           <ArrowLeft className="h-4 w-4" /> Back to dashboard
         </Link>
-        <Button
-          data-testid={SCAN.deleteBtn}
-          onClick={onDelete}
-          variant="ghost"
-          className="text-[#D4FF00] hover:bg-red-500/10 hover:text-[#D4FF00]/90"
-        >
-          <Trash2 className="mr-2 h-4 w-4" /> Delete scan
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            data-testid="scan-download-report-btn"
+            onClick={onDownloadReport}
+            disabled={downloading}
+            variant="outline"
+            className="border-[#0047FF]/40 bg-transparent text-[#F0E9D6] hover:bg-[#0047FF]/15 hover:text-[#F0E9D6]"
+          >
+            {downloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileDown className="mr-2 h-4 w-4" />}
+            {downloading ? "Generating…" : "PDF report"}
+          </Button>
+          <Button
+            data-testid={SCAN.deleteBtn}
+            onClick={onDelete}
+            variant="ghost"
+            className="text-[#D4FF00] hover:bg-red-500/10 hover:text-[#D4FF00]/90"
+          >
+            <Trash2 className="mr-2 h-4 w-4" /> Delete scan
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-12">
