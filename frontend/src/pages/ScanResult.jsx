@@ -43,6 +43,8 @@ export default function ScanResult() {
 
   const result = scan.result || {};
   const V = verdictMap[result.verdict] || verdictMap.REVIEW;
+  const fpBlock = result.fingerprint;
+  const fpEngine = fpBlock?.engine || "";
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-12" data-testid={SCAN.resultCard}>
@@ -97,38 +99,38 @@ export default function ScanResult() {
           <p className="mt-6 text-xs text-[#F0E9D6]/50 leading-relaxed">{result.regional_notes}</p>
         </div>
 
-        {/* ACRCloud fingerprint results */}
-        {result.acr && (
-          <div className="lg:col-span-12 rounded-md border border-white/10 bg-[#24242C] p-6" data-testid="scan-acr-panel">
+        {/* Fingerprint engine results */}
+        {fpBlock && (
+          <div className="lg:col-span-12 rounded-md border border-white/10 bg-[#24242C] p-6" data-testid="scan-fingerprint-panel">
             <div className="mb-4 flex items-center justify-between">
               <div>
-                <div className="text-[10px] uppercase tracking-widest text-[#F0E9D6]/50 font-mono-data">Fingerprint engine · ACRCloud</div>
+                <div className="text-[10px] uppercase tracking-widest text-[#F0E9D6]/50 font-mono-data">Fingerprint engine · {fpEngine}</div>
                 <h3 className="font-display text-2xl text-[#F0E9D6] mt-1">
-                  {result.acr.match_count > 0
-                    ? `${result.acr.match_count} commercial match${result.acr.match_count === 1 ? "" : "es"} found`
+                  {fpBlock.match_count > 0
+                    ? `${fpBlock.match_count} commercial match${fpBlock.match_count === 1 ? "" : "es"} found`
                     : "No commercial matches"}
                 </h3>
               </div>
               <div className={`rounded-full border px-3 py-1 text-xs font-mono-data uppercase tracking-widest ${
-                result.acr.status_code === 0 ? "border-red-400/40 bg-red-400/10 text-[#D4FF00]" :
-                result.acr.status_code === 1001 ? "border-emerald-400/40 bg-emerald-400/10 text-[#0047FF]" :
+                fpBlock.status_code === 0 ? "border-red-400/40 bg-red-400/10 text-[#D4FF00]" :
+                fpBlock.status_code === 1001 ? "border-emerald-400/40 bg-emerald-400/10 text-[#0047FF]" :
                 "border-zinc-400/40 bg-zinc-400/10 text-[#F0E9D6]/85"
               }`}>
-                {result.acr.status_msg}
+                {fpBlock.status_msg}
               </div>
             </div>
-            {result.acr.matches?.length > 0 ? (
+            {fpBlock.matches?.length > 0 ? (
               <div className="grid gap-3">
-                {result.acr.matches.map((t, i) => (
-                  <div key={t.acrid || `acr-${i}-${t.title}`} data-testid="scan-acr-match" className="rounded-md border border-red-400/30 bg-red-400/5 p-4">
+                {fpBlock.matches.map((t, i) => (
+                  <div key={t.mbid || t.acoustid || t.acrid || `fp-${i}-${t.title}`} data-testid="scan-fingerprint-match" className="rounded-md border border-red-400/30 bg-red-400/5 p-4">
                     <div className="grid gap-2 sm:grid-cols-12 items-center">
                       <div className="sm:col-span-5">
                         <div className="font-display text-lg text-[#F0E9D6]">{t.title}</div>
                         <div className="text-xs text-[#F0E9D6]/65 font-mono-data uppercase tracking-widest">{t.artist} · {t.album || "—"}</div>
                       </div>
                       <div className="sm:col-span-4 text-xs text-[#F0E9D6]/50 font-mono-data">
-                        <div>ISRC: <span className="text-[#F0E9D6]/85">{t.isrc || "n/a"}</span></div>
-                        <div>Label: <span className="text-[#F0E9D6]/85">{t.label || "n/a"}</span></div>
+                        {t.isrc ? <div>ISRC: <span className="text-[#F0E9D6]/85">{t.isrc}</span></div> : t.mbid ? <div>MusicBrainz: <span className="text-[#F0E9D6]/85">{t.mbid.slice(0, 13)}…</span></div> : null}
+                        <div>Source: <span className="text-[#F0E9D6]/85">{t.source || t.label || "n/a"}</span></div>
                       </div>
                       <div className="sm:col-span-3 text-right">
                         <div className="text-[10px] uppercase tracking-widest text-[#F0E9D6]/50 font-mono-data">Match score</div>
@@ -140,10 +142,38 @@ export default function ScanResult() {
               </div>
             ) : (
               <p className="text-sm text-[#F0E9D6]/50">
-                {result.acr.status_code === 1001
-                  ? "No matches in the licensed catalog. This is expected for unreleased / draft tracks. Lyric & melody heuristics below still apply."
-                  : result.acr.status_msg}
+                {fpBlock.status_code === 1001
+                  ? "No matches in the open AcoustID/MusicBrainz catalog. This is expected for unreleased / draft tracks."
+                  : fpBlock.status_msg}
               </p>
+            )}
+          </div>
+        )}
+
+        {/* AI lyric analysis */}
+        {result.lyric_analysis && (
+          <div className="lg:col-span-12 rounded-md border border-white/10 bg-[#24242C] p-6" data-testid="scan-lyric-analysis-panel">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <div className="text-[10px] uppercase tracking-widest text-[#F0E9D6]/50 font-mono-data">Lyric engine · {result.lyric_analysis.engine}</div>
+                <h3 className="font-display text-2xl text-[#F0E9D6] mt-1">AI semantic analysis</h3>
+              </div>
+              <div className="flex items-center gap-4">
+                {result.lyric_analysis.candidates_checked > 0 && (
+                  <span className="text-xs font-mono-data text-[#F0E9D6]/50 uppercase tracking-widest">{result.lyric_analysis.candidates_checked} Genius candidate{result.lyric_analysis.candidates_checked === 1 ? "" : "s"} checked</span>
+                )}
+                {result.lyric_analysis.originality_score != null && (
+                  <div className="text-right">
+                    <div className="text-[10px] uppercase tracking-widest text-[#F0E9D6]/50 font-mono-data">Originality</div>
+                    <div data-testid="scan-originality-score" className="font-mono-data text-2xl text-[#D4FF00]">{result.lyric_analysis.originality_score}%</div>
+                  </div>
+                )}
+              </div>
+            </div>
+            {result.lyric_analysis.ok ? (
+              <p data-testid="scan-lyric-summary" className="text-sm leading-relaxed text-[#F0E9D6]/85">{result.lyric_analysis.summary}</p>
+            ) : (
+              <p className="text-sm text-[#F0E9D6]/50">AI lyric analysis unavailable: {result.lyric_analysis.error || "unknown error"}</p>
             )}
           </div>
         )}

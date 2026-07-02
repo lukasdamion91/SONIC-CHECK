@@ -1,0 +1,82 @@
+{
+  "summary": "Iteration 5 end-to-end verification of the migration from ACRCloud to the free API stack (AcoustID + Chromaprint + MusicBrainz + Genius + Emergent LLM gpt-5.4) plus console-logged email verification and .edu student-plan gating. 19/19 backend pytest tests pass; frontend flows all pass after fixing a critical `fpBlock is not defined` ReferenceError that crashed every scan-detail view.",
+  "tested_scope": ["backend", "frontend", "auth", "email_verification", "lyric_engine", "audio_fingerprint", "quota", "student_gating", "regression", "ui_integration"],
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "ScanResult.jsx",
+        "issue": "ReferenceError: `fpBlock is not defined` (and `fpEngine`) rendered every scan detail page as a red React error overlay. Root cause: derived variables were referenced (lines 101-117 etc.) but never declared. Fix applied: added `const fpBlock = result.fingerprint; const fpEngine = fpBlock?.engine || '';` right after the existing `result` / `V` derivations.",
+        "selector": "/scan/:id",
+        "priority": "CRITICAL",
+        "status": "FIXED_BY_TESTING_AGENT"
+      }
+    ],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "backend_tests_run": [
+    "TestHealth::test_root PASS",
+    "TestHealth::test_regions PASS",
+    "TestHealth::test_plans PASS",
+    "TestAuthVerification::test_register_returns_verification_fields PASS (email_verified:false, student_eligible:false for non-edu)",
+    "TestAuthVerification::test_edu_register_student_eligible PASS (student_eligible:true for .edu)",
+    "TestAuthVerification::test_verification_link_logged_and_verify PASS (grep from backend log, token verified, /me returns email_verified:true)",
+    "TestAuthVerification::test_verify_email_invalid_token PASS (400)",
+    "TestAuthVerification::test_resend_for_verified_user_returns_already_verified PASS",
+    "TestAuthVerification::test_resend_for_unverified_user_ok PASS (new link logged)",
+    "TestAdminRegression::test_admin_login_and_me PASS",
+    "TestAdminRegression::test_list_scans PASS",
+    "TestAdminRegression::test_patch_region PASS",
+    "TestLyricScan::test_lyric_scan_famous_lyrics PASS (Vanilla Ice Ice Ice Baby -> verdict VIOLATION, top lyric similarity ~99%, engine 'Genius + AI Semantic', summary populated)",
+    "TestLyricScan::test_lyric_scan_original_lyrics PASS (unique lyrics -> verdict CLEAR/REVIEW, low similarity)",
+    "TestAudioScan::test_audio_scan_synthetic_tone PASS (15s 440Hz sine, fingerprint block present, engine 'AcoustID + MusicBrainz', 60 waveform bars, scan_modes.audio:true)",
+    "TestQuota::test_free_tier_quota_402_after_3 PASS",
+    "TestStudentGate::test_non_edu_blocked PASS (403)",
+    "TestStudentGate::test_edu_allowed PASS (Stripe checkout URL returned)",
+    "TestScanCRUD::test_get_and_delete PASS"
+  ],
+  "frontend_tests_run": [
+    "Admin login -> dashboard loads, NO verify banner (admin.email_verified=true)",
+    "Fresh registration -> dashboard shows data-testid='dashboard-verify-banner' + resend button; clicking resend shows 'Verification link sent' toast",
+    "Lyric scan with Vanilla Ice lyrics -> after ~40s LLM call, navigates to /scan/<hex>; lyric analysis panel + summary ('almost exact reproduction of the iconic opening lines of Vanilla Ice\\'s Ice Ice Baby...') + originality=1% + verdict=VIOLATION + 3 match rows (Ice Ice Baby, Vanilla Ice, 1987, 99.8% lyric similarity)",
+    "/verify-email?token=<valid> -> shows 'Email verified' + <email> is now verified.",
+    "/verify-email?token=bogus -> shows 'Verification failed' + 'Invalid or expired verification link'",
+    "Existing scan detail (audio scan from prior iterations) now renders without runtime error after fpBlock fix"
+  ],
+  "critical_code_review_comments": [
+    "CRITICAL BUG FIXED: ScanResult.jsx referenced undeclared `fpBlock` and `fpEngine` — page threw ReferenceError before mount. Trivial derived-variable fix applied so the audio fingerprint panel renders correctly when result.fingerprint is present.",
+    "NewScan.jsx line 146: user-facing helper text still says 'Real fingerprinting via ACRCloud — matches against 90M+ licensed tracks with ISRC codes.' — after the migration this is misleading; primary engine is now AcoustID/MusicBrainz with ACRCloud only as fallback. Recommend rewording.",
+    "Fingerprint panel status_code color logic in ScanResult.jsx swaps CLEAR/VIOLATION colors: status_code === 0 (a MATCH was found) uses the red/lime 'violation' palette while 1001 (no match) uses the blue 'clean' palette — that matches business intent but is a bit counter-intuitive; comment recommended.",
+    "server.py `_analyze_audio` returns `engine = 'AcoustID + MusicBrainz'` even when AcoustID returned code 2004 'Unable to generate fingerprint' — consider surfacing 'Fingerprinting unavailable' when fpcalc fails.",
+    "server.py: `verify_email` accepts a raw dict (no Pydantic model) — works, but for consistency & OpenAPI docs a `VerifyEmailIn` model would be cleaner.",
+    "lyrics_free.py fetch_lyrics: Genius pages return 403 (Cloudflare) as documented — this is handled (candidate falls back to metadata-only), no fix required. Confirmed in log output during runs."
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_soniccheck.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "updated_files": [
+    "/app/frontend/src/pages/ScanResult.jsx (added missing fpBlock/fpEngine derivations)",
+    "/app/backend/tests/test_soniccheck.py (new pytest suite)"
+  ],
+  "action_items": [
+    "Update NewScan.jsx helper copy near audio uploader — remove 'Real fingerprinting via ACRCloud' claim and mention AcoustID/MusicBrainz.",
+    "Consider adding a Pydantic model for /auth/verify-email payload for OpenAPI clarity."
+  ],
+  "success_rate": {"backend": "100% (19/19)", "frontend": "100% (all flows passed after fpBlock fix)"},
+  "test_credentials": "admin@soniccheck.io / Admin@Sonic2026 (verified, producer_pro). edutest1@stanford.edu / test1234 (.edu, quota exhausted). Fresh test users are generated per session by the pytest suite.",
+  "seed_data_creation": "Pytest creates transient TEST_ prefixed users (test_iter5_*@example.com and test_iter5_*@stanford.edu) and TEST_ prefixed scans; scan docs are deleted at the end of each test. User docs are left in MongoDB (no cleanup fixture) — cheap and safe since emails are unique per run.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Backend regression suite lives at /app/backend/tests/test_soniccheck.py — re-run with `pytest -v tests/test_soniccheck.py`. Session-level admin_session sets Content-Type: application/json globally; when hitting /scans/upload use `requests.post` with a temporary header dict that drops Content-Type so multipart works (see TestLyricScan / TestAudioScan). Genius page scrape 403 is EXPECTED (candidate lyrics field ends up None, LLM falls back to its own knowledge). LLM lyric scans take 15-45s; keep timeouts at 120s.",
+  "rca of the issue": {
+    "issue": "Runtime error `fpBlock is not defined` on /scan/:id",
+    "reproduction": "1) Log in as any user with at least one scan (or run a new scan). 2) Click any scan card / open /scan/<id>. 3) React renders <ScanResult/>, evaluates `{fpBlock && (...` on line 101, throws ReferenceError, entire route crashes to red error overlay.",
+    "root_cause": "During a refactor of ScanResult.jsx the fingerprint-panel JSX still references `fpBlock` and `fpEngine`, but the two lines that used to define them (something like `const fpBlock = result.fingerprint; const fpEngine = fpBlock?.engine ...`) were dropped and never re-added.",
+    "mitigation": "Added the two derivations immediately after `const V = verdictMap[...]` at the top of the ScanResult render body. Fix verified: after re-render, both the audio scan (with fingerprint) and lyric-only scan (fingerprint hidden by conditional) render cleanly and page-error count is zero."
+  }
+}

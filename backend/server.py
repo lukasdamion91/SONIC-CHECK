@@ -9,8 +9,6 @@ import uuid
 import bcrypt
 import jwt
 import logging
-import random
-import hashlib
 from datetime import datetime, timezone, timedelta
 from typing import Optional, List, Dict, Any
 
@@ -28,7 +26,11 @@ from emergentintegrations.payments.stripe.checkout import (
     CheckoutSessionRequest,
 )
 
-from acr import identify_bytes as acr_identify_bytes, identify_url as acr_identify_url, parse_tracks as acr_parse_tracks, error_message as acr_error_message, is_configured as acr_configured
+from acr import identify_bytes as acr_identify_bytes, parse_tracks as acr_parse_tracks, is_configured as acr_configured
+import fingerprint as fp_engine
+import lyrics_free
+import semantic
+import asyncio
 
 # ----------------------------------------------------------------------------
 # Config
@@ -124,6 +126,8 @@ def serialize_user(user: dict) -> dict:
         "plan": user.get("plan", "free"),
         "scans_used": user.get("scans_used", 0),
         "region": user.get("region", "US"),
+        "email_verified": user.get("email_verified", False),
+        "student_eligible": user.get("student_eligible", False),
         "created_at": user.get("created_at").isoformat() if isinstance(user.get("created_at"), datetime) else user.get("created_at"),
     }
 
@@ -181,85 +185,137 @@ class CheckoutCreate(BaseModel):
 
 
 # ----------------------------------------------------------------------------
-# Mock plagiarism engine
+# Real plagiarism engine — AcoustID/MusicBrainz + Genius + AI semantic matching
 # ----------------------------------------------------------------------------
-# A small seeded reference catalog so results feel plausible & deterministic
-REFERENCE_CATALOG = [
-    {"id": "ref-001", "title": "Blurred Lines", "artist": "Robin Thicke", "year": 2013, "genre": "Pop", "snippet": "I know you want it, I know you want it"},
-    {"id": "ref-002", "title": "Stay With Me", "artist": "Sam Smith", "year": 2014, "genre": "Soul", "snippet": "Won't you stay with me, 'cause you're all I need"},
-    {"id": "ref-003", "title": "Photograph", "artist": "Ed Sheeran", "year": 2014, "genre": "Pop", "snippet": "Loving can hurt sometimes, but it's the only thing that I know"},
-    {"id": "ref-004", "title": "Dark Horse", "artist": "Katy Perry", "year": 2013, "genre": "Pop", "snippet": "Are you ready for, ready for, a perfect storm"},
-    {"id": "ref-005", "title": "Ice Ice Baby", "artist": "Vanilla Ice", "year": 1990, "genre": "Hip-Hop", "snippet": "Stop, collaborate and listen, Ice is back with a brand new invention"},
-    {"id": "ref-006", "title": "Bitter Sweet Symphony", "artist": "The Verve", "year": 1997, "genre": "Rock", "snippet": "'Cause it's a bittersweet symphony, this life"},
-    {"id": "ref-007", "title": "My Sweet Lord", "artist": "George Harrison", "year": 1970, "genre": "Rock", "snippet": "My sweet lord, hmm, my lord"},
-    {"id": "ref-008", "title": "Levitating", "artist": "Dua Lipa", "year": 2020, "genre": "Pop", "snippet": "If you wanna run away with me, I know a galaxy"},
-]
+async def _analyze_audio(audio_bytes: bytes, audio_filename: str) -> tuple[dict, list, list]:
+    """Returns (fingerprint_block, waveform, fingerprint_matches)."""
+    fp_result, waveform = await asyncio.gather(
+        fp_engine.identify_bytes(audio_bytes, audio_filename),
+        fp_engine.compute_waveform(audio_bytes, "." + (audio_filename.rsplit(".", 1)[-1] if "." in audio_filename else "mp3")),
+    )
+    engine = "AcoustID + MusicBrainz"
+    tracks = fp_result["matches"]
+    code = fp_result["status"]["code"]
+    msg = fp_result["status"]["msg"]
 
+    if not tracks and acr_configured() and code != 0:
+        acr_resp = await acr_identify_bytes(audio_bytes, audio_filename, "audio/mpeg")
+        acr_code = (acr_resp.get("status") or {}).get("code", 9999)
+        if acr_code == 0:
+            acr_tracks = acr_parse_tracks(acr_resp)
+            if acr_tracks:
+                engine = "ACRCloud (fallback)"
+                code, msg = 0, "Success"
+                tracks = [{
+                    "title": t.get("title", "Unknown"),
+                    "artist": t.get("artist", "Unknown"),
+                    "album": t.get("album", ""),
+                    "mbid": "",
+                    "acoustid": t.get("acrid", ""),
+                    "release_date": t.get("release_date", ""),
+                    "confidence": round(min(99.0, float(t.get("confidence") or 90)), 1),
+                    "duration_ms": t.get("duration_ms", 0),
+                    "source": "ACRCloud",
+                    "isrc": t.get("isrc", ""),
+                    "label": t.get("label", ""),
+                } for t in acr_tracks]
 
-def deterministic_score(seed_text: str, mod: int = 100) -> int:
-    h = hashlib.sha256(seed_text.encode("utf-8")).hexdigest()
-    return int(h, 16) % mod
+    fingerprint_block = {
+        "engine": engine,
+        "status_code": code,
+        "status_msg": msg,
+        "matches": tracks,
+        "match_count": len(tracks),
+    }
 
-
-def run_mock_analysis(title: str, lyrics: str, audio_filename: Optional[str], region: str) -> Dict[str, Any]:
-    seed = f"{title}|{lyrics[:200]}|{audio_filename or ''}"
-    rng = random.Random(deterministic_score(seed, 10_000_000))
-
-    has_audio = bool(audio_filename)
-    has_lyrics = bool(lyrics and lyrics.strip())
-
-    # Generate 3-5 matches
-    n_matches = rng.randint(3, 5)
-    refs = rng.sample(REFERENCE_CATALOG, n_matches)
-    matches = []
-    for ref in refs:
-        lyric_sim = rng.uniform(2, 30) if has_lyrics else 0
-        melody_sim = rng.uniform(3, 35) if has_audio else 0
-        chord_sim = rng.uniform(5, 45) if has_audio else 0
-        timestamp_start = rng.randint(0, 120)
-        matches.append({
-            "reference_id": ref["id"],
-            "reference_title": ref["title"],
-            "reference_artist": ref["artist"],
-            "reference_year": ref["year"],
-            "genre": ref["genre"],
-            "lyric_similarity": round(lyric_sim, 1),
-            "melodic_similarity": round(melody_sim, 1),
-            "chord_progression_similarity": round(chord_sim, 1),
-            "matched_snippet": ref["snippet"],
-            "your_snippet": (lyrics[:80] + "...") if has_lyrics and len(lyrics) > 80 else (lyrics or "(audio-only segment)"),
-            "timestamp_start_sec": timestamp_start,
-            "timestamp_end_sec": timestamp_start + rng.randint(4, 12),
-            "confidence": round(rng.uniform(0.55, 0.97), 2),
+    fp_matches = []
+    for t in tracks:
+        conf = float(t.get("confidence") or 0)
+        fp_matches.append({
+            "reference_id": t.get("mbid") or t.get("acoustid") or f"fp-{len(fp_matches)}",
+            "reference_title": t.get("title", "Unknown"),
+            "reference_artist": t.get("artist", "Unknown"),
+            "reference_year": (t.get("release_date") or "").split("-")[0] or "—",
+            "genre": "Commercial catalog",
+            "lyric_similarity": 0,
+            "melodic_similarity": round(min(99.0, conf), 1),
+            "chord_progression_similarity": round(min(95.0, conf * 0.92), 1),
+            "matched_snippet": f"Fingerprint match · {t.get('source', 'AcoustID')}" + (f" · MBID {t['mbid'][:8]}…" if t.get("mbid") else ""),
+            "your_snippet": "(audio fingerprint match — your recording matches this released track)",
+            "timestamp_start_sec": 0,
+            "timestamp_end_sec": int((t.get("duration_ms") or 10000) / 1000),
+            "confidence": round(conf / 100, 2),
+            "is_fingerprint_match": True,
         })
+    return fingerprint_block, waveform, fp_matches
 
-    # Sort by combined similarity
-    matches.sort(key=lambda m: m["lyric_similarity"] + m["melodic_similarity"] + m["chord_progression_similarity"], reverse=True)
 
-    # Overall scores
-    overall = 0.0
-    if has_audio and has_lyrics:
-        overall = round(max(m["lyric_similarity"] for m in matches) * 0.4 + max(m["melodic_similarity"] for m in matches) * 0.35 + max(m["chord_progression_similarity"] for m in matches) * 0.25, 1)
-    elif has_audio:
-        overall = round(max(m["melodic_similarity"] for m in matches) * 0.55 + max(m["chord_progression_similarity"] for m in matches) * 0.45, 1)
-    else:
-        overall = round(max(m["lyric_similarity"] for m in matches), 1)
+async def _analyze_lyrics(lyrics: str, title: str) -> tuple[dict, list]:
+    """Returns (lyric_analysis_block, lyric_matches)."""
+    candidates = await lyrics_free.find_candidates(lyrics, title)
+    llm = await semantic.analyze_lyrics(lyrics, candidates, title)
+    block = {
+        "engine": "Genius + AI Semantic" if candidates else "AI Semantic",
+        "candidates_checked": len(candidates),
+        "ok": llm.get("ok", False),
+        "summary": llm.get("summary", ""),
+        "originality_score": llm.get("originality_score"),
+        "error": llm.get("error"),
+    }
+    matches = []
+    for i, m in enumerate(llm.get("matches", [])):
+        matches.append({
+            "reference_id": f"lyric-{i}",
+            "reference_title": m.get("title", "Unknown"),
+            "reference_artist": m.get("artist", "Unknown"),
+            "reference_year": str(m.get("year") or "—"),
+            "genre": "Lyric reference",
+            "lyric_similarity": m.get("lyric_similarity", 0),
+            "melodic_similarity": 0,
+            "chord_progression_similarity": 0,
+            "matched_snippet": m.get("matched_snippet", ""),
+            "your_snippet": m.get("your_snippet", ""),
+            "reasoning": m.get("reasoning", ""),
+            "timestamp_start_sec": 0,
+            "timestamp_end_sec": 0,
+            "confidence": m.get("confidence", 0.5),
+        })
+    return block, matches
 
-    # Waveform data (60 segments)
-    waveform = [round(rng.uniform(0.2, 1.0), 2) for _ in range(60)]
-    # Flag 3-8 segments as suspicious
-    n_flags = rng.randint(3, 8) if has_audio else 0
-    flagged_segments = sorted(rng.sample(range(60), n_flags))
 
-    # Region verdict
+async def run_analysis(title: str, lyrics: str, region: str, audio_bytes: Optional[bytes] = None, audio_filename: Optional[str] = None) -> Dict[str, Any]:
+    has_audio = bool(audio_bytes)
+    has_lyrics = bool(lyrics and lyrics.strip())
     region_data = REGIONS.get(region, REGIONS["US"])
     lyric_threshold = region_data["lyric_threshold"]
     melody_threshold = region_data["melody_threshold"]
+
+    tasks = []
+    tasks.append(_analyze_audio(audio_bytes, audio_filename or "sample.mp3") if has_audio else None)
+    tasks.append(_analyze_lyrics(lyrics, title) if has_lyrics else None)
+    results = await asyncio.gather(*[t for t in tasks if t is not None])
+
+    fingerprint_block, waveform, matches, lyric_block = None, [], [], None
+    idx = 0
+    if has_audio:
+        fingerprint_block, waveform, fp_matches = results[idx]
+        matches.extend(fp_matches)
+        idx += 1
+    if has_lyrics:
+        lyric_block, lyric_matches = results[idx]
+        matches.extend(lyric_matches)
+
+    matches.sort(key=lambda m: max(m["lyric_similarity"], m["melodic_similarity"]), reverse=True)
+
     top_lyric = max((m["lyric_similarity"] for m in matches), default=0)
     top_melody = max((m["melodic_similarity"] for m in matches), default=0)
+    overall = round(max(top_lyric, top_melody), 1)
+
     lyric_verdict = "VIOLATION" if top_lyric > lyric_threshold else "WITHIN_LIMITS"
     melody_verdict = "VIOLATION" if top_melody > melody_threshold else "WITHIN_LIMITS"
     overall_verdict = "VIOLATION" if "VIOLATION" in (lyric_verdict, melody_verdict) else ("REVIEW" if overall > 8 else "CLEAR")
+
+    flagged_segments = list(range(len(waveform))) if (fingerprint_block and fingerprint_block["match_count"] > 0) else []
 
     return {
         "overall_score": overall,
@@ -278,12 +334,25 @@ def run_mock_analysis(title: str, lyrics: str, audio_filename: Optional[str], re
         "doctrine": region_data["doctrine"],
         "regional_notes": region_data["notes"],
         "scan_modes": {"audio": has_audio, "lyrics": has_lyrics},
+        "fingerprint": fingerprint_block,
+        "lyric_analysis": lyric_block,
     }
 
 
 # ----------------------------------------------------------------------------
 # Auth routes
 # ----------------------------------------------------------------------------
+def is_edu_email(email: str) -> bool:
+    domain = email.rsplit("@", 1)[-1]
+    return domain.endswith(".edu") or ".edu." in domain or domain.endswith(".ac.uk")
+
+
+def log_verification_link(email: str, token: str) -> None:
+    base = os.environ.get("FRONTEND_URL", "").rstrip("/")
+    link = f"{base}/verify-email?token={token}"
+    logger.info(f"[EMAIL VERIFICATION] To: {email} — Verify link: {link}")
+
+
 @api.post("/auth/register")
 async def register(payload: RegisterIn, response: Response):
     email = payload.email.lower().strip()
@@ -291,6 +360,7 @@ async def register(payload: RegisterIn, response: Response):
     if existing:
         raise HTTPException(status_code=400, detail="Email already registered")
     role = payload.role if payload.role in ("artist", "producer", "student") else "artist"
+    verify_token = uuid.uuid4().hex
     doc = {
         "email": email,
         "password_hash": hash_password(payload.password),
@@ -299,10 +369,14 @@ async def register(payload: RegisterIn, response: Response):
         "plan": "free",
         "scans_used": 0,
         "region": "US",
+        "email_verified": False,
+        "verify_token": verify_token,
+        "student_eligible": is_edu_email(email),
         "created_at": datetime.now(timezone.utc),
     }
     result = await db.users.insert_one(doc)
     doc["_id"] = result.inserted_id
+    log_verification_link(email, verify_token)
     access = create_access_token(str(result.inserted_id), email)
     refresh = create_refresh_token(str(result.inserted_id))
     set_auth_cookies(response, access, refresh)
@@ -332,6 +406,28 @@ async def me(user: dict = Depends(get_current_user)):
     return serialize_user(user)
 
 
+@api.post("/auth/verify-email")
+async def verify_email(payload: dict):
+    token = (payload.get("token") or "").strip()
+    if not token:
+        raise HTTPException(status_code=400, detail="Missing verification token")
+    user = await db.users.find_one({"verify_token": token})
+    if not user:
+        raise HTTPException(status_code=400, detail="Invalid or expired verification link")
+    await db.users.update_one({"_id": user["_id"]}, {"$set": {"email_verified": True}, "$unset": {"verify_token": ""}})
+    return {"ok": True, "email": user["email"]}
+
+
+@api.post("/auth/resend-verification")
+async def resend_verification(user: dict = Depends(get_current_user)):
+    if user.get("email_verified"):
+        return {"ok": True, "already_verified": True}
+    token = user.get("verify_token") or uuid.uuid4().hex
+    await db.users.update_one({"_id": user["_id"]}, {"$set": {"verify_token": token}})
+    log_verification_link(user["email"], token)
+    return {"ok": True, "message": "Verification link sent (check server console — free tier uses console delivery)"}
+
+
 @api.patch("/auth/region")
 async def update_region(payload: dict, user: dict = Depends(get_current_user)):
     region = payload.get("region", "US")
@@ -358,48 +454,6 @@ async def get_plans():
 # ----------------------------------------------------------------------------
 # Scans
 # ----------------------------------------------------------------------------
-def merge_acr_into_result(result: Dict[str, Any], acr_response: Dict[str, Any]) -> Dict[str, Any]:
-    """Merge ACRCloud fingerprint matches into the mock analysis result."""
-    status = (acr_response or {}).get("status") or {}
-    code = status.get("code", 9999)
-    acr_tracks = acr_parse_tracks(acr_response) if code == 0 else []
-
-    result["acr"] = {
-        "enabled": acr_configured(),
-        "status_code": code,
-        "status_msg": acr_error_message(code) if code != 0 else "Success",
-        "matches": acr_tracks,
-        "match_count": len(acr_tracks),
-    }
-
-    if acr_tracks:
-        # Real match found — flag as VIOLATION and inject as top match
-        top = acr_tracks[0]
-        real_match = {
-            "reference_id": top.get("acrid") or "acr-1",
-            "reference_title": top.get("title") or "Unknown",
-            "reference_artist": top.get("artist") or "Unknown",
-            "reference_year": (top.get("release_date") or "").split("-")[0] or "—",
-            "genre": "Commercial catalog",
-            "lyric_similarity": 0,
-            "melodic_similarity": round(min(99, (top.get("confidence") or 90)), 1),
-            "chord_progression_similarity": round(min(95, (top.get("confidence") or 85)), 1),
-            "matched_snippet": f"ISRC {top.get('isrc') or 'n/a'} · {top.get('label') or 'unknown label'}",
-            "your_snippet": "(fingerprint match from ACRCloud)",
-            "timestamp_start_sec": int((top.get("play_offset_ms") or 0) / 1000),
-            "timestamp_end_sec": int((top.get("play_offset_ms") or 0) / 1000) + 10,
-            "confidence": round((top.get("confidence") or 90) / 100, 2),
-            "is_fingerprint_match": True,
-        }
-        result["matches"] = [real_match] + result.get("matches", [])
-        result["top_melody_similarity"] = real_match["melodic_similarity"]
-        result["overall_score"] = max(result.get("overall_score", 0), real_match["melodic_similarity"])
-        result["melody_verdict"] = "VIOLATION"
-        result["verdict"] = "VIOLATION"
-
-    return result
-
-
 @api.post("/scans/upload")
 async def create_scan_upload(
     request: Request,
@@ -423,23 +477,21 @@ async def create_scan_upload(
     if not (lyrics and lyrics.strip()) and not file and not audio_url:
         raise HTTPException(status_code=400, detail="Provide lyrics, upload audio, or paste an audio URL")
 
+    audio_bytes = None
     audio_filename = None
     audio_size = 0
-    acr_response = None
 
     if file is not None:
-        data = await file.read()
+        audio_bytes = await file.read()
         audio_filename = file.filename
-        audio_size = len(data)
-        if data:
-            acr_response = await acr_identify_bytes(data, file.filename or "sample.mp3", file.content_type or "audio/mpeg")
+        audio_size = len(audio_bytes)
     elif audio_url:
-        audio_filename = audio_url.rsplit("/", 1)[-1].split("?")[0] or "url-audio"
-        acr_response = await acr_identify_url(audio_url)
+        audio_bytes, audio_filename, err = await fp_engine.download_audio(audio_url)
+        if audio_bytes is None:
+            raise HTTPException(status_code=400, detail=err or "Could not download audio from URL")
+        audio_size = len(audio_bytes)
 
-    result = run_mock_analysis(title, lyrics or "", audio_filename, region)
-    if acr_response is not None:
-        result = merge_acr_into_result(result, acr_response)
+    result = await run_analysis(title, lyrics or "", region, audio_bytes, audio_filename)
 
     scan_doc = {
         "user_id": str(user["_id"]),
@@ -475,11 +527,15 @@ async def create_scan(payload: ScanCreate, user: dict = Depends(get_current_user
     if not (payload.lyrics and payload.lyrics.strip()) and not payload.audio_filename and not payload.audio_url:
         raise HTTPException(status_code=400, detail="Provide lyrics or upload an audio file")
 
-    result_data = run_mock_analysis(payload.title, payload.lyrics or "", payload.audio_filename or payload.audio_url, payload.region)
-
+    audio_bytes = None
+    audio_filename = payload.audio_filename
     if payload.audio_url:
-        acr_response = await acr_identify_url(payload.audio_url)
-        result_data = merge_acr_into_result(result_data, acr_response)
+        audio_bytes, dl_filename, err = await fp_engine.download_audio(payload.audio_url)
+        if audio_bytes is None:
+            raise HTTPException(status_code=400, detail=err or "Could not download audio from URL")
+        audio_filename = audio_filename or dl_filename
+
+    result_data = await run_analysis(payload.title, payload.lyrics or "", payload.region, audio_bytes, audio_filename)
 
     scan_doc = {
         "user_id": str(user["_id"]),
@@ -546,6 +602,8 @@ def _stripe_client(http_request: Request) -> StripeCheckout:
 async def create_checkout(payload: CheckoutCreate, request: Request, user: dict = Depends(get_current_user)):
     if payload.plan_id not in PLANS:
         raise HTTPException(status_code=400, detail="Invalid plan")
+    if payload.plan_id == "student" and not user.get("student_eligible"):
+        raise HTTPException(status_code=403, detail="Student plan requires a verified .edu email address — register with your school email")
     plan = PLANS[payload.plan_id]
     origin = payload.origin_url.rstrip("/")
     success_url = f"{origin}/payment-success?session_id={{CHECKOUT_SESSION_ID}}"
@@ -665,11 +723,19 @@ async def startup_tasks():
             "plan": "producer_pro",
             "scans_used": 0,
             "region": "US",
+            "email_verified": True,
+            "student_eligible": False,
             "created_at": datetime.now(timezone.utc),
         })
         logger.info(f"Seeded admin user: {admin_email}")
-    elif not verify_password(admin_password, existing["password_hash"]):
-        await db.users.update_one({"email": admin_email}, {"$set": {"password_hash": hash_password(admin_password)}})
+    else:
+        updates = {}
+        if not verify_password(admin_password, existing["password_hash"]):
+            updates["password_hash"] = hash_password(admin_password)
+        if not existing.get("email_verified"):
+            updates["email_verified"] = True
+        if updates:
+            await db.users.update_one({"email": admin_email}, {"$set": updates})
 
 
 @app.on_event("shutdown")

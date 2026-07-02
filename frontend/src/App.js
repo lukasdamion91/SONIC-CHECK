@@ -12,6 +12,7 @@ import NewScan from "@/pages/NewScan";
 import ScanResult from "@/pages/ScanResult";
 import Pricing from "@/pages/Pricing";
 import PaymentSuccess from "@/pages/PaymentSuccess";
+import VerifyEmail from "@/pages/VerifyEmail";
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
             <Route path="/register" element={<Register />} />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/payment-success" element={<PaymentSuccess />} />
+            <Route path="/verify-email" element={<VerifyEmail />} />
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/scan/new" element={<ProtectedRoute><NewScan /></ProtectedRoute>} />
             <Route path="/scan/:id" element={<ProtectedRoute><ScanResult /></ProtectedRoute>} />

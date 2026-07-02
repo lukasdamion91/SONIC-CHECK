@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { DASH } from "@/constants/testIds";
-import { Plus, Music2, AlertTriangle, Check, AlertCircle } from "lucide-react";
+import { Plus, Music2, AlertTriangle, Check, AlertCircle, MailWarning } from "lucide-react";
 import { toast } from "sonner";
 
 const verdictMap = {
@@ -44,8 +44,31 @@ export default function Dashboard() {
     }
   };
 
+  const handleResendVerification = async () => {
+    try {
+      await api.post("/auth/resend-verification");
+      toast.success("Verification link sent — it's logged on the server console (free tier)");
+    } catch (e) {
+      toast.error(formatApiErrorDetail(e.response?.data?.detail));
+    }
+  };
+
   return (
     <div className="mx-auto max-w-7xl px-6 py-12">
+      {user.email_verified === false && (
+        <div data-testid="dashboard-verify-banner" className="mb-8 flex flex-wrap items-center justify-between gap-4 rounded-md border border-[#D4FF00]/30 bg-[#D4FF00]/5 px-5 py-4">
+          <div className="flex items-center gap-3">
+            <MailWarning className="h-5 w-5 text-[#D4FF00]" />
+            <div>
+              <div className="text-sm text-[#F0E9D6]">Your email is not verified yet.</div>
+              <div className="text-xs text-[#F0E9D6]/50">Check your verification link, or resend it below.</div>
+            </div>
+          </div>
+          <Button data-testid="dashboard-resend-verification-btn" onClick={handleResendVerification} variant="outline" className="h-9 rounded-md border-[#D4FF00]/40 bg-transparent text-[#D4FF00] hover:bg-[#D4FF00]/10 hover:text-[#D4FF00]">
+            Resend verification
+          </Button>
+        </div>
+      )}
       <div className="flex flex-wrap items-end justify-between gap-6">
         <div>
           <div className="mb-2 text-[10px] uppercase tracking-widest text-[#F0E9D6]/50 font-mono-data">Studio dashboard</div>
