@@ -31,6 +31,7 @@ import fingerprint as fp_engine
 import lyrics_free
 import semantic
 import report as report_pdf
+import storage as obj_storage
 import asyncio
 
 # ----------------------------------------------------------------------------
@@ -455,6 +456,34 @@ async def get_plans():
 # ----------------------------------------------------------------------------
 # Scans
 # ----------------------------------------------------------------------------
+async def store_audio_if_paid(user: dict, audio_bytes: Optional[bytes], audio_filename: Optional[str]) -> Optional[dict]:
+    """Persist audio to object storage for paid plans. Returns file record or None."""
+    if not audio_bytes:
+        return None
+    plan = user.get("plan", "free")
+    if plan == "free" and user.get("role") != "admin":
+        return None
+    ext = (audio_filename or "audio.mp3").rsplit(".", 1)[-1].lower() if "." in (audio_filename or "") else "mp3"
+    content_type = obj_storage.mime_for(audio_filename or "audio.mp3")
+    path = f"{obj_storage.APP_NAME}/uploads/{str(user['_id'])}/{uuid.uuid4().hex}.{ext}"
+    try:
+        result = await obj_storage.put_object(path, audio_bytes, content_type)
+    except Exception as e:
+        logger.error(f"Audio storage upload failed: {e}")
+        return None
+    record = {
+        "storage_path": result["path"],
+        "user_id": str(user["_id"]),
+        "original_filename": audio_filename or "audio",
+        "content_type": content_type,
+        "size": result.get("size", len(audio_bytes)),
+        "is_deleted": False,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.files.insert_one(dict(record))
+    return record
+
+
 @api.post("/scans/upload")
 async def create_scan_upload(
     request: Request,
@@ -494,6 +523,8 @@ async def create_scan_upload(
 
     result = await run_analysis(title, lyrics or "", region, audio_bytes, audio_filename)
 
+    file_record = await store_audio_if_paid(user, audio_bytes, audio_filename)
+
     scan_doc = {
         "user_id": str(user["_id"]),
         "title": title,
@@ -502,6 +533,8 @@ async def create_scan_upload(
         "audio_filename": audio_filename,
         "audio_size_bytes": audio_size,
         "audio_url": audio_url,
+        "audio_storage_path": file_record["storage_path"] if file_record else None,
+        "audio_content_type": file_record["content_type"] if file_record else None,
         "region": region,
         "result": result,
         "created_at": datetime.now(timezone.utc).isoformat(),
@@ -538,13 +571,17 @@ async def create_scan(payload: ScanCreate, user: dict = Depends(get_current_user
 
     result_data = await run_analysis(payload.title, payload.lyrics or "", payload.region, audio_bytes, audio_filename)
 
+    file_record = await store_audio_if_paid(user, audio_bytes, audio_filename)
+
     scan_doc = {
         "user_id": str(user["_id"]),
         "title": payload.title,
         "artist_name": payload.artist_name or user.get("name", ""),
         "lyrics": payload.lyrics or "",
-        "audio_filename": payload.audio_filename,
-        "audio_size_bytes": payload.audio_size_bytes or 0,
+        "audio_filename": audio_filename,
+        "audio_size_bytes": payload.audio_size_bytes or (len(audio_bytes) if audio_bytes else 0),
+        "audio_storage_path": file_record["storage_path"] if file_record else None,
+        "audio_content_type": file_record["content_type"] if file_record else None,
         "region": payload.region,
         "result": result_data,
         "created_at": datetime.now(timezone.utc).isoformat(),
@@ -601,14 +638,43 @@ async def download_report(scan_id: str, user: dict = Depends(get_current_user)):
     )
 
 
+@api.get("/scans/{scan_id}/audio")
+async def get_scan_audio(scan_id: str, user: dict = Depends(get_current_user)):
+    try:
+        doc = await db.scans.find_one({"_id": ObjectId(scan_id), "user_id": str(user["_id"])})
+    except Exception:
+        raise HTTPException(status_code=404, detail="Scan not found")
+    if not doc:
+        raise HTTPException(status_code=404, detail="Scan not found")
+    path = doc.get("audio_storage_path")
+    if not path:
+        raise HTTPException(status_code=404, detail="No stored audio for this scan — audio storage is a Pro feature")
+    record = await db.files.find_one({"storage_path": path, "is_deleted": False})
+    if not record:
+        raise HTTPException(status_code=404, detail="Audio file not found")
+    try:
+        data, content_type = await obj_storage.get_object(path)
+    except Exception as e:
+        logger.error(f"Audio storage fetch failed: {e}")
+        raise HTTPException(status_code=502, detail="Could not retrieve audio from storage")
+    return Response(
+        content=data,
+        media_type=doc.get("audio_content_type") or content_type,
+        headers={"Content-Disposition": f'inline; filename="{doc.get("audio_filename") or "audio"}"', "Accept-Ranges": "bytes"},
+    )
+
+
 @api.delete("/scans/{scan_id}")
 async def delete_scan(scan_id: str, user: dict = Depends(get_current_user)):
     try:
-        result = await db.scans.delete_one({"_id": ObjectId(scan_id), "user_id": str(user["_id"])})
+        doc = await db.scans.find_one({"_id": ObjectId(scan_id), "user_id": str(user["_id"])})
     except Exception:
         raise HTTPException(status_code=404, detail="Scan not found")
-    if result.deleted_count == 0:
+    if not doc:
         raise HTTPException(status_code=404, detail="Scan not found")
+    if doc.get("audio_storage_path"):
+        await db.files.update_one({"storage_path": doc["audio_storage_path"]}, {"$set": {"is_deleted": True}})
+    await db.scans.delete_one({"_id": doc["_id"]})
     return {"ok": True}
 
 
@@ -734,6 +800,12 @@ async def startup_tasks():
     await db.users.create_index("email", unique=True)
     await db.scans.create_index("user_id")
     await db.payment_transactions.create_index("session_id", unique=True)
+    await db.files.create_index("storage_path")
+    try:
+        await obj_storage.init_storage()
+        logger.info("Object storage initialized")
+    except Exception as e:
+        logger.error(f"Object storage init failed: {e}")
 
     admin_email = os.environ.get("ADMIN_EMAIL", "admin@example.com").lower()
     admin_password = os.environ.get("ADMIN_PASSWORD", "admin123")
