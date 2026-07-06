@@ -704,6 +704,72 @@ async def rescan(scan_id: str, payload: Optional[dict] = None, user: dict = Depe
     return new_doc
 
 
+@api.post("/scans/{scan_id}/badge")
+async def create_badge(scan_id: str, user: dict = Depends(get_current_user)):
+    if user.get("plan", "free") == "free" and user.get("role") != "admin":
+        raise HTTPException(status_code=402, detail="Verification badges are a Pro feature — upgrade to unlock")
+    try:
+        doc = await db.scans.find_one({"_id": ObjectId(scan_id), "user_id": str(user["_id"])})
+    except Exception:
+        raise HTTPException(status_code=404, detail="Scan not found")
+    if not doc:
+        raise HTTPException(status_code=404, detail="Scan not found")
+    badge_id = doc.get("badge_id")
+    if not badge_id:
+        badge_id = uuid.uuid4().hex
+        await db.scans.update_one({"_id": doc["_id"]}, {"$set": {"badge_id": badge_id, "badge_created_at": datetime.now(timezone.utc).isoformat()}})
+    return {"badge_id": badge_id}
+
+
+@api.get("/verify/{badge_id}")
+async def public_verify(badge_id: str):
+    doc = await db.scans.find_one({"badge_id": badge_id})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Verification record not found")
+    result = doc.get("result") or {}
+    return {
+        "badge_id": badge_id,
+        "title": doc.get("title"),
+        "artist_name": doc.get("artist_name"),
+        "verdict": result.get("verdict"),
+        "overall_score": result.get("overall_score"),
+        "region": result.get("region"),
+        "region_name": result.get("region_name"),
+        "doctrine": result.get("doctrine"),
+        "scan_modes": result.get("scan_modes"),
+        "scanned_at": doc.get("created_at"),
+        "badge_created_at": doc.get("badge_created_at"),
+    }
+
+
+BADGE_COLORS = {"CLEAR": "#1F8A4C", "REVIEW": "#B8860B", "VIOLATION": "#C0221F"}
+
+
+@api.get("/verify/{badge_id}/badge.svg")
+async def public_badge_svg(badge_id: str):
+    doc = await db.scans.find_one({"badge_id": badge_id})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Verification record not found")
+    result = doc.get("result") or {}
+    verdict = result.get("verdict", "REVIEW")
+    score = result.get("overall_score", 0)
+    vcolor = BADGE_COLORS.get(verdict, "#6B6B75")
+    title = (doc.get("title") or "Untitled")[:28]
+    svg = f'''<svg xmlns="http://www.w3.org/2000/svg" width="360" height="84" viewBox="0 0 360 84" role="img" aria-label="Verified by SonicCheck">
+  <rect width="360" height="84" rx="10" fill="#1C1C22"/>
+  <rect x="1" y="1" width="358" height="82" rx="9" fill="none" stroke="#D4FF00" stroke-opacity="0.35" stroke-width="1.5"/>
+  <rect x="16" y="22" width="40" height="40" rx="8" fill="#D4FF00"/>
+  <path d="M26 42 l7 7 l14 -14" stroke="#1C1C22" stroke-width="4.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="70" y="32" font-family="Courier New,monospace" font-size="10" letter-spacing="2" fill="#F0E9D6" fill-opacity="0.6">VERIFIED BY</text>
+  <text x="70" y="52" font-family="Arial,Helvetica,sans-serif" font-size="19" font-weight="bold" fill="#F0E9D6">SonicCheck</text>
+  <text x="70" y="69" font-family="Courier New,monospace" font-size="9.5" fill="#F0E9D6" fill-opacity="0.55">{title}</text>
+  <rect x="252" y="26" width="92" height="32" rx="16" fill="{vcolor}" fill-opacity="0.18" stroke="{vcolor}" stroke-width="1"/>
+  <text x="298" y="41" text-anchor="middle" font-family="Courier New,monospace" font-size="11" font-weight="bold" fill="{vcolor}">{verdict}</text>
+  <text x="298" y="53" text-anchor="middle" font-family="Courier New,monospace" font-size="9" fill="{vcolor}" fill-opacity="0.9">{score}% similarity</text>
+</svg>'''
+    return Response(content=svg, media_type="image/svg+xml", headers={"Cache-Control": "public, max-age=3600"})
+
+
 @api.get("/scans/{scan_id}/audio")
 async def get_scan_audio(scan_id: str, user: dict = Depends(get_current_user)):
     try:
@@ -872,6 +938,7 @@ async def startup_tasks():
     await db.scans.create_index("user_id")
     await db.payment_transactions.create_index("session_id", unique=True)
     await db.files.create_index("storage_path")
+    await db.scans.create_index("badge_id", sparse=True)
     try:
         await obj_storage.init_storage()
         logger.info("Object storage initialized")

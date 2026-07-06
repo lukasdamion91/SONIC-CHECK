@@ -84,6 +84,15 @@
 - ✅ Frontend: /library page (play/pause with blob cache, Report link, Re-scan button, Pro upsell empty-state for free users) + "Library" navbar link
 - ✅ Self-tested: curl (library list, rescan to JP region, shared-path delete → audio still fetchable) + Playwright (cards render, playback active)
 
+## Iteration 9 (Jun 2026) — "Verified by SonicCheck" Badge
+- ✅ POST /api/scans/{id}/badge — creates public badge_id (Pro-gated, 402 for free tier; idempotent)
+- ✅ PUBLIC endpoints (no auth): GET /api/verify/{badge_id} (record JSON) + GET /api/verify/{badge_id}/badge.svg (branded embeddable SVG with verdict color + score)
+- ✅ Public page /verify/:badgeId — certificate-style verification record with badge preview + CTA back to SonicCheck
+- ✅ ScanResult: "Verification badge" button + share panel (badge preview, public link, HTML embed, Markdown embed, copy buttons)
+- ✅ Self-tested: curl (badge create, public verify, SVG, 404 invalid, 402 free-tier) + Playwright (public page no-auth, share panel renders)
+- ⚠️ NOTE: search_replace phantom-write occurred again (CopyField helper edit reported success but didn't land; re-applied). Verify grep after ScanResult.jsx edits.
+- 🎨 PENDING: user said they will upload a logo for branding — integrate into badge SVG, navbar, and PDF report when it arrives (check get_assets_tool).
+
 ## Test Credentials
 See `/app/memory/test_credentials.md`. Admin: `admin@soniccheck.io / Admin@Sonic2026`.
 

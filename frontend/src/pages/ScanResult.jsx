@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { api, formatApiErrorDetail } from "@/lib/api";
+import { api, API, formatApiErrorDetail } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Waveform from "@/components/Waveform";
 import { SCAN } from "@/constants/testIds";
-import { AlertTriangle, Check, AlertCircle, Trash2, ArrowLeft, Scale, FileDown, Loader2 } from "lucide-react";
+import { AlertTriangle, Check, AlertCircle, Trash2, ArrowLeft, Scale, FileDown, Loader2, BadgeCheck, Copy } from "lucide-react";
 import { toast } from "sonner";
 
 const verdictMap = {
@@ -23,9 +23,11 @@ export default function ScanResult() {
   const [loading, setLoading] = useState(true);
   const [downloading, setDownloading] = useState(false);
   const [audioUrl, setAudioUrl] = useState(null);
+  const [badgeId, setBadgeId] = useState(null);
+  const [creatingBadge, setCreatingBadge] = useState(false);
 
   useEffect(() => {
-    api.get(`/scans/${id}`).then((r) => setScan(r.data)).catch((e) => {
+    api.get(`/scans/${id}`).then((r) => { setScan(r.data); setBadgeId(r.data.badge_id || null); }).catch((e) => {
       toast.error(formatApiErrorDetail(e.response?.data?.detail));
       navigate("/dashboard");
     }).finally(() => setLoading(false));
@@ -70,6 +72,25 @@ export default function ScanResult() {
     }
   };
 
+  const onCreateBadge = async () => {
+    setCreatingBadge(true);
+    try {
+      const { data } = await api.post(`/scans/${id}/badge`);
+      setBadgeId(data.badge_id);
+      toast.success("Verification badge created — share it anywhere");
+    } catch (e) {
+      if (e.response?.status === 402) {
+        toast.error("Verification badges are a Pro feature", {
+          action: { label: "See plans", onClick: () => navigate("/pricing") },
+        });
+      } else {
+        toast.error(formatApiErrorDetail(e.response?.data?.detail));
+      }
+    } finally {
+      setCreatingBadge(false);
+    }
+  };
+
   const onDelete = async () => {
     if (!window.confirm("Delete this scan permanently?")) return;
     try {
@@ -96,6 +117,16 @@ export default function ScanResult() {
           <ArrowLeft className="h-4 w-4" /> Back to dashboard
         </Link>
         <div className="flex items-center gap-2">
+          <Button
+            data-testid="scan-create-badge-btn"
+            onClick={onCreateBadge}
+            disabled={creatingBadge || !!badgeId}
+            variant="outline"
+            className="border-[#D4FF00]/40 bg-transparent text-[#D4FF00] hover:bg-[#D4FF00]/10 hover:text-[#D4FF00]"
+          >
+            {creatingBadge ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <BadgeCheck className="mr-2 h-4 w-4" />}
+            {badgeId ? "Badge active" : "Verification badge"}
+          </Button>
           <Button
             data-testid="scan-download-report-btn"
             onClick={onDownloadReport}
@@ -233,6 +264,26 @@ export default function ScanResult() {
           </div>
         )}
 
+        {/* Verification badge share panel */}
+        {badgeId && (
+          <div className="lg:col-span-12 rounded-md border border-[#D4FF00]/25 bg-[#24242C] p-6" data-testid="scan-badge-panel">
+            <div className="mb-4">
+              <div className="text-[10px] uppercase tracking-widest text-[#F0E9D6]/50 font-mono-data">Public verification</div>
+              <h3 className="font-display text-2xl text-[#F0E9D6] mt-1">Verified by SonicCheck badge</h3>
+            </div>
+            <div className="grid gap-6 lg:grid-cols-2">
+              <div className="flex items-center justify-center rounded-md border border-white/10 bg-[#1C1C22] p-6">
+                <img src={`${API}/verify/${badgeId}/badge.svg`} alt="Verified by SonicCheck badge" data-testid="scan-badge-preview" />
+              </div>
+              <div className="space-y-3">
+                <CopyField label="Public link" testId="scan-badge-link" value={`${window.location.origin}/verify/${badgeId}`} />
+                <CopyField label="Embed (HTML)" testId="scan-badge-embed-html" value={`<a href="${window.location.origin}/verify/${badgeId}"><img src="${API}/verify/${badgeId}/badge.svg" alt="Verified by SonicCheck" /></a>`} />
+                <CopyField label="Markdown" testId="scan-badge-embed-md" value={`[![Verified by SonicCheck](${API}/verify/${badgeId}/badge.svg)](${window.location.origin}/verify/${badgeId})`} />
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Waveform */}
         {result.scan_modes?.audio && (
           <div className="lg:col-span-12 rounded-md border border-white/10 bg-[#24242C] p-6">
@@ -309,6 +360,34 @@ export default function ScanResult() {
             ))}
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function CopyField({ label, value, testId }) {
+  const onCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(value);
+      toast.success(`${label} copied`);
+    } catch {
+      toast.error("Copy failed — select and copy manually");
+    }
+  };
+  return (
+    <div>
+      <div className="mb-1 text-[10px] uppercase tracking-widest text-[#F0E9D6]/50 font-mono-data">{label}</div>
+      <div className="flex items-center gap-2">
+        <input
+          readOnly
+          value={value}
+          data-testid={testId}
+          className="h-9 w-full rounded-md border border-white/10 bg-[#1C1C22] px-3 font-mono-data text-xs text-[#F0E9D6]/85"
+          onFocus={(e) => e.target.select()}
+        />
+        <Button data-testid={`${testId}-copy-btn`} onClick={onCopy} variant="ghost" className="h-9 px-3 text-[#F0E9D6]/85 hover:bg-white/10 hover:text-[#F0E9D6]">
+          <Copy className="h-4 w-4" />
+        </Button>
       </div>
     </div>
   );

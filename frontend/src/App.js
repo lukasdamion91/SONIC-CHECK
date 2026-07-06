@@ -14,6 +14,7 @@ import Pricing from "@/pages/Pricing";
 import PaymentSuccess from "@/pages/PaymentSuccess";
 import VerifyEmail from "@/pages/VerifyEmail";
 import Library from "@/pages/Library";
+import VerifyBadge from "@/pages/VerifyBadge";
 
 function App() {
   return (
@@ -28,6 +29,7 @@ function App() {
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/payment-success" element={<PaymentSuccess />} />
             <Route path="/verify-email" element={<VerifyEmail />} />
+            <Route path="/verify/:badgeId" element={<VerifyBadge />} />
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/scan/new" element={<ProtectedRoute><NewScan /></ProtectedRoute>} />
             <Route path="/scan/:id" element={<ProtectedRoute><ScanResult /></ProtectedRoute>} />
