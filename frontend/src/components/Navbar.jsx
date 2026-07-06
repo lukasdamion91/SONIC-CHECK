@@ -32,6 +32,7 @@ export default function Navbar() {
             <>
               <Link to="/dashboard" data-testid={NAV.dashboardLink} className={linkClass("/dashboard")}>Dashboard</Link>
               <Link to="/scan/new" data-testid={NAV.newScanLink} className={linkClass("/scan/new")}>New Scan</Link>
+              <Link to="/library" data-testid="nav-library-link" className={linkClass("/library")}>Library</Link>
               <Link to="/pricing" data-testid={NAV.pricingLink} className={linkClass("/pricing")}>Pricing</Link>
             </>
           ) : (

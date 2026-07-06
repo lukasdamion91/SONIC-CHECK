@@ -77,6 +77,13 @@
 - ✅ Self-tested: curl (upload→store→fetch→delete lifecycle, free-tier exclusion) + Playwright (player renders with blob src)
 - ⚠️ NOTE: pod rebuild wiped apt packages — ffmpeg + libchromaprint-tools (fpcalc) had to be reinstalled. These are REQUIRED system deps for the audio engine.
 
+## Iteration 8 (Jun 2026) — My Library (Audio Vault)
+- ✅ GET /api/library — user's stored audio tracks (title, filename, size, verdict, score)
+- ✅ POST /api/scans/{id}/rescan — re-analyzes stored audio (optionally new region), creates new scan sharing the same storage path, quota-enforced
+- ✅ Delete safety: file record only soft-deleted when no other scan references the storage path
+- ✅ Frontend: /library page (play/pause with blob cache, Report link, Re-scan button, Pro upsell empty-state for free users) + "Library" navbar link
+- ✅ Self-tested: curl (library list, rescan to JP region, shared-path delete → audio still fetchable) + Playwright (cards render, playback active)
+
 ## Test Credentials
 See `/app/memory/test_credentials.md`. Admin: `admin@soniccheck.io / Admin@Sonic2026`.
 

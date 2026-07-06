@@ -638,6 +638,72 @@ async def download_report(scan_id: str, user: dict = Depends(get_current_user)):
     )
 
 
+@api.get("/library")
+async def get_library(user: dict = Depends(get_current_user)):
+    cursor = db.scans.find(
+        {"user_id": str(user["_id"]), "audio_storage_path": {"$nin": [None, ""]}},
+        {"title": 1, "artist_name": 1, "audio_filename": 1, "audio_size_bytes": 1, "audio_storage_path": 1,
+         "region": 1, "created_at": 1, "result.verdict": 1, "result.overall_score": 1},
+    ).sort("created_at", -1).limit(200)
+    items = []
+    async for doc in cursor:
+        doc["id"] = str(doc.pop("_id"))
+        items.append(doc)
+    return items
+
+
+@api.post("/scans/{scan_id}/rescan")
+async def rescan(scan_id: str, payload: Optional[dict] = None, user: dict = Depends(get_current_user)):
+    plan = user.get("plan", "free")
+    scans_used = user.get("scans_used", 0)
+    if plan == "free" and scans_used >= 3:
+        raise HTTPException(status_code=402, detail="Free quota reached — upgrade to continue scanning")
+    plan_limit = PLANS.get(plan, {}).get("scans_per_month")
+    if plan_limit is not None and scans_used >= plan_limit:
+        raise HTTPException(status_code=402, detail="Plan quota reached for this month")
+    try:
+        doc = await db.scans.find_one({"_id": ObjectId(scan_id), "user_id": str(user["_id"])})
+    except Exception:
+        raise HTTPException(status_code=404, detail="Scan not found")
+    if not doc:
+        raise HTTPException(status_code=404, detail="Scan not found")
+    path = doc.get("audio_storage_path")
+    if not path:
+        raise HTTPException(status_code=400, detail="This scan has no stored audio to re-scan")
+
+    region = (payload or {}).get("region") or user.get("region", doc.get("region", "US"))
+    if region not in REGIONS:
+        raise HTTPException(status_code=400, detail="Invalid region")
+
+    try:
+        audio_bytes, _ = await obj_storage.get_object(path)
+    except Exception as e:
+        logger.error(f"Rescan storage fetch failed: {e}")
+        raise HTTPException(status_code=502, detail="Could not retrieve stored audio")
+
+    result = await run_analysis(doc["title"], doc.get("lyrics") or "", region, audio_bytes, doc.get("audio_filename"))
+
+    new_doc = {
+        "user_id": str(user["_id"]),
+        "title": doc["title"],
+        "artist_name": doc.get("artist_name", ""),
+        "lyrics": doc.get("lyrics") or "",
+        "audio_filename": doc.get("audio_filename"),
+        "audio_size_bytes": doc.get("audio_size_bytes", 0),
+        "audio_storage_path": path,
+        "audio_content_type": doc.get("audio_content_type"),
+        "region": region,
+        "result": result,
+        "rescanned_from": scan_id,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    inserted = await db.scans.insert_one(new_doc)
+    new_doc["id"] = str(inserted.inserted_id)
+    new_doc.pop("_id", None)
+    await db.users.update_one({"_id": user["_id"]}, {"$inc": {"scans_used": 1}})
+    return new_doc
+
+
 @api.get("/scans/{scan_id}/audio")
 async def get_scan_audio(scan_id: str, user: dict = Depends(get_current_user)):
     try:
@@ -673,7 +739,12 @@ async def delete_scan(scan_id: str, user: dict = Depends(get_current_user)):
     if not doc:
         raise HTTPException(status_code=404, detail="Scan not found")
     if doc.get("audio_storage_path"):
-        await db.files.update_one({"storage_path": doc["audio_storage_path"]}, {"$set": {"is_deleted": True}})
+        others = await db.scans.count_documents({
+            "audio_storage_path": doc["audio_storage_path"],
+            "_id": {"$ne": doc["_id"]},
+        })
+        if others == 0:
+            await db.files.update_one({"storage_path": doc["audio_storage_path"]}, {"$set": {"is_deleted": True}})
     await db.scans.delete_one({"_id": doc["_id"]})
     return {"ok": True}
 

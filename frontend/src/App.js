@@ -13,6 +13,7 @@ import ScanResult from "@/pages/ScanResult";
 import Pricing from "@/pages/Pricing";
 import PaymentSuccess from "@/pages/PaymentSuccess";
 import VerifyEmail from "@/pages/VerifyEmail";
+import Library from "@/pages/Library";
 
 function App() {
   return (
@@ -30,6 +31,7 @@ function App() {
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/scan/new" element={<ProtectedRoute><NewScan /></ProtectedRoute>} />
             <Route path="/scan/:id" element={<ProtectedRoute><ScanResult /></ProtectedRoute>} />
+            <Route path="/library" element={<ProtectedRoute><Library /></ProtectedRoute>} />
           </Routes>
           <Toaster theme="dark" position="top-right" />
         </BrowserRouter>
