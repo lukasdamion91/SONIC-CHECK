@@ -22,15 +22,17 @@ export default function Landing() {
         <div className="mx-auto max-w-7xl px-6 pt-28 pb-32">
           <div className="grid items-end gap-12 lg:grid-cols-12">
             <div className="lg:col-span-8 fade-up">
+              <div className="holo-bar mb-8 w-44" />
+              <img src="/brand/logo-full.png" alt="SONIC CHECK" data-testid="landing-hero-logo" className="mb-8 h-20 w-auto object-contain sm:h-24" />
               <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs uppercase tracking-widest text-[#F0E9D6]/85 font-mono-data">
-                <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" /> Plagiarism intelligence for music
+                <span className="inline-block h-1.5 w-1.5 rounded-full holo-gradient animate-pulse" /> Plagiarism intelligence for music
               </div>
               <h1 className="font-display text-[10vw] leading-[0.9] text-[#F0E9D6] sm:text-7xl lg:text-8xl">
                 Settle it<br/>
                 <span className="text-[#F0E9D6]/65">before</span> the<br/>
                 <span className="relative inline-block">
                   <span className="relative z-10">lawsuit.</span>
-                  <span className="absolute -bottom-1 left-0 h-3 w-full bg-[#D4FF00]/80" />
+                  <span className="absolute -bottom-1 left-0 h-3 w-full holo-gradient opacity-90" />
                 </span>
               </h1>
               <p className="mt-8 max-w-2xl text-lg text-[#F0E9D6]/65 font-body">
@@ -55,11 +57,12 @@ export default function Landing() {
                 <span className="h-1 w-1 rounded-full bg-zinc-700" />
                 <span>For artists · producers · students</span>
               </div>
+              <div className="holo-bar mt-8 w-28" />
             </div>
 
             {/* Floating score card */}
             <div className="lg:col-span-4 fade-up delay-200">
-              <div className="rounded-md border border-white/10 bg-[#24242C]/80 p-6 backdrop-blur-xl glow-blue">
+              <div className="rounded-md border border-white/10 bg-[#24242C]/80 p-6 backdrop-blur-xl glow-holo">
                 <div className="flex items-center justify-between text-[10px] uppercase tracking-widest text-[#F0E9D6]/50 font-mono-data">
                   <span>Sample report</span>
                   <span>US · Fair Use</span>
@@ -110,7 +113,7 @@ export default function Landing() {
         <div className="mb-12 flex items-end justify-between">
           <div>
             <div className="mb-3 text-[10px] uppercase tracking-widest text-[#F0E9D6]/50 font-mono-data">How it works</div>
-            <h2 className="font-display text-5xl text-[#F0E9D6] sm:text-6xl">Forensic-grade<br/>music analysis.</h2>
+            <h2 className="font-display text-5xl text-[#F0E9D6] sm:text-6xl">Forensic-grade<br/><span className="holo-text">music analysis.</span></h2>
           </div>
           <p className="hidden max-w-md text-[#F0E9D6]/65 lg:block">Three engines, one verdict. Upload an audio file, paste lyrics, or both — we run them through lyric, melodic, and chord analyzers, then apply your region&apos;s copyright doctrine.</p>
         </div>
@@ -158,7 +161,7 @@ export default function Landing() {
         <div className="mx-auto grid max-w-7xl items-center gap-12 px-6 py-24 lg:grid-cols-2">
           <div>
             <div className="mb-3 text-[10px] uppercase tracking-widest text-[#F0E9D6]/50 font-mono-data">Jurisdiction aware</div>
-            <h2 className="font-display text-5xl text-[#F0E9D6]">Different country.<br/>Different rules.</h2>
+            <h2 className="font-display text-5xl text-[#F0E9D6]">Different country.<br/><span className="holo-text">Different rules.</span></h2>
             <p className="mt-6 max-w-lg text-[#F0E9D6]/65">A 14% lyric overlap might be defensible in the US under Fair Use but trigger an automatic infringement claim in Japan. SonicCheck applies the right threshold for the right region.</p>
             <div className="mt-8 grid grid-cols-2 gap-3 max-w-md">
               {[
@@ -198,7 +201,9 @@ export default function Landing() {
       {/* CTA */}
       <section className="mx-auto max-w-7xl px-6 py-24">
         <div className="relative overflow-hidden rounded-md border border-white/10 bg-gradient-to-br from-[#24242C] via-[#1C1C22] to-[#24242C] p-12 sm:p-20">
-          <h2 className="font-display text-5xl text-[#F0E9D6] sm:text-7xl">Don&apos;t release<br/>blindfolded.</h2>
+          <img src="/brand/logo-icon.png" alt="" className="pointer-events-none absolute -right-10 -top-10 h-64 w-64 object-contain opacity-15 sm:h-80 sm:w-80" />
+          <div className="holo-bar mb-8 w-32" />
+          <h2 className="font-display text-5xl text-[#F0E9D6] sm:text-7xl">Don&apos;t release<br/><span className="holo-text">blindfolded.</span></h2>
           <p className="mt-6 max-w-xl text-[#F0E9D6]/65">Built for the music industry: A&R teams, labels, producers, and the next generation of artists in conservatories worldwide.</p>
           <div className="mt-10 flex flex-wrap gap-3">
             <Link to="/register"><Button className="h-12 rounded-md bg-white px-8 text-black btn-lift hover:bg-[#D4FF00]/85">Start free →</Button></Link>

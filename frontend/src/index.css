@@ -45,8 +45,8 @@ html, body, #root {
 
 body {
   background:
-    radial-gradient(1200px 600px at 80% -10%, rgba(59,130,246,0.10), transparent 60%),
-    radial-gradient(900px 500px at 0% 100%, rgba(239,68,68,0.06), transparent 60%),
+    radial-gradient(1200px 600px at 80% -10%, rgba(157,184,240,0.10), transparent 60%),
+    radial-gradient(900px 500px at 0% 100%, rgba(217,168,232,0.07), transparent 60%),
     #1C1C22;
   min-height: 100vh;
 }
@@ -92,7 +92,7 @@ body {
 .beam-card::before {
   content: '';
   position: absolute; inset: -1px;
-  background: conic-gradient(from var(--angle, 0deg), transparent 0deg, rgba(59,130,246,0.7) 30deg, transparent 60deg);
+  background: conic-gradient(from var(--angle, 0deg), transparent 0deg, rgba(157,184,240,0.75) 25deg, rgba(217,168,232,0.6) 45deg, transparent 70deg);
   z-index: -1;
   animation: spin-beam 6s linear infinite;
 }
@@ -141,3 +141,33 @@ input:focus, textarea:focus, select:focus { outline: none; box-shadow: 0 0 0 2px
 .delay-200 { animation-delay: 0.2s; }
 .delay-300 { animation-delay: 0.3s; }
 .delay-400 { animation-delay: 0.4s; }
+
+/* Holographic brand accents — sampled from the SONIC CHECK logo */
+.holo-gradient {
+  background: linear-gradient(90deg, #EFEF9C 0%, #9DB8F0 38%, #D9A8E8 72%, #EFEF9C 100%);
+}
+.holo-text {
+  background: linear-gradient(90deg, #EFEF9C, #9DB8F0, #D9A8E8, #EFEF9C);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: holo-shift 7s linear infinite;
+}
+@keyframes holo-shift {
+  to { background-position: 200% 0; }
+}
+.holo-bar {
+  height: 6px;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, #EFEF9C, #9DB8F0, #D9A8E8);
+  position: relative;
+}
+.holo-bar::after {
+  content: '';
+  position: absolute; left: 5px; right: 5px; top: 50%;
+  height: 1px; background: rgba(0,0,0,0.5);
+}
+.glow-holo {
+  box-shadow: 0 0 55px -12px rgba(157,184,240,0.45), 0 0 35px -14px rgba(217,168,232,0.4);
+}

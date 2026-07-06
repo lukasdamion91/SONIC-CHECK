@@ -103,6 +103,13 @@
 - ✅ Self-tested: SVG contains base64 image, PDF page has 1 image, screenshot confirms navbar/verify/badge branding
 - Original asset URL: https://customer-assets.emergentagent.com/job_cb2ca478-6fff-4497-8c51-f08057f9394d/artifacts/dlmrgylg_SONIC%20CHECK%20LOGO%201%20backgroundremove.PNG
 
+## Iteration 11 (Jun 2026) — Landing Page Holographic Brand Polish
+- ✅ index.css: holo utilities (.holo-gradient, .holo-text animated shimmer, .holo-bar with logo's signature center-line, .glow-holo), body radial glows + beam-card conic gradient shifted to holographic blue/purple
+- ✅ Hero: full logo image (data-testid='landing-hero-logo'), holo bars framing it (mirrors logo lockup), holo underline under "lawsuit.", holo glow on sample-report card
+- ✅ Section headlines: "music analysis." / "Different rules." / "blindfolded." in animated holo-text
+- ✅ CTA panel: giant watermark logo arcs + holo bar
+- ✅ Verified via screenshots (hero + CTA)
+
 ## Test Credentials
 See `/app/memory/test_credentials.md`. Admin: `admin@soniccheck.io / Admin@Sonic2026`.
 
