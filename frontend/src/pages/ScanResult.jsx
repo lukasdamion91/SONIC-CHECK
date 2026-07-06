@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { api, formatApiErrorDetail } from "@/lib/api";
+import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Waveform from "@/components/Waveform";
@@ -17,9 +18,11 @@ const verdictMap = {
 export default function ScanResult() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [scan, setScan] = useState(null);
   const [loading, setLoading] = useState(true);
   const [downloading, setDownloading] = useState(false);
+  const [audioUrl, setAudioUrl] = useState(null);
 
   useEffect(() => {
     api.get(`/scans/${id}`).then((r) => setScan(r.data)).catch((e) => {
@@ -27,6 +30,18 @@ export default function ScanResult() {
       navigate("/dashboard");
     }).finally(() => setLoading(false));
   }, [id, navigate]);
+
+  useEffect(() => {
+    if (!scan?.audio_storage_path) return;
+    let url;
+    api.get(`/scans/${id}/audio`, { responseType: "blob" })
+      .then((res) => {
+        url = URL.createObjectURL(res.data);
+        setAudioUrl(url);
+      })
+      .catch(() => {});
+    return () => { if (url) URL.revokeObjectURL(url); };
+  }, [scan?.audio_storage_path, id]);
 
   const onDownloadReport = async () => {
     setDownloading(true);
@@ -232,6 +247,23 @@ export default function ScanResult() {
               </div>
             </div>
             <Waveform bars={result.waveform || []} flagged={result.flagged_segments || []} height={140} />
+            {scan.audio_storage_path ? (
+              audioUrl ? (
+                <div className="mt-4" data-testid="scan-audio-player">
+                  <div className="mb-2 text-[10px] uppercase tracking-widest text-[#F0E9D6]/50 font-mono-data">Stored audio · {scan.audio_filename || "your upload"}</div>
+                  <audio controls src={audioUrl} className="w-full" style={{ filter: "invert(0.9) hue-rotate(180deg)" }} />
+                </div>
+              ) : (
+                <div className="mt-4 text-xs text-[#F0E9D6]/50 font-mono-data">Loading stored audio…</div>
+              )
+            ) : (
+              user?.plan === "free" && (
+                <div data-testid="scan-audio-upsell" className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-md border border-[#0047FF]/25 bg-[#0047FF]/5 px-4 py-3">
+                  <span className="text-xs text-[#F0E9D6]/65">Audio was analyzed but not stored — permanent audio storage &amp; playback is a Pro feature.</span>
+                  <Link to="/pricing" className="text-xs font-mono-data uppercase tracking-widest text-[#D4FF00] hover:underline">Upgrade →</Link>
+                </div>
+              )
+            )}
           </div>
         )}
 

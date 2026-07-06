@@ -67,6 +67,16 @@
 - ✅ Fixed corrupted NewScan.jsx (duplicated trailing JSX broke build) + updated fingerprint copy to AcoustID/MusicBrainz
 - ✅ Self-tested: curl (PDF headers/content via pypdf, 402 gate) + Playwright (button renders, download triggers, toast shows)
 
+## Iteration 7 (Jun 2026) — File & Media Storage (Emergent Object Storage)
+- ✅ `/app/backend/storage.py` — Emergent Object Storage client (init/put/get with 403 key-refresh retry), uses EMERGENT_LLM_KEY, $0 cost
+- ✅ Paid-plan-only audio persistence (user chose option B): uploads stored at `soniccheck/uploads/{user_id}/{uuid}.{ext}`; free tier analyzes-and-discards
+- ✅ Scan docs carry `audio_storage_path` + `audio_content_type`; `db.files` collection tracks records with `is_deleted` soft-delete (no storage delete API)
+- ✅ GET /api/scans/{id}/audio — auth'd audio streaming (byte-identical retrieval verified)
+- ✅ DELETE scan now soft-deletes the linked audio file record
+- ✅ Frontend: blob-based audio player on ScanResult (data-testid='scan-audio-player') + Pro upsell note for free users (scan-audio-upsell)
+- ✅ Self-tested: curl (upload→store→fetch→delete lifecycle, free-tier exclusion) + Playwright (player renders with blob src)
+- ⚠️ NOTE: pod rebuild wiped apt packages — ffmpeg + libchromaprint-tools (fpcalc) had to be reinstalled. These are REQUIRED system deps for the audio engine.
+
 ## Test Credentials
 See `/app/memory/test_credentials.md`. Admin: `admin@soniccheck.io / Admin@Sonic2026`.
 
