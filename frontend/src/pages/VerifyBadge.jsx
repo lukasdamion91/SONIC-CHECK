@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { api, API } from "@/lib/api";
-import { BadgeCheck, ShieldAlert, Loader2, Radio } from "lucide-react";
+import { ShieldAlert, Loader2 } from "lucide-react";
 
 const verdictStyles = {
   CLEAR: { color: "#1F8A4C", label: "CLEAR — within regional limits" },
@@ -43,9 +43,7 @@ export default function VerifyBadge() {
     <div className="mx-auto max-w-2xl px-6 py-16" data-testid="verify-badge-page">
       <div className="rounded-md border border-[#D4FF00]/30 bg-[#24242C] p-10">
         <div className="flex items-center gap-3">
-          <div className="grid h-12 w-12 place-items-center rounded-md bg-[#D4FF00] text-[#1C1C22]">
-            <BadgeCheck className="h-6 w-6" strokeWidth={2.5} />
-          </div>
+          <img src="/brand/logo-icon.png" alt="SonicCheck" className="h-12 w-12 object-contain" />
           <div>
             <div className="text-[10px] uppercase tracking-widest text-[#F0E9D6]/50 font-mono-data">Public verification record</div>
             <div className="font-display text-xl text-[#F0E9D6]">Verified by SonicCheck</div>
@@ -92,7 +90,7 @@ export default function VerifyBadge() {
 
       <div className="mt-8 text-center">
         <Link to="/" className="inline-flex items-center gap-2 text-sm text-[#F0E9D6]/65 hover:text-[#F0E9D6]">
-          <Radio className="h-4 w-4" /> Check your own music at SonicCheck
+          <img src="/brand/logo-icon.png" alt="" className="h-5 w-5 object-contain" /> Check your own music at SonicCheck
         </Link>
       </div>
     </div>

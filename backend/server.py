@@ -744,6 +744,13 @@ async def public_verify(badge_id: str):
 
 BADGE_COLORS = {"CLEAR": "#1F8A4C", "REVIEW": "#B8860B", "VIOLATION": "#C0221F"}
 
+import base64 as _b64
+try:
+    with open(ROOT_DIR / "assets" / "logo-icon.png", "rb") as _f:
+        LOGO_ICON_B64 = _b64.b64encode(_f.read()).decode()
+except OSError:
+    LOGO_ICON_B64 = ""
+
 
 @api.get("/verify/{badge_id}/badge.svg")
 async def public_badge_svg(badge_id: str):
@@ -755,13 +762,17 @@ async def public_badge_svg(badge_id: str):
     score = result.get("overall_score", 0)
     vcolor = BADGE_COLORS.get(verdict, "#6B6B75")
     title = (doc.get("title") or "Untitled")[:28]
+    logo_part = (
+        f'<image x="14" y="20" width="46" height="44" href="data:image/png;base64,{LOGO_ICON_B64}" preserveAspectRatio="xMidYMid meet"/>'
+        if LOGO_ICON_B64 else
+        '<rect x="16" y="22" width="40" height="40" rx="8" fill="#D4FF00"/><path d="M26 42 l7 7 l14 -14" stroke="#1C1C22" stroke-width="4.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>'
+    )
     svg = f'''<svg xmlns="http://www.w3.org/2000/svg" width="360" height="84" viewBox="0 0 360 84" role="img" aria-label="Verified by SonicCheck">
-  <rect width="360" height="84" rx="10" fill="#1C1C22"/>
-  <rect x="1" y="1" width="358" height="82" rx="9" fill="none" stroke="#D4FF00" stroke-opacity="0.35" stroke-width="1.5"/>
-  <rect x="16" y="22" width="40" height="40" rx="8" fill="#D4FF00"/>
-  <path d="M26 42 l7 7 l14 -14" stroke="#1C1C22" stroke-width="4.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect width="360" height="84" rx="10" fill="#0A0A0D"/>
+  <rect x="1" y="1" width="358" height="82" rx="9" fill="none" stroke="#B89BE6" stroke-opacity="0.5" stroke-width="1.5"/>
+  {logo_part}
   <text x="70" y="32" font-family="Courier New,monospace" font-size="10" letter-spacing="2" fill="#F0E9D6" fill-opacity="0.6">VERIFIED BY</text>
-  <text x="70" y="52" font-family="Arial,Helvetica,sans-serif" font-size="19" font-weight="bold" fill="#F0E9D6">SonicCheck</text>
+  <text x="70" y="52" font-family="Arial,Helvetica,sans-serif" font-size="19" font-weight="bold" fill="#F0E9D6">SONIC CHECK</text>
   <text x="70" y="69" font-family="Courier New,monospace" font-size="9.5" fill="#F0E9D6" fill-opacity="0.55">{title}</text>
   <rect x="252" y="26" width="92" height="32" rx="16" fill="{vcolor}" fill-opacity="0.18" stroke="{vcolor}" stroke-width="1"/>
   <text x="298" y="41" text-anchor="middle" font-family="Courier New,monospace" font-size="11" font-weight="bold" fill="{vcolor}">{verdict}</text>

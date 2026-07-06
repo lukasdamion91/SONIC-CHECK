@@ -2,7 +2,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { NAV } from "@/constants/testIds";
-import { LogOut, Radio } from "lucide-react";
+import { LogOut } from "lucide-react";
 
 export default function Navbar() {
   const { user, logout } = useAuth();
@@ -20,11 +20,9 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-50 border-b border-white/10 bg-black/60 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
-        <Link to="/" data-testid={NAV.logo} className="flex items-center gap-2 text-[#F0E9D6]">
-          <div className="grid h-8 w-8 place-items-center rounded-md bg-[#D4FF00] text-[#1C1C22]">
-            <Radio className="h-4 w-4" strokeWidth={2.5} />
-          </div>
-          <span className="font-display text-xl tracking-tighter">SonicCheck</span>
+        <Link to="/" data-testid={NAV.logo} className="flex items-center gap-3 text-[#F0E9D6]">
+          <img src="/brand/logo-icon.png" alt="SonicCheck" className="h-9 w-9 object-contain" />
+          <img src="/brand/logo-wordmark.png" alt="SonicCheck" className="h-5 w-auto object-contain" />
         </Link>
 
         <nav className="hidden items-center gap-7 md:flex">

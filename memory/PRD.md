@@ -93,6 +93,16 @@
 - ⚠️ NOTE: search_replace phantom-write occurred again (CopyField helper edit reported success but didn't land; re-applied). Verify grep after ScanResult.jsx edits.
 - 🎨 PENDING: user said they will upload a logo for branding — integrate into badge SVG, navbar, and PDF report when it arrives (check get_assets_tool).
 
+## Iteration 10 (Jun 2026) — Logo Branding Integration
+- ✅ User-uploaded logo (transparent PNG, holographic arcs + wordmark) processed into assets: /app/frontend/public/brand/{logo-full,logo-wordmark,logo-icon}.png, favicon-64.png, /app/backend/assets/logo-icon.png
+- ✅ Navbar: icon + wordmark images replace old Radio glyph
+- ✅ Badge SVG: base64-embedded logo icon, darker bg + holographic border, "SONIC CHECK" text
+- ✅ Public verify page + footer CTA use logo icon
+- ✅ PDF report header includes logo image
+- ✅ index.html: title "SonicCheck — Music Plagiarism Checker" + favicon
+- ✅ Self-tested: SVG contains base64 image, PDF page has 1 image, screenshot confirms navbar/verify/badge branding
+- Original asset URL: https://customer-assets.emergentagent.com/job_cb2ca478-6fff-4497-8c51-f08057f9394d/artifacts/dlmrgylg_SONIC%20CHECK%20LOGO%201%20backgroundremove.PNG
+
 ## Test Credentials
 See `/app/memory/test_credentials.md`. Admin: `admin@soniccheck.io / Admin@Sonic2026`.
 

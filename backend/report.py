@@ -3,14 +3,17 @@ import io
 import json
 import hashlib
 from datetime import datetime, timezone
+from pathlib import Path
 
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.units import mm
 from reportlab.platypus import (
-    SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, HRFlowable,
+    SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, HRFlowable, Image as RLImage,
 )
+
+LOGO_ICON_PATH = Path(__file__).parent / "assets" / "logo-icon.png"
 
 CHARCOAL = colors.HexColor("#1C1C22")
 COBALT = colors.HexColor("#0047FF")
@@ -47,7 +50,15 @@ def build_pdf(scan: dict, user: dict) -> tuple[bytes, str]:
     story = []
 
     # Header
-    story.append(Paragraph("SONICCHECK · ORIGINALITY REPORT", S_BRAND))
+    if LOGO_ICON_PATH.exists():
+        header_tbl = Table(
+            [[RLImage(str(LOGO_ICON_PATH), width=14 * mm, height=12 * mm), Paragraph("SONIC CHECK · ORIGINALITY REPORT", S_BRAND)]],
+            colWidths=[18 * mm, 156 * mm],
+        )
+        header_tbl.setStyle(TableStyle([("VALIGN", (0, 0), (-1, -1), "MIDDLE"), ("LEFTPADDING", (0, 0), (0, 0), 0)]))
+        story.append(header_tbl)
+    else:
+        story.append(Paragraph("SONIC CHECK · ORIGINALITY REPORT", S_BRAND))
     story.append(Spacer(1, 4))
     story.append(HRFlowable(width="100%", thickness=2, color=CHARCOAL))
     story.append(Spacer(1, 10))
