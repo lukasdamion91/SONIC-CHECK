@@ -11,8 +11,8 @@ BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://audio-plagiarism.pre
 API = f"{BASE_URL}/api"
 BACKEND_LOG = "/var/log/supervisor/backend.err.log"
 
-ADMIN_EMAIL = "admin@soniccheck.io"
-ADMIN_PASSWORD = "Admin@Sonic2026"
+ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL", "admin@soniccheck.io")
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "Admin@Sonic2026")
 
 # Famous Vanilla Ice lyrics (Ice Ice Baby) – used for lyric plagiarism assertion
 VANILLA_LYRICS = (

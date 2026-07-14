@@ -1,0 +1,64 @@
+{
+  "summary": "Iteration 6 REGRESSION after AuthContext.jsx rewrite (useCallback/useMemo) and env-var credential change in test_soniccheck.py. All targeted auth-consumer flows PASS end-to-end. Backend pytest subset (15 tests, skipping LLM/audio/quota to save budget) = 15/15 PASS. Frontend flows: admin login, admin dashboard (no verify banner), region selector update via context, Library render, ScanResult panels/buttons, public /verify page, Pricing checkout (real Stripe redirect), logout + protected-route redirect, fresh registration + verify banner + resend toast — ALL PASS with 0 page errors.",
+  "tested_scope": ["backend_regression", "frontend_regression", "auth", "auth_context_memoization", "verify_email_banner", "region_update", "library", "scan_result", "public_verify_badge", "pricing_stripe", "logout"],
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "backend_tests_run": [
+    "TestHealth::test_root PASS",
+    "TestHealth::test_regions PASS",
+    "TestHealth::test_plans PASS",
+    "TestAuthVerification::test_register_returns_verification_fields PASS",
+    "TestAuthVerification::test_edu_register_student_eligible PASS",
+    "TestAuthVerification::test_verification_link_logged_and_verify PASS",
+    "TestAuthVerification::test_verify_email_invalid_token PASS",
+    "TestAuthVerification::test_resend_for_verified_user_returns_already_verified PASS",
+    "TestAuthVerification::test_resend_for_unverified_user_ok PASS",
+    "TestAdminRegression::test_admin_login_and_me PASS (env-var ADMIN_EMAIL/ADMIN_PASSWORD fallback used correctly)",
+    "TestAdminRegression::test_list_scans PASS (GET /api/scans -> 200 list)",
+    "TestAdminRegression::test_patch_region PASS (PATCH /api/auth/region US->EU->US)",
+    "TestStudentGate::test_non_edu_blocked PASS (403)",
+    "TestStudentGate::test_edu_allowed PASS (Stripe URL returned)",
+    "TestScanCRUD::test_get_and_delete PASS",
+    "SKIPPED (budget): TestLyricScan (2), TestAudioScan (1), TestQuota (1) — verified in iteration 5"
+  ],
+  "backend_endpoint_curl_checks": [
+    "POST /api/auth/login (admin) -> 200",
+    "GET /api/auth/me -> 200 (via session cookie)",
+    "GET /api/scans -> 200 list",
+    "GET /api/library -> 200 with 1 item (Player Demo)",
+    "GET /api/regions -> 200",
+    "GET /api/plans -> 200",
+    "GET /api/verify/6f0311746dde4a01b2059c9063594493 -> 200 with expected badge JSON",
+    "GET /api/verify/6f0311746dde4a01b2059c9063594493/badge.svg -> 200 (34.5KB SVG)"
+  ],
+  "frontend_tests_run": [
+    "Admin login (admin@soniccheck.io) -> lands on /dashboard, no dashboard-verify-banner (email_verified=true), 15 scans / 27 quota, 0 page errors",
+    "Region selector: dashboard-region-selector trigger opens shadcn Select, choose EU -> trigger text updates to 'EU - European Union', context.updateRegion succeeds. Restored to US.",
+    "nav-library-link -> /library renders 1 library-track-card (Player Demo)",
+    "Click track title Link -> /scan/<id> renders scan-verdict-badge, scan-fingerprint-panel, scan-download-report-btn (PDF), scan-create-badge-btn — 0 page errors (fpBlock fix from iter-5 still holds)",
+    "Public /verify/6f0311746dde4a01b2059c9063594493 -> verify-badge-page, verify-badge-title, verify-badge-svg, verify-badge-verdict all render",
+    "Pricing -> 3 pricing-plan-card + 3 pricing-checkout-btn. Clicking 'Choose Artist Pro' redirected browser to https://checkout.stripe.com/c/pay/cs_test_... (real Stripe URL, redirect attempted successfully)",
+    "nav-logout-btn -> back to /login; visiting /dashboard while logged out redirects to /login (protected route enforced)",
+    "Fresh registration (regtest_*@example.com) -> auto-logged-in and landed on /dashboard, dashboard-verify-banner visible, clicking dashboard-resend-verification-btn shows toast 'Verification link sent - it's logged on the server console (free tier)'"
+  ],
+  "auth_context_regression_verdict": "PASS. The useCallback + useMemo rewrite of AuthContext.jsx did NOT break any consumer flow. login, register, logout, updateRegion, and refresh() all still work exactly as before. No stale-closure or infinite-re-render issues observed. Zero pageerror events across all tested routes.",
+  "critical_code_review_comments": [
+    "AuthContext.jsx: refresh() is memoized without deps and is used in the useEffect(() => refresh(), [refresh]) — correct because setUser/setLoading setters are stable. Value object properly memoized.",
+    "Pre-existing (already flagged in iter-5, still open): NewScan.jsx line 146 still says 'Real fingerprinting via ACRCloud - matches against 90M+ licensed tracks with ISRC codes.' — misleading after migration to AcoustID/MusicBrainz primary. Cosmetic, not a regression.",
+    "Pre-existing: server.py verify_email accepts raw dict (no Pydantic model). Cosmetic.",
+    "Consider adding a `logout` link/button testid consistency: constants/testIds/auth.js exports `button: 'logout-button'` but the actual Navbar uses `NAV.logoutBtn = 'nav-logout-btn'`. Two conventions for the same concept exist. Not a bug, but a minor cleanup opportunity."
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_soniccheck.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "updated_files": [],
+  "action_items": [],
+  "success_rate": {"backend": "100% (15/15 executed; 4 skipped by design)", "frontend": "100% (9/9 flows PASS, 0 page errors)"},
+  "test_credentials": "admin@soniccheck.io / Admin@Sonic2026 used (from /app/memory/test_credentials.md). ADMIN_EMAIL/ADMIN_PASSWORD env-var fallbacks in test_soniccheck.py:14-15 verified working.",
+  "seed_data_creation": "pytest created a handful of transient TEST_ prefixed users (test_iter5_*, quota_*) and one Playwright registration user regtest_*@example.com; scan docs are deleted by test teardowns; user docs harmless (unique emails).",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "AuthContext.jsx refactor verified regression-free. If touching AuthContext again, re-run this iteration's frontend flow: login->dashboard->region change->library->scan detail->verify->pricing->logout->register->resend. Backend regression subset command: `pytest /app/backend/tests/test_soniccheck.py -v -k 'not lyric_scan and not audio_scan and not quota'`. Full LLM+audio tests already validated in iteration 5.",
+  "rca of the issue": "N/A - no bugs found this iteration."
+}
