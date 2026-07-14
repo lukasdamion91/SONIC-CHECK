@@ -116,6 +116,12 @@
 - ✅ Verified: navbar + hero screenshot, badge SVG base64 embed, PDF report image
 - Logo asset URLs on record in get_assets_tool (3 artifacts)
 
+## Iteration 13 (Jun 2026) — Code Review Fixes + Regression
+- ✅ Valid fixes applied: tests/test_soniccheck.py reads ADMIN_EMAIL/ADMIN_PASSWORD from env; AuthContext.jsx rewritten with useCallback for all auth fns + useMemo'd provider value (prevents consumer re-renders)
+- ✅ False positives verified & rejected: `is` vs `==` in server.py (none exist), "undefined vars" at server.py 615/804-806 (assigned in try with raising except), hook-dependency warnings citing module imports (`api`) and local vars, PaymentSuccess deps (correct as written)
+- ⏭️ Deferred (stylistic, high regression risk on tested code): complexity refactors of ScanResult/NewScan/Library/build_pdf/create_scan — revisit only if these files need feature work
+- ✅ testing_agent iteration_6: 15/15 backend, 9/9 frontend flows, 0 page errors — AuthContext rewrite regression-free
+
 ## Test Credentials
 See `/app/memory/test_credentials.md`. Admin: `admin@soniccheck.io / Admin@Sonic2026`.
 
