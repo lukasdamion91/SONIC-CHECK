@@ -110,6 +110,12 @@
 - ✅ CTA panel: giant watermark logo arcs + holo bar
 - ✅ Verified via screenshots (hero + CTA)
 
+## Iteration 12 (Jun 2026) — Official Logo v2 (SONICCHECK OFFICIAL2.webp)
+- ✅ Reprocessed all brand assets from the official white-bg logo (asset: xqq8tr7h_SONICCHECK%20OFFICIAL2.webp): whiteness-based alpha extraction, cream (#F0E9D6) recolor of dark text for dark-UI variant, holographic circles icon isolated (x1820-1959)
+- ✅ Same file paths, no code changes: frontend /brand/{logo-full,logo-wordmark,logo-icon}.png + favicon-64.png (light variants), backend assets/{logo-icon,logo-full}.png (icon + dark original for PDF/white surfaces)
+- ✅ Verified: navbar + hero screenshot, badge SVG base64 embed, PDF report image
+- Logo asset URLs on record in get_assets_tool (3 artifacts)
+
 ## Test Credentials
 See `/app/memory/test_credentials.md`. Admin: `admin@soniccheck.io / Admin@Sonic2026`.
 

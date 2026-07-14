@@ -23,7 +23,7 @@ export default function Landing() {
           <div className="grid items-end gap-12 lg:grid-cols-12">
             <div className="lg:col-span-8 fade-up">
               <div className="holo-bar mb-8 w-44" />
-              <img src="/brand/logo-full.png" alt="SONIC CHECK" data-testid="landing-hero-logo" className="mb-8 h-20 w-auto object-contain sm:h-24" />
+              <img src="/brand/logo-full.png" alt="SONIC CHECK" data-testid="landing-hero-logo" className="mb-8 h-24 w-auto object-contain sm:h-32" />
               <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs uppercase tracking-widest text-[#F0E9D6]/85 font-mono-data">
                 <span className="inline-block h-1.5 w-1.5 rounded-full holo-gradient animate-pulse" /> Plagiarism intelligence for music
               </div>
