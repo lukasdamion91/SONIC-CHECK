@@ -349,14 +349,14 @@ def is_edu_email(email: str) -> bool:
     return domain.endswith(".edu") or ".edu." in domain or domain.endswith(".ac.uk")
 
 
-def log_verification_link(email: str, token: str) -> None:
-    base = os.environ.get("FRONTEND_URL", "").rstrip("/")
+def log_verification_link(email: str, token: str, origin: str = "") -> None:
+    base = (origin or os.environ.get("FRONTEND_URL", "")).rstrip("/")
     link = f"{base}/verify-email?token={token}"
     logger.info(f"[EMAIL VERIFICATION] To: {email} — Verify link: {link}")
 
 
 @api.post("/auth/register")
-async def register(payload: RegisterIn, response: Response):
+async def register(payload: RegisterIn, response: Response, request: Request):
     email = payload.email.lower().strip()
     existing = await db.users.find_one({"email": email})
     if existing:
@@ -378,7 +378,7 @@ async def register(payload: RegisterIn, response: Response):
     }
     result = await db.users.insert_one(doc)
     doc["_id"] = result.inserted_id
-    log_verification_link(email, verify_token)
+    log_verification_link(email, verify_token, request.headers.get("origin", ""))
     access = create_access_token(str(result.inserted_id), email)
     refresh = create_refresh_token(str(result.inserted_id))
     set_auth_cookies(response, access, refresh)
@@ -421,12 +421,12 @@ async def verify_email(payload: dict):
 
 
 @api.post("/auth/resend-verification")
-async def resend_verification(user: dict = Depends(get_current_user)):
+async def resend_verification(request: Request, user: dict = Depends(get_current_user)):
     if user.get("email_verified"):
         return {"ok": True, "already_verified": True}
     token = user.get("verify_token") or uuid.uuid4().hex
     await db.users.update_one({"_id": user["_id"]}, {"$set": {"verify_token": token}})
-    log_verification_link(user["email"], token)
+    log_verification_link(user["email"], token, request.headers.get("origin", ""))
     return {"ok": True, "message": "Verification link sent (check server console — free tier uses console delivery)"}
 
 
