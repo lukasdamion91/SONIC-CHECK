@@ -595,7 +595,11 @@ async def create_scan(payload: ScanCreate, user: dict = Depends(get_current_user
 
 @api.get("/scans")
 async def list_scans(user: dict = Depends(get_current_user)):
-    cursor = db.scans.find({"user_id": str(user["_id"])}).sort("created_at", -1).limit(100)
+    cursor = db.scans.find(
+        {"user_id": str(user["_id"])},
+        {"title": 1, "artist_name": 1, "region": 1, "created_at": 1, "audio_filename": 1,
+         "result.verdict": 1, "result.overall_score": 1, "result.doctrine": 1, "result.scan_modes": 1},
+    ).sort("created_at", -1).limit(100)
     items = []
     async for doc in cursor:
         doc["id"] = str(doc.pop("_id"))
