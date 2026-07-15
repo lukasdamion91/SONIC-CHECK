@@ -122,6 +122,14 @@
 - ⏭️ Deferred (stylistic, high regression risk on tested code): complexity refactors of ScanResult/NewScan/Library/build_pdf/create_scan — revisit only if these files need feature work
 - ✅ testing_agent iteration_6: 15/15 backend, 9/9 frontend flows, 0 page errors — AuthContext rewrite regression-free
 
+## Iteration 14 (Jun 2026) — Launch Prep: Domain + Live Stripe + Deploy Health
+- ✅ FRONTEND_URL → https://soniccheck.io; verification links now origin-aware (register/resend use request Origin header, env fallback)
+- ✅ Stripe: user's own account wired in — tested with their sk_test key (session + status verified), then swapped to LIVE key (sk_live, cs_live session creation verified). ⚠️ LIVE MODE: real charges, test cards won't work
+- ✅ Deployment health checks: fixed GET /api/scans projection (light fields only; detail endpoint unchanged) + .gitignore .env patterns (recurred; now .env.local only) → deployment_agent PASS
+- ✅ testing_agent iteration_7: 7/7 backend, 6/6 frontend — projection regression-free; new test file /app/backend/tests/test_scans_projection.py
+- 🚀 DEPLOYED TO PRODUCTION: https://audio-plagiarism.emergent.host (user linking soniccheck.io via Cloudflare)
+- NOTE: preview fixes after deployment require user to REDEPLOY to reach production
+
 ## Test Credentials
 See `/app/memory/test_credentials.md`. Admin: `admin@soniccheck.io / Admin@Sonic2026`.
 
