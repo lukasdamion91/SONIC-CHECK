@@ -1,0 +1,45 @@
+{
+  "summary": "Iteration 7 — targeted regression after GET /api/scans projection change and .gitignore .env pattern fix. All 6 requested checks PASS end-to-end. Backend: 7 new projection-focused pytest tests (test_scans_projection.py) all green — list returns 200 with only light fields (id, title, artist_name, region, created_at, audio_filename, result.verdict/overall_score/doctrine/scan_modes) and heavy fields (result.matches, result.waveform, result.fingerprint, lyrics) are correctly ABSENT; detail GET /api/scans/{id} still returns FULL doc including fingerprint + matches + lyrics; GET /api/library unaffected. Frontend: admin login → Dashboard renders 16 scan rows with title, verdict badge, overall score %, region · doctrine text; stat counters correct (Total=16, Violations=13, Clear=3) — computed values EXACTLY match the counted verdicts in the projected list. Clicking a lyric-only scan (PILOT) renders detail fully (title, 88px overall_score, verdict badge, lyric/melody verdicts, jurisdiction/doctrine, AI semantic analysis, badge card). Clicking an audio scan (Player Demo) additionally renders the scan-fingerprint-panel (\"FINGERPRINT ENGINE · ACOUSTID + MUSICBRAINZ\") — proving the detail endpoint still returns the heavy result.fingerprint block. Library page renders 1 library-track-card (Player Demo). Zero page errors, zero console errors across all navigations.",
+  "tested_scope": ["backend_projection_regression", "backend_detail_unchanged", "backend_library_unaffected", "frontend_dashboard_projected_list", "frontend_stat_counters", "frontend_scan_detail_full", "frontend_library"],
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "backend_tests_run": [
+    "TestScansListProjection::test_list_scans_returns_200_and_list PASS",
+    "TestScansListProjection::test_projection_light_fields_present PASS (all 16 rows have id, title, region, created_at, result.verdict, result.overall_score, result.doctrine)",
+    "TestScansListProjection::test_projection_heavy_fields_absent PASS (no top-level 'lyrics'; no result.matches, result.waveform, result.fingerprint on any of 16 items)",
+    "TestScansListProjection::test_no_mongo_object_id_leak PASS",
+    "TestScanDetailFull::test_detail_returns_full_document PASS (result.fingerprint + result.matches present; lyrics key present)",
+    "TestScanDetailFull::test_detail_by_first_scan_id_light_fields_still_present PASS",
+    "TestLibraryUnaffected::test_library_returns_200 PASS"
+  ],
+  "frontend_tests_run": [
+    "Admin login (admin@soniccheck.io) -> /dashboard with 0 page errors",
+    "Dashboard: 16 scan-card rows rendered, each showing title, artist, score %, 'REGION · DOCTRINE', verdict badge (CLEAR/VIOLATION/REVIEW)",
+    "StatCards render Total scans=16, Violations flagged=13, Clear releases=3 — matches counts from list projection (13 VIOLATION + 3 CLEAR + 0 REVIEW = 16 total)",
+    "Click PILOT (lyric scan, EU/Quotation Exception, 7.8% CLEAR) -> detail renders overall_score 88px, verdict badge, jurisdiction (European Union / Quotation Exception), Lyric verdict '7.8%/10% - OK', Melody verdict '0%/10% - OK', AI semantic analysis panel (95.6% originality, 3 Genius candidates), public verification badge card, Delete + PDF report + Badge active buttons",
+    "Click Player Demo (audio scan, JP) -> detail additionally renders scan-fingerprint-panel with 'FINGERPRINT ENGINE · ACOUSTID + MUSICBRAINZ', 'No commercial matches', 'NO RECOGNITION RESULT' badge — heavy result.fingerprint block from detail endpoint",
+    "Library page renders 1 library-track-card (Player Demo · test_tone.mp3 · 118 KB · CLEAR)"
+  ],
+  "regression_verdict": "PASS. The GET /api/scans projection change is safe: (a) the list endpoint returns only the fields Dashboard.jsx consumes (title, artist_name, region, created_at, result.verdict, result.overall_score, result.doctrine, id) and stat filters against result.verdict work; (b) heavy fields are correctly stripped from list responses; (c) the detail endpoint is unmodified and still returns the full document, so ScanResult.jsx renders fingerprint/matches/lyrics/waveform sections as before.",
+  "critical_code_review_comments": [
+    "server.py list_scans (line 597) projection is correct — nested dotted projection 'result.verdict' etc. works with MongoDB and doc.pop('_id') strips the auto-included ObjectId.",
+    "One minor consistency observation (non-blocking): the list projection includes 'audio_filename' but the Dashboard rows do not render it — safe to keep for future use / library-style row upgrade, but could be dropped if size-optimising further.",
+    "Pre-existing (from iter5/6, still open — not this iteration's scope): NewScan.jsx line 146 copy still mentions ACRCloud/'90M+ licensed tracks with ISRC codes' while backend has migrated to AcoustID/MusicBrainz. Cosmetic."
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_scans_projection.py",
+    "/app/test_reports/pytest/iteration_7_projection.xml",
+    "/app/backend/tests/test_soniccheck.py"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_scans_projection.py (new — 4 test classes, 7 tests for this iteration's projection regression)"
+  ],
+  "action_items": [],
+  "success_rate": {"backend": "100% (7/7)", "frontend": "100% (all 6 requested checks pass)"},
+  "test_credentials": "admin@soniccheck.io / Admin@Sonic2026 (from /app/memory/test_credentials.md)",
+  "seed_data_creation": "None. No new users, no new scans created. Existing 16 admin scans left intact per instruction.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Iteration 7 was a tight 6-check regression on the /api/scans list projection change (backend server.py ~L597) and .gitignore .env pattern fix. Everything is green. If projection is ever tuned again, re-run: `pytest /app/backend/tests/test_scans_projection.py -v` — the tests are self-contained (only require REACT_APP_BACKEND_URL + admin credentials env-vars). Frontend regression key selectors: dashboard-scan-card, scan-verdict-badge, scan-fingerprint-panel, library-track-card. IMPORTANT: login button testid is 'login-submit-button' (not '-btn').",
+  "rca of the issue": "N/A — no bugs found. The pre-deploy projection change is a no-op for all UI consumers (Dashboard.jsx and stat counters only touch fields still present in the projection); the detail page continues to receive the full result document, so fingerprint/matches/lyrics/waveform panels are unaffected."
+}
