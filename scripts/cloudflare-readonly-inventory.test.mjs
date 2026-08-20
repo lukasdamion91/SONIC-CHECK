@@ -10,6 +10,7 @@ import test from "node:test";
 import {
   collectInventory,
   encryptInventory,
+  normalizeToken,
   safeSummary,
 } from "./cloudflare-readonly-inventory.mjs";
 
@@ -79,4 +80,13 @@ test("encrypted inventory decrypts to the original report", () => {
   ]);
 
   assert.deepEqual(JSON.parse(plaintext.toString("utf8")), report);
+});
+
+test("token paste artefacts are removed without changing the token", () => {
+  const token = "cfat_example123";
+  assert.equal(normalizeToken(`  ${token}\r\n`), token);
+  assert.equal(normalizeToken(`Bearer ${token}`), token);
+  assert.equal(normalizeToken(`CLOUDFLARE_READ_TOKEN=${token}`), token);
+  assert.equal(normalizeToken(`"${token}"`), token);
+  assert.equal(normalizeToken(`'${token}'`), token);
 });

@@ -11,6 +11,20 @@ import { pathToFileURL } from "node:url";
 const API_ROOT = "https://api.cloudflare.com/client/v4";
 const DOMAIN = "soniccheck.io";
 
+export function normalizeToken(value) {
+  let token = String(value || "").trim();
+  token = token.replace(/^CLOUDFLARE_(?:READ_TOKEN|API_TOKEN)\s*=\s*/i, "").trim();
+  token = token.replace(/^Bearer\s+/i, "").trim();
+  if (
+    token.length >= 2
+    && ((token.startsWith('"') && token.endsWith('"'))
+      || (token.startsWith("'") && token.endsWith("'")))
+  ) {
+    token = token.slice(1, -1).trim();
+  }
+  return token;
+}
+
 function responseErrors(payload) {
   return Array.isArray(payload?.errors)
     ? payload.errors.map(({ code, message }) => ({ code, message }))
@@ -197,7 +211,7 @@ export function safeSummary(report) {
 }
 
 async function main() {
-  const token = process.env.CLOUDFLARE_READ_TOKEN;
+  const token = normalizeToken(process.env.CLOUDFLARE_READ_TOKEN);
   const publicKeyPath = process.env.INVENTORY_PUBLIC_KEY_PATH
     || ".github/cloudflare-inventory-encryption.pub";
   const outputPath = process.env.INVENTORY_OUTPUT
