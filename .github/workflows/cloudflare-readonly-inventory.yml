@@ -1,0 +1,71 @@
+name: Cloudflare read-only inventory
+
+on:
+  pull_request:
+    branches: ["main"]
+    paths:
+      - ".github/cloudflare-inventory-encryption.pub"
+      - ".github/workflows/cloudflare-readonly-inventory.yml"
+      - "scripts/cloudflare-readonly-inventory.mjs"
+      - "scripts/cloudflare-readonly-inventory.test.mjs"
+  push:
+    branches: ["main"]
+    paths:
+      - ".github/cloudflare-inventory-encryption.pub"
+      - ".github/workflows/cloudflare-readonly-inventory.yml"
+      - "scripts/cloudflare-readonly-inventory.mjs"
+      - "scripts/cloudflare-readonly-inventory.test.mjs"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cloudflare-readonly-inventory
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Confirm GET-only implementation
+        run: |
+          node --check scripts/cloudflare-readonly-inventory.mjs
+          node --test scripts/cloudflare-readonly-inventory.test.mjs
+
+  inventory:
+    if: github.event_name != 'pull_request'
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Confirm read token is configured
+        env:
+          CLOUDFLARE_READ_TOKEN: ${{ secrets.CLOUDFLARE_READ_TOKEN }}
+        run: |
+          if [ -z "$CLOUDFLARE_READ_TOKEN" ]; then
+            echo "::error::CLOUDFLARE_READ_TOKEN is not configured."
+            exit 1
+          fi
+
+      - name: Collect and encrypt GET-only inventory
+        env:
+          CLOUDFLARE_READ_TOKEN: ${{ secrets.CLOUDFLARE_READ_TOKEN }}
+          INVENTORY_PUBLIC_KEY_PATH: .github/cloudflare-inventory-encryption.pub
+          INVENTORY_OUTPUT: cloudflare-inventory.enc.json
+        run: node scripts/cloudflare-readonly-inventory.mjs
+
+      - name: Upload encrypted inventory
+        uses: actions/upload-artifact@v4
+        with:
+          name: soniccheck-cloudflare-readonly-inventory
+          path: cloudflare-inventory.enc.json
+          if-no-files-found: error
+          retention-days: 1
