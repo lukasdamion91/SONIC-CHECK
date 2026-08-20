@@ -8,6 +8,7 @@ import {
 import test from "node:test";
 
 import {
+  classifyCloudflareFailure,
   collectInventory,
   encryptInventory,
   normalizeToken,
@@ -89,4 +90,25 @@ test("token paste artefacts are removed without changing the token", () => {
   assert.equal(normalizeToken(`CLOUDFLARE_READ_TOKEN=${token}`), token);
   assert.equal(normalizeToken(`"${token}"`), token);
   assert.equal(normalizeToken(`'${token}'`), token);
+});
+
+test("Cloudflare authentication failures are classified without exposing details", () => {
+  const response = (message) => ({ errors: [{ code: 9109, message }] });
+
+  assert.equal(
+    classifyCloudflareFailure(response("Cannot use the access token from location: 203.0.113.1")),
+    "TOKEN_LOCATION_RESTRICTED",
+  );
+  assert.equal(
+    classifyCloudflareFailure(response("Unauthorized to access requested resource")),
+    "TOKEN_RESOURCE_UNAUTHORIZED",
+  );
+  assert.equal(
+    classifyCloudflareFailure(response("Invalid access token")),
+    "TOKEN_INVALID_OR_REVOKED",
+  );
+  assert.equal(
+    classifyCloudflareFailure(response("Invalid format for Authorization header")),
+    "TOKEN_HEADER_INVALID",
+  );
 });

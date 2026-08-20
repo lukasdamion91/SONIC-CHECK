@@ -31,6 +31,22 @@ function responseErrors(payload) {
     : [];
 }
 
+export function classifyCloudflareFailure(response) {
+  const message = Array.isArray(response?.errors)
+    ? response.errors.map(({ message: value }) => String(value || "")).join(" ").toLowerCase()
+    : "";
+
+  if (message.includes("location")) return "TOKEN_LOCATION_RESTRICTED";
+  if (message.includes("unauthorized to access requested resource")) {
+    return "TOKEN_RESOURCE_UNAUTHORIZED";
+  }
+  if (message.includes("invalid access token")) return "TOKEN_INVALID_OR_REVOKED";
+  if (message.includes("invalid request headers") || message.includes("authorization header")) {
+    return "TOKEN_HEADER_INVALID";
+  }
+  return "UNCLASSIFIED";
+}
+
 export async function cloudflareGet(path, token, options = {}) {
   if (!path.startsWith("/")) throw new Error("Cloudflare API path must start with '/'.");
   if (!token) throw new Error("CLOUDFLARE_READ_TOKEN is required.");
@@ -91,7 +107,10 @@ export async function collectInventory(token, options = {}) {
   const zoneLookup = await cloudflareGet(`/zones?${query}`, token, options);
   if (!zoneLookup.success) {
     const codes = zoneLookup.errors.map(({ code }) => code).join(",") || "unknown";
-    throw new Error(`Cloudflare zone lookup failed (HTTP ${zoneLookup.status}; codes ${codes}).`);
+    const category = classifyCloudflareFailure(zoneLookup);
+    throw new Error(
+      `Cloudflare zone lookup failed (HTTP ${zoneLookup.status}; codes ${codes}; category ${category}).`,
+    );
   }
 
   const zones = Array.isArray(zoneLookup.result) ? zoneLookup.result : [];
