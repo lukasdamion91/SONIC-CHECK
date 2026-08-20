@@ -1,220 +1,219 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import {
+  AudioLines,
+  BadgeCheck,
+  BookOpenCheck,
+  Database,
+  FileSearch,
+  Fingerprint,
+  LockKeyhole,
+  Music2,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LANDING } from "@/constants/testIds";
-import { ShieldCheck, Scale, Music2, FileSearch, Globe2, Zap } from "lucide-react";
+import { api } from "@/lib/api";
 
-const partners = ["UMG", "ASCAP", "BMI", "PRS", "SACEM", "JASRAC", "APRA", "SOCAN"];
+const asset = (path) => `${process.env.PUBLIC_URL || ""}${path}`;
+const aud = new Intl.NumberFormat("en-AU", { style: "currency", currency: "AUD" });
+
+function intervalLabel(plan) {
+  if (plan.billing_interval === "one-time") return "one time";
+  return `per ${plan.billing_interval}`;
+}
 
 export default function Landing() {
+  const [contract, setContract] = useState(null);
+  const [catalogue, setCatalogue] = useState(null);
+
+  useEffect(() => {
+    let active = true;
+    Promise.allSettled([api.get("/product-contract"), api.get("/catalogue/manifest")]).then(([contractResult, catalogueResult]) => {
+      if (!active) return;
+      if (contractResult.status === "fulfilled") setContract(contractResult.value.data);
+      if (catalogueResult.status === "fulfilled") setCatalogue(catalogueResult.value.data);
+    });
+    return () => { active = false; };
+  }, []);
+
+  const plans = contract?.pricing?.plans || [];
+  const activeProfiles = catalogue?.coverage_summary?.comparison_eligible_entries;
+  const paidOpen = contract?.paid_public_scanning === "enabled";
+
   return (
-    <div className="relative">
-      {/* HERO */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 -z-10">
-          <img
-            src="https://images.unsplash.com/photo-1621947081720-86970823b77a?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2OTF8MHwxfHNlYXJjaHwxfHxhYnN0cmFjdCUyMHNvdW5kJTIwd2F2ZSUyMGJhY2tncm91bmQlMjBkYXJrfGVufDB8fHx8MTc4Mjg1NzcyNnww&ixlib=rb-4.1.0&q=85"
-            alt=""
-            className="h-full w-full object-cover opacity-40"
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#1C1C22]/40 via-[#1C1C22]/70 to-[#1C1C22]" />
-        </div>
-
-        <div className="mx-auto max-w-7xl px-6 pt-28 pb-32">
-          <div className="grid items-end gap-12 lg:grid-cols-12">
-            <div className="lg:col-span-8 fade-up">
-              <div className="holo-bar mb-8 w-44" />
-              <img src="/brand/logo-full.png" alt="SONIC CHECK" data-testid="landing-hero-logo" className="mb-8 h-24 w-auto object-contain sm:h-32" />
-              <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs uppercase tracking-widest text-[#F0E9D6]/85 font-mono-data">
-                <span className="inline-block h-1.5 w-1.5 rounded-full holo-gradient animate-pulse" /> Plagiarism intelligence for music
-              </div>
-              <h1 className="font-display text-[10vw] leading-[0.9] text-[#F0E9D6] sm:text-7xl lg:text-8xl">
-                Settle it<br/>
-                <span className="text-[#F0E9D6]/65">before</span> the<br/>
-                <span className="relative inline-block">
-                  <span className="relative z-10">lawsuit.</span>
-                  <span className="absolute -bottom-1 left-0 h-3 w-full holo-gradient opacity-90" />
-                </span>
-              </h1>
-              <p className="mt-8 max-w-2xl text-lg text-[#F0E9D6]/65 font-body">
-                SonicCheck is the Turnitin for music. Drop in a track or lyrics and we score it against millions of copyrighted works, then tell you exactly what is defensible in your jurisdiction — US Fair Use, EU Quotation, UK Fair Dealing, and more.
-              </p>
-              <div className="mt-10 flex flex-wrap gap-3">
-                <Link to="/register" data-testid={LANDING.heroCta}>
-                  <Button className="h-12 rounded-md bg-white px-7 text-black btn-lift hover:bg-[#D4FF00]/85">
-                    Start free scan →
-                  </Button>
-                </Link>
-                <Link to="/pricing" data-testid={LANDING.heroSecondaryCta}>
-                  <Button variant="outline" className="h-12 rounded-md border-white/15 bg-transparent px-7 text-[#F0E9D6] hover:bg-white/10">
-                    See pricing
-                  </Button>
-                </Link>
-              </div>
-              <div className="mt-12 flex flex-wrap items-center gap-6 text-xs text-[#F0E9D6]/50 font-mono-data uppercase tracking-widest">
-                <span>3 free scans</span>
-                <span className="h-1 w-1 rounded-full bg-zinc-700" />
-                <span>No card required</span>
-                <span className="h-1 w-1 rounded-full bg-zinc-700" />
-                <span>For artists · producers · students</span>
-              </div>
-              <div className="holo-bar mt-8 w-28" />
+    <main>
+      <section className="relative overflow-hidden border-b border-white/10">
+        <div className="landing-orbit landing-orbit-one" />
+        <div className="landing-orbit landing-orbit-two" />
+        <div className="mx-auto grid max-w-7xl gap-14 px-6 pb-24 pt-20 lg:grid-cols-[1.25fr_0.75fr] lg:items-end lg:pb-32 lg:pt-28">
+          <div className="relative z-10 fade-up">
+            <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-[#D4FF00]/25 bg-[#D4FF00]/5 px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] text-[#D4FF00] font-mono-data">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#D4FF00]" /> Controlled private beta
             </div>
+            <img src={asset("/brand/logo-full.png")} alt="SONIC CHECK" className="mb-10 h-20 w-auto sm:h-28" />
+            <h1 className="max-w-5xl font-display text-6xl text-[#F0E9D6] sm:text-7xl lg:text-[6.4rem]">
+              Originality,<br /><span className="holo-text">checked through evidence.</span>
+            </h1>
+            <p className="mt-8 max-w-2xl text-lg leading-8 text-[#F0E9D6]/66">
+              SONIC CHECK brings recording identity, lyric phrase overlap and governed symbolic-composition signals into one traceable evidence screen for qualified human review.
+            </p>
+            <div className="mt-10 flex flex-wrap gap-3">
+              <Link to="/join" data-testid={LANDING.heroCta}>
+                <Button className="h-12 bg-[#D4FF00] px-7 text-[#1C1C22] btn-lift hover:bg-[#D4FF00]/85">Join SONIC CHECK</Button>
+              </Link>
+              <Link to="/login" data-testid={LANDING.heroSecondaryCta}>
+                <Button variant="outline" className="h-12 border-white/15 bg-transparent px-7 text-[#F0E9D6] hover:bg-white/10">Log in</Button>
+              </Link>
+            </div>
+            <div className="mt-9 flex flex-wrap gap-x-7 gap-y-3 text-xs uppercase tracking-[0.14em] text-[#F0E9D6]/45 font-mono-data">
+              <span>Private submissions</span>
+              <span>Method-labelled signals</span>
+              <span>Human review required</span>
+            </div>
+          </div>
 
-            {/* Floating score card */}
-            <div className="lg:col-span-4 fade-up delay-200">
-              <div className="rounded-md border border-white/10 bg-[#24242C]/80 p-6 backdrop-blur-xl glow-holo">
-                <div className="flex items-center justify-between text-[10px] uppercase tracking-widest text-[#F0E9D6]/50 font-mono-data">
-                  <span>Sample report</span>
-                  <span>US · Fair Use</span>
+          <div className="relative z-10 fade-up delay-200">
+            <div className="rounded-2xl border border-white/10 bg-[#1A1A21]/90 p-6 shadow-2xl backdrop-blur-xl sm:p-8">
+              <div className="flex items-center justify-between border-b border-white/10 pb-5">
+                <div>
+                  <div className="text-[10px] uppercase tracking-[0.2em] text-[#F0E9D6]/45 font-mono-data">Evidence record</div>
+                  <div className="mt-1 text-lg font-semibold text-[#F0E9D6]">Method coverage</div>
                 </div>
-                <div className="mt-4 font-mono-data text-[64px] leading-none text-[#F0E9D6]">
-                  18.4<span className="text-2xl text-[#F0E9D6]/50">%</span>
-                </div>
-                <div className="mt-2 inline-flex items-center gap-2 rounded-full border border-amber-500/40 bg-amber-500/10 px-3 py-1 text-xs text-[#F0E9D6] font-mono-data uppercase tracking-widest">
-                  Review needed
-                </div>
-                <div className="mt-6 space-y-3">
-                  {[
-                    { label: "Lyric overlap", val: 22, color: "#D4FF00" },
-                    { label: "Melodic match", val: 14, color: "#F0E9D6" },
-                    { label: "Chord progression", val: 9, color: "#0047FF" },
-                  ].map((b) => (
-                    <div key={b.label}>
-                      <div className="flex items-center justify-between text-xs text-[#F0E9D6]/65">
-                        <span>{b.label}</span>
-                        <span className="font-mono-data">{b.val}%</span>
-                      </div>
-                      <div className="mt-1 h-1.5 w-full rounded-full bg-white/5">
-                        <div className="h-full rounded-full" style={{ width: `${b.val * 3}%`, background: b.color }} />
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                <BadgeCheck className="h-7 w-7 text-[#D4FF00]" />
               </div>
+              <div className="mt-6 space-y-3">
+                {[
+                  [Fingerprint, "Recording identity", "Candidate route"],
+                  [BookOpenCheck, "Lyric phrase overlap", "Exact evidence"],
+                  [Music2, "Composition features", "Governed reference set"],
+                ].map(([Icon, label, state]) => (
+                  <div key={label} className="flex items-center gap-4 rounded-xl border border-white/8 bg-white/[0.025] p-4">
+                    <Icon className="h-5 w-5 text-[#9DB8F0]" />
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm text-[#F0E9D6]">{label}</div>
+                      <div className="mt-0.5 text-xs text-[#F0E9D6]/45">{state}</div>
+                    </div>
+                    <span className="rounded-full border border-[#D4FF00]/25 bg-[#D4FF00]/5 px-2.5 py-1 text-[9px] uppercase tracking-widest text-[#D4FF00] font-mono-data">labelled</span>
+                  </div>
+                ))}
+              </div>
+              <p className="mt-6 text-xs leading-5 text-[#F0E9D6]/45">
+                Output is candidate evidence, not a determination of plagiarism, authorship, ownership, infringement, legal clearance or admissibility.
+              </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Partners marquee */}
-      <section className="border-y border-white/10 bg-[#1C1C22]">
-        <div className="mx-auto max-w-7xl overflow-hidden px-6 py-8">
-          <div className="mb-4 text-[10px] uppercase tracking-widest text-[#F0E9D6]/50 font-mono-data">Trusted reference catalogs</div>
-          <div className="marquee">
-            {[...partners, ...partners].map((p, i) => (
-              <div key={`${p}-${i}`} className="font-display whitespace-nowrap text-2xl text-[#F0E9D6]/35">{p}</div>
+      <section id="method" className="mx-auto max-w-7xl px-6 py-24">
+        <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16">
+          <div>
+            <div className="eyebrow">The method</div>
+            <h2 className="mt-4 font-display text-5xl text-[#F0E9D6] sm:text-6xl">One record.<br />Separate signals.</h2>
+            <p className="mt-6 max-w-lg leading-7 text-[#F0E9D6]/62">
+              Each evidence channel retains its own source, version, limitations and confidence. The result is designed to support review, not replace it.
+            </p>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {[
+              [Fingerprint, "Recording identity", "Authorised recognition providers can return a candidate recording. Identity evidence is never converted into a composition conclusion."],
+              [BookOpenCheck, "Lyrics", "Distinctive exact phrase overlap is reported with the submitted and reference snippets required for contextual review."],
+              [AudioLines, "Composition", "Decoded audio is measured against governed symbolic feature profiles with manifest and reference provenance."],
+              [FileSearch, "Evidence record", "Inputs, method versions, source status and limitations are preserved in a reviewable record and optional report."],
+            ].map(([Icon, title, copy]) => (
+              <article key={title} className="rounded-xl border border-white/10 bg-[#24242C] p-6">
+                <Icon className="h-6 w-6 text-[#9DB8F0]" />
+                <h3 className="mt-6 text-xl font-semibold text-[#F0E9D6]">{title}</h3>
+                <p className="mt-3 text-sm leading-6 text-[#F0E9D6]/58">{copy}</p>
+              </article>
             ))}
           </div>
         </div>
       </section>
 
-      {/* HOW IT WORKS — Tetris grid */}
-      <section id="how-it-works" className="mx-auto max-w-7xl px-6 py-24">
-        <div className="mb-12 flex items-end justify-between">
+      <section id="catalogue" className="border-y border-white/10 bg-[#15151A]">
+        <div className="mx-auto grid max-w-7xl gap-12 px-6 py-24 lg:grid-cols-2 lg:items-center">
+          <div className="rounded-2xl border border-white/10 bg-[#202027] p-7 sm:p-10">
+            <div className="flex items-center gap-3 text-[#9DB8F0]">
+              <Database className="h-6 w-6" />
+              <span className="eyebrow !text-[#9DB8F0]">Active catalogue release</span>
+            </div>
+            <div className="mt-8 font-mono-data text-5xl text-[#F0E9D6] sm:text-6xl">
+              {typeof activeProfiles === "number" ? activeProfiles.toLocaleString("en-AU") : "—"}
+            </div>
+            <div className="mt-2 text-sm text-[#F0E9D6]/58">comparison-eligible symbolic feature profiles</div>
+            <div className="mt-8 grid grid-cols-2 gap-3">
+              <div className="rounded-lg border border-white/8 bg-black/15 p-4">
+                <div className="text-[10px] uppercase tracking-widest text-[#F0E9D6]/40 font-mono-data">Metadata</div>
+                <div className="mt-2 text-sm text-[#F0E9D6]">MusicBrainz context</div>
+              </div>
+              <div className="rounded-lg border border-white/8 bg-black/15 p-4">
+                <div className="text-[10px] uppercase tracking-widest text-[#F0E9D6]/40 font-mono-data">Raw media</div>
+                <div className="mt-2 text-sm text-[#F0E9D6]">Not hosted in this release</div>
+              </div>
+            </div>
+          </div>
           <div>
-            <div className="mb-3 text-[10px] uppercase tracking-widest text-[#F0E9D6]/50 font-mono-data">How it works</div>
-            <h2 className="font-display text-5xl text-[#F0E9D6] sm:text-6xl">Forensic-grade<br/><span className="holo-text">music analysis.</span></h2>
-          </div>
-          <p className="hidden max-w-md text-[#F0E9D6]/65 lg:block">Three engines, one verdict. Upload an audio file, paste lyrics, or both — we run them through lyric, melodic, and chord analyzers, then apply your region&apos;s copyright doctrine.</p>
-        </div>
-
-        <div className="tetris-grid">
-          <div className="col-span-6 row-span-2 beam-card p-8 lg:col-span-4">
-            <FileSearch className="h-7 w-7 text-[#0047FF]" />
-            <h3 className="mt-6 font-display text-3xl text-[#F0E9D6]">Lyric scanner</h3>
-            <p className="mt-3 text-sm text-[#F0E9D6]/65 max-w-md">Catches paraphrased hooks, verse echoes, and direct lifts using sliding n-gram windows and semantic similarity against millions of registered lyrics.</p>
-            <div className="mt-6 grid grid-cols-3 gap-2">
-              {Array.from({ length: 18 }).map((_, i) => (
-                <div key={`ngram-${i}`} className="h-2 rounded-sm" style={{ background: i % 5 === 0 ? "#D4FF00" : "rgba(255,255,255,0.08)" }} />
-              ))}
-            </div>
-          </div>
-
-          <div className="col-span-6 row-span-1 border border-white/10 bg-[#24242C] p-8 lg:col-span-2">
-            <Music2 className="h-6 w-6 text-[#0047FF]" />
-            <h3 className="mt-4 font-display text-xl text-[#F0E9D6]">Melodic match</h3>
-            <p className="mt-2 text-xs text-[#F0E9D6]/65">MIDI-extracted contour & interval comparison.</p>
-          </div>
-
-          <div className="col-span-6 row-span-1 border border-white/10 bg-[#24242C] p-8 lg:col-span-2">
-            <Zap className="h-6 w-6 text-[#F0E9D6]" />
-            <h3 className="mt-4 font-display text-xl text-[#F0E9D6]">Chord engine</h3>
-            <p className="mt-2 text-xs text-[#F0E9D6]/65">Detects shared progressions across keys.</p>
-          </div>
-
-          <div className="col-span-6 lg:col-span-3 border border-white/10 bg-[#24242C] p-8">
-            <Scale className="h-6 w-6 text-[#0047FF]" />
-            <h3 className="mt-4 font-display text-2xl text-[#F0E9D6]">Regional verdicts</h3>
-            <p className="mt-2 text-sm text-[#F0E9D6]/65">Each jurisdiction has its own fair-use threshold. We render verdicts you can defend in court.</p>
-          </div>
-
-          <div className="col-span-6 lg:col-span-3 border border-white/10 bg-gradient-to-br from-[#2E2E38] to-[#24242C] p-8">
-            <ShieldCheck className="h-6 w-6 text-[#0047FF]" />
-            <h3 className="mt-4 font-display text-2xl text-[#F0E9D6]">Defensible reports</h3>
-            <p className="mt-2 text-sm text-[#F0E9D6]/65">Export a timestamped, signed PDF that is admissible in dispute resolution. Built for music attorneys.</p>
-          </div>
-        </div>
-      </section>
-
-      {/* REGIONS */}
-      <section id="regions" className="relative overflow-hidden border-y border-white/10 bg-[#1C1C22]">
-        <div className="mx-auto grid max-w-7xl items-center gap-12 px-6 py-24 lg:grid-cols-2">
-          <div>
-            <div className="mb-3 text-[10px] uppercase tracking-widest text-[#F0E9D6]/50 font-mono-data">Jurisdiction aware</div>
-            <h2 className="font-display text-5xl text-[#F0E9D6]">Different country.<br/><span className="holo-text">Different rules.</span></h2>
-            <p className="mt-6 max-w-lg text-[#F0E9D6]/65">A 14% lyric overlap might be defensible in the US under Fair Use but trigger an automatic infringement claim in Japan. SonicCheck applies the right threshold for the right region.</p>
-            <div className="mt-8 grid grid-cols-2 gap-3 max-w-md">
-              {[
-                { code: "US", name: "United States", t: 15, doc: "Fair Use" },
-                { code: "EU", name: "Europe", t: 10, doc: "Quotation" },
-                { code: "UK", name: "United Kingdom", t: 10, doc: "Fair Dealing" },
-                { code: "JP", name: "Japan", t: 8, doc: "Art. 32" },
-              ].map((r) => (
-                <div key={r.code} className="rounded-md border border-white/10 bg-[#24242C] p-4">
-                  <div className="flex items-center justify-between">
-                    <span className="font-mono-data text-xs text-[#F0E9D6]/50">{r.code}</span>
-                    <span className="font-mono-data text-2xl text-[#F0E9D6]">{r.t}%</span>
-                  </div>
-                  <div className="mt-1 text-sm text-[#F0E9D6]">{r.name}</div>
-                  <div className="text-xs text-[#F0E9D6]/50">{r.doc}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="relative">
-            <div className="overflow-hidden rounded-md border border-white/10">
-              <img
-                src="https://images.unsplash.com/photo-1636226570637-3fbda7ca09dc?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjY2NjV8MHwxfHNlYXJjaHwzfHxtdXNpYyUyMHByb2R1Y2VyJTIwc3R1ZGlvfGVufDB8fHx8MTc4Mjg1NzcyNnww&ixlib=rb-4.1.0&q=85"
-                alt="Producer studio"
-                className="h-full w-full object-cover"
-              />
-            </div>
-            <div className="absolute -bottom-6 -left-6 max-w-xs rounded-md border border-white/10 bg-[#24242C] p-5 glow-red">
-              <Globe2 className="h-5 w-5 text-[#D4FF00]" />
-              <div className="mt-2 font-mono-data text-xs uppercase tracking-widest text-[#D4FF00]">Violation flagged</div>
-              <p className="mt-1 text-sm text-[#F0E9D6]">&ldquo;Levitating&rdquo; — 22% lyric overlap in EU jurisdiction (limit: 10%).</p>
+            <div className="eyebrow">Catalogue boundary</div>
+            <h2 className="mt-4 font-display text-5xl text-[#F0E9D6]">Real coverage.<br />Precisely described.</h2>
+            <p className="mt-6 leading-7 text-[#F0E9D6]/62">
+              {contract?.catalogue_boundary || "Coverage is published from the versioned production manifest. MusicBrainz provides metadata and identity context; recording recognition requires an authorised provider."}
+            </p>
+            <div className="mt-7 flex items-start gap-3 rounded-lg border border-[#D4FF00]/20 bg-[#D4FF00]/5 p-4 text-sm leading-6 text-[#F0E9D6]/72">
+              <LockKeyhole className="mt-0.5 h-5 w-5 shrink-0 text-[#D4FF00]" />
+              Licensed or governed access does not mean raw recordings are exposed to users or stored in the public web application.
             </div>
           </div>
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="mx-auto max-w-7xl px-6 py-24">
-        <div className="relative overflow-hidden rounded-md border border-white/10 bg-gradient-to-br from-[#24242C] via-[#1C1C22] to-[#24242C] p-12 sm:p-20">
-          <img src="/brand/logo-icon.png" alt="" className="pointer-events-none absolute -right-10 -top-10 h-64 w-64 object-contain opacity-15 sm:h-80 sm:w-80" />
-          <div className="holo-bar mb-8 w-32" />
-          <h2 className="font-display text-5xl text-[#F0E9D6] sm:text-7xl">Don&apos;t release<br/><span className="holo-text">blindfolded.</span></h2>
-          <p className="mt-6 max-w-xl text-[#F0E9D6]/65">Built for the music industry: A&R teams, labels, producers, and the next generation of artists in conservatories worldwide.</p>
-          <div className="mt-10 flex flex-wrap gap-3">
-            <Link to="/register"><Button className="h-12 rounded-md bg-white px-8 text-black btn-lift hover:bg-[#D4FF00]/85">Start free →</Button></Link>
-            <Link to="/pricing" data-testid={LANDING.pricingCta}><Button variant="outline" className="h-12 rounded-md border-white/15 bg-transparent px-8 text-[#F0E9D6] hover:bg-white/10">See plans</Button></Link>
-          </div>
+      <section id="pricing" className="mx-auto max-w-7xl px-6 py-24">
+        <div className="max-w-3xl">
+          <div className="eyebrow">AUD pricing</div>
+          <h2 className="mt-4 font-display text-5xl text-[#F0E9D6] sm:text-6xl">A clear path from one screen to a team.</h2>
+          <p className="mt-6 text-[#F0E9D6]/62">The API is the pricing authority. Create an account to purchase or manage an entitlement.</p>
         </div>
-        <div className="mt-10 flex flex-wrap items-center justify-between gap-4 text-xs text-[#F0E9D6]/50 font-mono-data">
-          <span>© SonicCheck — Plagiarism intelligence for music</span>
-          <span>v1.0.0 · MVP</span>
+
+        {plans.length ? (
+          <div className="mt-12 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {plans.map((plan) => (
+              <article key={plan.id} className="flex rounded-xl border border-white/10 bg-[#24242C] p-6 flex-col">
+                <div className="text-xs uppercase tracking-[0.17em] text-[#F0E9D6]/45 font-mono-data">{plan.name}</div>
+                <div className="mt-6 text-4xl font-semibold text-[#F0E9D6]">{aud.format(plan.price)}</div>
+                <div className="mt-1 text-xs text-[#F0E9D6]/45">AUD · {intervalLabel(plan)}</div>
+                <ul className="mt-7 flex-1 space-y-3 text-sm leading-5 text-[#F0E9D6]/62">
+                  {plan.features.map((feature) => <li key={feature} className="flex gap-2"><span className="text-[#D4FF00]">•</span>{feature}</li>)}
+                </ul>
+                <Link to="/join" className="mt-8">
+                  <Button variant="outline" className="w-full border-white/15 bg-transparent text-[#F0E9D6] hover:bg-white/10">Join to continue</Button>
+                </Link>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <div className="mt-12 rounded-xl border border-white/10 bg-[#24242C] p-8 text-[#F0E9D6]/55">Loading the authoritative AUD pricing contract…</div>
+        )}
+
+        <div className="mt-6 rounded-lg border border-white/10 bg-white/[0.025] px-4 py-3 text-xs text-[#F0E9D6]/50 font-mono-data">
+          Paid public checkout: {paidOpen ? "enabled" : "closed until the operational readiness gate is green"}.
         </div>
       </section>
-    </div>
+
+      <section className="mx-auto max-w-7xl px-6 pb-24">
+        <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-[#202027] p-10 sm:p-16">
+          <div className="absolute right-0 top-0 h-64 w-64 translate-x-1/3 -translate-y-1/3 rounded-full bg-[#9DB8F0]/10 blur-3xl" />
+          <h2 className="relative max-w-3xl font-display text-5xl text-[#F0E9D6] sm:text-6xl">Enter through one trusted front door.</h2>
+          <p className="relative mt-5 max-w-2xl text-[#F0E9D6]/62">Join or log in at soniccheck.io. Account, subscription and individual functionality then remain inside the protected application.</p>
+          <div className="relative mt-8 flex flex-wrap gap-3">
+            <Link to="/join"><Button className="h-12 bg-[#D4FF00] px-7 text-[#1C1C22] hover:bg-[#D4FF00]/85">Join</Button></Link>
+            <Link to="/login"><Button variant="outline" className="h-12 border-white/15 bg-transparent px-7 text-[#F0E9D6] hover:bg-white/10">Log in</Button></Link>
+          </div>
+        </div>
+        <footer className="mt-10 flex flex-wrap items-center justify-between gap-4 text-xs text-[#F0E9D6]/38 font-mono-data">
+          <span>© SONIC CHECK</span>
+          <span>{contract?.contract_revision || "RC-0 operational convergence"}</span>
+        </footer>
+      </section>
+    </main>
   );
 }

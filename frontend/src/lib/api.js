@@ -1,12 +1,27 @@
 import axios from "axios";
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const BACKEND_URL = (process.env.REACT_APP_BACKEND_URL || "https://api.soniccheck.io").replace(/\/$/, "");
 export const API = `${BACKEND_URL}/api`;
+
+let tokenProvider = null;
+
+export function setApiTokenProvider(provider) {
+  tokenProvider = typeof provider === "function" ? provider : null;
+}
 
 export const api = axios.create({
   baseURL: API,
-  withCredentials: true,
-  headers: { "Content-Type": "application/json" },
+  withCredentials: false,
+});
+
+api.interceptors.request.use(async (config) => {
+  if (!tokenProvider) return config;
+  const token = await tokenProvider();
+  if (token) {
+    config.headers = config.headers || {};
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
 });
 
 export function formatApiErrorDetail(detail) {

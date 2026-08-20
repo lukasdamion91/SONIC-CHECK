@@ -1,98 +1,72 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
+import { Loader2, ShieldAlert } from "lucide-react";
 import { api, API } from "@/lib/api";
-import { ShieldAlert, Loader2 } from "lucide-react";
 
-const verdictStyles = {
-  CLEAR: { color: "#1F8A4C", label: "CLEAR — within regional limits" },
-  REVIEW: { color: "#B8860B", label: "REVIEW — manual review advised" },
-  VIOLATION: { color: "#C0221F", label: "VIOLATION — exceeds regional limits" },
+const asset = (path) => `${process.env.PUBLIC_URL || ""}${path}`;
+const statusLabels = {
+  REVIEW_REQUIRED: "Candidate evidence — human review required",
+  NO_CANDIDATE_IDENTIFIED: "No candidate identified in searched sources",
+  INCONCLUSIVE: "Inconclusive — incomplete source coverage",
+  CLEAR: "Legacy record",
+  REVIEW: "Legacy record",
+  VIOLATION: "Legacy record",
 };
 
 export default function VerifyBadge() {
   const { badgeId } = useParams();
   const [record, setRecord] = useState(null);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     api.get(`/verify/${badgeId}`)
-      .then((r) => setRecord(r.data))
-      .catch(() => setError("This verification record does not exist or has been removed."));
+      .then(({ data }) => setRecord(data))
+      .catch(() => setError("This public evidence record does not exist or has been removed."));
   }, [badgeId]);
 
   if (error) {
-    return (
-      <div className="mx-auto max-w-lg px-6 py-24 text-center" data-testid="verify-badge-page">
-        <ShieldAlert className="mx-auto h-10 w-10 text-red-400" />
-        <h1 className="mt-6 font-display text-3xl text-[#F0E9D6]">Not found</h1>
-        <p className="mt-3 text-[#F0E9D6]/65" data-testid="verify-badge-error">{error}</p>
-      </div>
-    );
+    return <main className="mx-auto max-w-lg px-6 py-24 text-center"><ShieldAlert className="mx-auto h-10 w-10 text-red-300" /><h1 className="mt-6 font-display text-4xl text-[#F0E9D6]">Record not found.</h1><p className="mt-3 text-[#F0E9D6]/58">{error}</p></main>;
   }
-  if (!record) {
-    return (
-      <div className="mx-auto max-w-lg px-6 py-24 text-center">
-        <Loader2 className="mx-auto h-8 w-8 animate-spin text-[#0047FF]" />
-      </div>
-    );
-  }
+  if (!record) return <div className="grid min-h-[65vh] place-items-center"><Loader2 className="h-7 w-7 animate-spin text-[#F0E9D6]/45" /></div>;
 
-  const V = verdictStyles[record.verdict] || verdictStyles.REVIEW;
+  const status = statusLabels[record.screening_status] || "Evidence record";
 
   return (
-    <div className="mx-auto max-w-2xl px-6 py-16" data-testid="verify-badge-page">
-      <div className="rounded-md border border-[#D4FF00]/30 bg-[#24242C] p-10">
-        <div className="flex items-center gap-3">
-          <img src="/brand/logo-icon.png" alt="SonicCheck" className="h-12 w-12 object-contain" />
-          <div>
-            <div className="text-[10px] uppercase tracking-widest text-[#F0E9D6]/50 font-mono-data">Public verification record</div>
-            <div className="font-display text-xl text-[#F0E9D6]">Verified by SonicCheck</div>
-          </div>
+    <main className="mx-auto max-w-3xl px-6 py-14">
+      <div className="rounded-2xl border border-[#D4FF00]/20 bg-[#202027] p-7 sm:p-10">
+        <div className="flex items-center gap-4 border-b border-white/10 pb-7">
+          <img src={asset("/brand/logo-icon.png")} alt="" className="h-12 w-12" />
+          <div><div className="eyebrow">Public evidence record</div><div className="mt-1 text-lg font-semibold text-[#F0E9D6]">SONIC CHECK verification</div></div>
         </div>
 
         <div className="mt-8">
-          <div className="text-[10px] uppercase tracking-widest text-[#F0E9D6]/50 font-mono-data">Work</div>
-          <h1 data-testid="verify-badge-title" className="font-display text-4xl text-[#F0E9D6] mt-1">{record.title}</h1>
-          <div className="mt-1 text-[#F0E9D6]/65">{record.artist_name || "—"}</div>
+          <h1 className="font-display text-5xl text-[#F0E9D6]">{record.title}</h1>
+          <div className="mt-2 text-[#F0E9D6]/52">{record.artist_name || "Unknown creator"}</div>
         </div>
 
-        <div className="mt-8 grid gap-3 sm:grid-cols-2">
-          <div className="rounded-md border border-white/10 bg-[#1C1C22] p-4">
-            <div className="text-[10px] uppercase tracking-widest text-[#F0E9D6]/50 font-mono-data">Similarity score</div>
-            <div data-testid="verify-badge-score" className="mt-1 font-mono-data text-4xl text-[#F0E9D6]">{record.overall_score}<span className="text-lg text-[#F0E9D6]/50">%</span></div>
-          </div>
-          <div className="rounded-md border border-white/10 bg-[#1C1C22] p-4">
-            <div className="text-[10px] uppercase tracking-widest text-[#F0E9D6]/50 font-mono-data">Verdict</div>
-            <div data-testid="verify-badge-verdict" className="mt-2 inline-flex rounded-full border px-3 py-1 text-xs font-mono-data uppercase tracking-widest" style={{ color: V.color, borderColor: `${V.color}66`, background: `${V.color}1a` }}>
-              {record.verdict}
-            </div>
-            <div className="mt-2 text-xs text-[#F0E9D6]/50">{V.label}</div>
-          </div>
+        <div className="mt-8 rounded-xl border border-white/10 bg-[#17171C] p-5">
+          <div className="text-[10px] uppercase tracking-widest text-[#F0E9D6]/38 font-mono-data">Screening status</div>
+          <div className="mt-2 text-lg text-[#F0E9D6]">{status}</div>
+          <p className="mt-3 text-sm leading-6 text-[#F0E9D6]/52">This status describes candidate evidence under the listed source coverage. It is not an authorship, ownership, infringement or legal-clearance decision.</p>
         </div>
 
-        <div className="mt-4 rounded-md border border-white/10 bg-[#1C1C22] p-4 text-sm text-[#F0E9D6]/85">
-          <div className="grid gap-1 font-mono-data text-xs">
-            <div><span className="text-[#F0E9D6]/50">Jurisdiction:</span> {record.region_name} ({record.region}) · {record.doctrine}</div>
-            <div><span className="text-[#F0E9D6]/50">Checks:</span> {record.scan_modes?.audio ? "Audio fingerprint" : null}{record.scan_modes?.audio && record.scan_modes?.lyrics ? " + " : ""}{record.scan_modes?.lyrics ? "AI lyric analysis" : null}</div>
-            <div><span className="text-[#F0E9D6]/50">Scanned:</span> {record.scanned_at?.slice(0, 10)}</div>
-            <div><span className="text-[#F0E9D6]/50">Record ID:</span> {record.badge_id}</div>
-          </div>
-        </div>
+        <dl className="mt-6 grid gap-3 sm:grid-cols-2">
+          {[
+            ["Analysis version", record.analysis_version],
+            ["Regional context", `${record.region_name || "Not specified"}${record.region ? ` (${record.region})` : ""}`],
+            ["Audio channel", record.scan_modes?.audio ? "Submitted" : "Not submitted"],
+            ["Lyrics channel", record.scan_modes?.lyrics ? "Submitted" : "Not submitted"],
+            ["Screened", record.scanned_at ? new Date(record.scanned_at).toLocaleString("en-AU") : "—"],
+            ["Record ID", record.badge_id],
+          ].map(([label, value]) => <div key={label} className="rounded-lg border border-white/8 bg-white/[0.025] p-4"><dt className="text-[9px] uppercase tracking-widest text-[#F0E9D6]/35 font-mono-data">{label}</dt><dd className="mt-2 break-all text-sm text-[#F0E9D6]/68">{value || "—"}</dd></div>)}
+        </dl>
 
-        <div className="mt-6 flex justify-center">
-          <img src={`${API}/verify/${badgeId}/badge.svg`} alt="Verified by SonicCheck badge" data-testid="verify-badge-svg" />
+        <div className="mt-8 flex justify-center overflow-x-auto rounded-xl border border-white/8 bg-[#0A0A0D] p-4">
+          <img src={`${API}/verify/${badgeId}/badge.svg`} alt="SONIC CHECK evidence-record badge" />
         </div>
-
-        <p className="mt-6 text-center text-xs text-[#F0E9D6]/40">
-          This record was generated by SonicCheck's automated plagiarism analysis. It is not legal advice.
-        </p>
       </div>
 
-      <div className="mt-8 text-center">
-        <Link to="/" className="inline-flex items-center gap-2 text-sm text-[#F0E9D6]/65 hover:text-[#F0E9D6]">
-          <img src="/brand/logo-icon.png" alt="" className="h-5 w-5 object-contain" /> Check your own music at SonicCheck
-        </Link>
-      </div>
-    </div>
+      <div className="mt-8 text-center"><Link to="/" className="text-sm text-[#F0E9D6]/55 hover:text-[#F0E9D6]">Return to soniccheck.io</Link></div>
+    </main>
   );
 }

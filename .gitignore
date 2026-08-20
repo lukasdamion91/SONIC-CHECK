@@ -75,6 +75,8 @@ agenthub/agents/youtube/db
 
 # Build caches
 .cache/
+tmp/
+output/
 
 memory/test_credentials.md
 
@@ -88,3 +90,4 @@ credentials.json
 .env
 .env.*
 *.env
+!**/.env.example
