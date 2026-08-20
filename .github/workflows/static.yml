@@ -1,4 +1,4 @@
-name: Build and deploy SONIC CHECK preview
+name: Build and deploy SONIC CHECK
 
 on:
   push:
@@ -37,10 +37,9 @@ jobs:
       - name: Validate public claims
         run: npm run validate:claims
 
-      - name: Build routed application
+      - name: Build canonical-domain application
         env:
           CI: "true"
-          PUBLIC_URL: /SONIC-CHECK
           REACT_APP_BACKEND_URL: https://api.soniccheck.io
           REACT_APP_CLERK_PUBLISHABLE_KEY: ${{ vars.REACT_APP_CLERK_PUBLISHABLE_KEY }}
         run: |
@@ -83,6 +82,6 @@ jobs:
         with:
           path: frontend/build
 
-      - name: Deploy preview
+      - name: Deploy production site
         id: deployment
         uses: actions/deploy-pages@v5
