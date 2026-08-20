@@ -1,171 +1,128 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { api, formatApiErrorDetail } from "@/lib/api";
-import { useAuth } from "@/context/AuthContext";
+import { AlertCircle, ArrowRight, FileClock, FileSearch, Loader2, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { DASH } from "@/constants/testIds";
-import { Plus, Music2, AlertTriangle, Check, AlertCircle, MailWarning } from "lucide-react";
-import { toast } from "sonner";
+import { hasScanEntitlement, useAuth } from "@/context/AuthContext";
+import { api, formatApiErrorDetail } from "@/lib/api";
 
-const verdictMap = {
-  CLEAR: { color: "text-[#0047FF] border-emerald-400/40 bg-emerald-400/10", icon: Check, label: "CLEAR" },
-  REVIEW: { color: "text-[#F0E9D6] border-amber-400/40 bg-amber-400/10", icon: AlertCircle, label: "REVIEW" },
-  VIOLATION: { color: "text-[#D4FF00] border-red-400/40 bg-red-400/10", icon: AlertTriangle, label: "VIOLATION" },
+const statusCopy = {
+  REVIEW_REQUIRED: { label: "Candidate evidence", className: "border-amber-300/25 bg-amber-300/5 text-amber-200" },
+  NO_CANDIDATE_IDENTIFIED: { label: "No candidate identified", className: "border-sky-300/25 bg-sky-300/5 text-sky-200" },
+  INCONCLUSIVE: { label: "Inconclusive", className: "border-white/15 bg-white/5 text-[#F0E9D6]/65" },
 };
 
-export default function Dashboard() {
-  const { user, updateRegion } = useAuth();
-  const [scans, setScans] = useState([]);
-  const [regions, setRegions] = useState([]);
-  const [loading, setLoading] = useState(true);
+function statusFor(scan) {
+  const status = scan?.result?.screening_status;
+  if (statusCopy[status]) return statusCopy[status];
+  return { label: "Legacy evidence record", className: "border-white/15 bg-white/5 text-[#F0E9D6]/65" };
+}
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const [s, r] = await Promise.all([api.get("/scans"), api.get("/regions")]);
-        setScans(s.data);
-        setRegions(r.data);
-      } catch (e) {
-        toast.error(formatApiErrorDetail(e.response?.data?.detail));
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, []);
-
-  const handleRegionChange = async (region) => {
-    try {
-      await updateRegion(region);
-      toast.success(`Region set to ${region}`);
-    } catch (e) {
-      toast.error(formatApiErrorDetail(e.response?.data?.detail));
-    }
-  };
-
-  const handleResendVerification = async () => {
-    try {
-      await api.post("/auth/resend-verification");
-      toast.success("Verification link sent — it's logged on the server console (free tier)");
-    } catch (e) {
-      toast.error(formatApiErrorDetail(e.response?.data?.detail));
-    }
-  };
-
+function Stat({ label, value, note }) {
   return (
-    <div className="mx-auto max-w-7xl px-6 py-12">
-      {user.email_verified === false && (
-        <div data-testid="dashboard-verify-banner" className="mb-8 flex flex-wrap items-center justify-between gap-4 rounded-md border border-[#D4FF00]/30 bg-[#D4FF00]/5 px-5 py-4">
-          <div className="flex items-center gap-3">
-            <MailWarning className="h-5 w-5 text-[#D4FF00]" />
-            <div>
-              <div className="text-sm text-[#F0E9D6]">Your email is not verified yet.</div>
-              <div className="text-xs text-[#F0E9D6]/50">Check your verification link, or resend it below.</div>
-            </div>
-          </div>
-          <Button data-testid="dashboard-resend-verification-btn" onClick={handleResendVerification} variant="outline" className="h-9 rounded-md border-[#D4FF00]/40 bg-transparent text-[#D4FF00] hover:bg-[#D4FF00]/10 hover:text-[#D4FF00]">
-            Resend verification
-          </Button>
-        </div>
-      )}
-      <div className="flex flex-wrap items-end justify-between gap-6">
-        <div>
-          <div className="mb-2 text-[10px] uppercase tracking-widest text-[#F0E9D6]/50 font-mono-data">Studio dashboard</div>
-          <h1 className="font-display text-5xl text-[#F0E9D6]">Welcome, {user.name?.split(" ")[0] || "Artist"}.</h1>
-          <p className="mt-3 max-w-xl text-[#F0E9D6]/65">{scans.length} scan{scans.length === 1 ? "" : "s"} archived · plan quota: {user.scans_used} used</p>
-        </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <Badge data-testid={DASH.planBadge} className="rounded-full border border-white/15 bg-white/5 px-3 py-1 text-[#F0E9D6] font-mono-data uppercase tracking-widest">
-            {user.plan === "free" ? "Free tier" : user.plan.replace("_", " ")}
-          </Badge>
-          <div>
-            <Select value={user.region} onValueChange={handleRegionChange}>
-              <SelectTrigger data-testid={DASH.regionSelector} className="w-[180px] border-white/10 bg-[#24242C] text-[#F0E9D6]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="border-white/10 bg-[#24242C] text-[#F0E9D6]">
-                {regions.map((r) => (
-                  <SelectItem key={r.code} value={r.code}>
-                    {r.code} · {r.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <Link to="/scan/new" data-testid={DASH.newScanBtn}>
-            <Button className="h-10 rounded-md bg-[#D4FF00] text-[#1C1C22] btn-lift hover:bg-[#D4FF00]/85">
-              <Plus className="mr-2 h-4 w-4" /> New scan
-            </Button>
-          </Link>
-        </div>
-      </div>
-
-      {/* Stats */}
-      <div className="mt-10 grid gap-4 sm:grid-cols-3">
-        <StatCard label="Total scans" value={scans.length} accent="#0047FF" />
-        <StatCard label="Violations flagged" value={scans.filter((s) => s.result?.verdict === "VIOLATION").length} accent="#D4FF00" />
-        <StatCard label="Clear releases" value={scans.filter((s) => s.result?.verdict === "CLEAR").length} accent="#0047FF" />
-      </div>
-
-      <div className="mt-12">
-        <div className="mb-6 flex items-center justify-between">
-          <h2 className="font-display text-2xl text-[#F0E9D6]">Recent scans</h2>
-        </div>
-        {loading ? (
-          <div className="rounded-md border border-white/10 bg-[#24242C] p-12 text-center text-[#F0E9D6]/50 font-mono-data text-sm">Loading…</div>
-        ) : scans.length === 0 ? (
-          <div data-testid={DASH.emptyState} className="rounded-md border border-dashed border-white/10 bg-[#24242C] p-16 text-center">
-            <Music2 className="mx-auto h-10 w-10 text-[#F0E9D6]/35" />
-            <h3 className="mt-4 font-display text-3xl text-[#F0E9D6]">No scans yet</h3>
-            <p className="mt-2 text-[#F0E9D6]/65">Run your first plagiarism check to see the score, matched references, and regional verdict.</p>
-            <Link to="/scan/new" className="mt-6 inline-block">
-              <Button className="h-11 rounded-md bg-white px-6 text-black btn-lift hover:bg-[#D4FF00]/85">Start your first scan</Button>
-            </Link>
-          </div>
-        ) : (
-          <div className="grid gap-3">
-            {scans.map((scan) => {
-              const verdict = scan.result?.verdict || "REVIEW";
-              const V = verdictMap[verdict];
-              return (
-                <Link
-                  key={scan.id}
-                  to={`/scan/${scan.id}`}
-                  data-testid={DASH.scanCard}
-                  className="group grid grid-cols-12 items-center gap-4 rounded-md border border-white/10 bg-[#24242C] p-5 transition-colors hover:border-white/20 hover:bg-[#2E2E38]"
-                >
-                  <div className="col-span-12 sm:col-span-5">
-                    <div className="font-display text-xl text-[#F0E9D6]">{scan.title}</div>
-                    <div className="text-xs text-[#F0E9D6]/50 font-mono-data uppercase tracking-widest">{scan.artist_name || "—"}</div>
-                  </div>
-                  <div className="col-span-6 sm:col-span-2 font-mono-data text-2xl text-[#F0E9D6]">
-                    {scan.result?.overall_score ?? 0}<span className="text-sm text-[#F0E9D6]/50">%</span>
-                  </div>
-                  <div className="col-span-6 sm:col-span-2 text-xs text-[#F0E9D6]/65 font-mono-data uppercase tracking-widest">
-                    {scan.region} · {scan.result?.doctrine}
-                  </div>
-                  <div className={`col-span-12 sm:col-span-3 inline-flex items-center gap-2 self-start rounded-full border px-3 py-1 text-xs font-mono-data uppercase tracking-widest ${V.color}`}>
-                    <V.icon className="h-3 w-3" /> {V.label}
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        )}
-      </div>
+    <div className="rounded-xl border border-white/10 bg-[#24242C] p-5">
+      <div className="text-[10px] uppercase tracking-[0.16em] text-[#F0E9D6]/42 font-mono-data">{label}</div>
+      <div className="mt-3 text-4xl font-semibold text-[#F0E9D6]">{value}</div>
+      <div className="mt-1 text-xs text-[#F0E9D6]/42">{note}</div>
     </div>
   );
 }
 
-function StatCard({ label, value, accent }) {
+export default function Dashboard() {
+  const { user } = useAuth();
+  const [scans, setScans] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const entitled = hasScanEntitlement(user);
+
+  useEffect(() => {
+    api.get("/scans")
+      .then(({ data }) => setScans(data))
+      .catch((requestError) => setError(formatApiErrorDetail(requestError?.response?.data?.detail)))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const metrics = useMemo(() => ({
+    review: scans.filter((scan) => scan.result?.screening_status === "REVIEW_REQUIRED").length,
+    noCandidate: scans.filter((scan) => scan.result?.screening_status === "NO_CANDIDATE_IDENTIFIED").length,
+    inconclusive: scans.filter((scan) => scan.result?.screening_status === "INCONCLUSIVE").length,
+  }), [scans]);
+
   return (
-    <div className="rounded-md border border-white/10 bg-[#24242C] p-6">
-      <div className="text-[10px] uppercase tracking-widest text-[#F0E9D6]/50 font-mono-data">{label}</div>
-      <div className="mt-3 flex items-baseline gap-2">
-        <span className="font-mono-data text-5xl text-[#F0E9D6]">{value}</span>
-        <span className="h-3 w-3 rounded-full" style={{ background: accent }} />
+    <main className="mx-auto max-w-7xl px-6 py-14">
+      <div className="flex flex-wrap items-end justify-between gap-7">
+        <div>
+          <div className="eyebrow">Protected application</div>
+          <h1 className="mt-4 font-display text-5xl text-[#F0E9D6] sm:text-6xl">Hello, {user?.name || "creator"}.</h1>
+          <p className="mt-5 max-w-2xl leading-7 text-[#F0E9D6]/62">Your evidence records, entitlement and private workflow now live under the canonical soniccheck.io application.</p>
+        </div>
+        <Link to={entitled ? "/app/scan/new" : "/app/billing?reason=entitlement"}>
+          <Button className="h-11 bg-[#D4FF00] px-6 text-[#1C1C22] hover:bg-[#D4FF00]/85">
+            {entitled ? "Start evidence screen" : "Choose an AUD entitlement"}<ArrowRight className="ml-2 h-4 w-4" />
+          </Button>
+        </Link>
       </div>
-    </div>
+
+      <section className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <Stat label="Evidence records" value={scans.length} note="Up to 100 most recent" />
+        <Stat label="Candidate evidence" value={metrics.review} note="Human review required" />
+        <Stat label="No candidate" value={metrics.noCandidate} note="Within searched sources only" />
+        <Stat label="Inconclusive" value={metrics.inconclusive} note="Unavailable or incomplete sources" />
+      </section>
+
+      <section className="mt-8 grid gap-5 lg:grid-cols-[1.45fr_0.55fr]">
+        <div className="rounded-xl border border-white/10 bg-[#202027] p-6 sm:p-8">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <div className="eyebrow">Recent records</div>
+              <h2 className="mt-2 text-xl font-semibold text-[#F0E9D6]">Evidence-screen history</h2>
+            </div>
+            {entitled && <Link to="/app/library" className="text-sm text-[#9DB8F0] hover:text-[#F0E9D6]">Open library</Link>}
+          </div>
+
+          {loading ? (
+            <div className="grid min-h-64 place-items-center"><Loader2 className="h-6 w-6 animate-spin text-[#F0E9D6]/45" /></div>
+          ) : error ? (
+            <div className="mt-7 flex gap-3 rounded-lg border border-red-400/20 bg-red-400/5 p-4 text-sm text-red-200"><AlertCircle className="h-5 w-5 shrink-0" />{error}</div>
+          ) : scans.length === 0 ? (
+            <div className="mt-8 rounded-xl border border-dashed border-white/15 p-10 text-center">
+              <FileSearch className="mx-auto h-8 w-8 text-[#9DB8F0]" />
+              <h3 className="mt-5 text-lg font-semibold text-[#F0E9D6]">No evidence records yet.</h3>
+              <p className="mt-2 text-sm text-[#F0E9D6]/52">A completed screen will appear here after it has been stored successfully.</p>
+            </div>
+          ) : (
+            <div className="mt-6 divide-y divide-white/8">
+              {scans.slice(0, 8).map((scan) => {
+                const state = statusFor(scan);
+                const body = (
+                  <>
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate font-medium text-[#F0E9D6]">{scan.title}</div>
+                      <div className="mt-1 text-xs text-[#F0E9D6]/42">{scan.artist_name || "Unknown creator"} · {new Date(scan.created_at).toLocaleDateString("en-AU")}</div>
+                    </div>
+                    <span className={`rounded-full border px-3 py-1 text-[10px] uppercase tracking-widest font-mono-data ${state.className}`}>{state.label}</span>
+                  </>
+                );
+                return entitled ? <Link key={scan.id} to={`/app/scans/${scan.id}`} className="flex items-center gap-4 py-4 hover:bg-white/[0.02]">{body}</Link> : <div key={scan.id} className="flex items-center gap-4 py-4">{body}</div>;
+              })}
+            </div>
+          )}
+        </div>
+
+        <aside className="space-y-5">
+          <div className="rounded-xl border border-white/10 bg-[#24242C] p-6">
+            <ShieldCheck className="h-6 w-6 text-[#D4FF00]" />
+            <div className="mt-5 text-[10px] uppercase tracking-widest text-[#F0E9D6]/42 font-mono-data">Account entitlement</div>
+            <div className="mt-2 text-2xl font-semibold text-[#F0E9D6]">{user?.plan || "account"}</div>
+            <div className="mt-3 text-sm leading-6 text-[#F0E9D6]/58">{entitled ? "Screening routes are available for this account." : "Identity is active; paid screening routes remain locked until an entitlement is added."}</div>
+            <div className="mt-5 border-t border-white/10 pt-4 text-xs text-[#F0E9D6]/45 font-mono-data">Credits: {user?.scan_credits || 0} · Used this period: {user?.scans_used || 0}</div>
+          </div>
+          <div className="rounded-xl border border-white/10 bg-[#24242C] p-6">
+            <FileClock className="h-6 w-6 text-[#9DB8F0]" />
+            <h3 className="mt-5 font-semibold text-[#F0E9D6]">Decision boundary</h3>
+            <p className="mt-3 text-sm leading-6 text-[#F0E9D6]/58">The application reports candidate evidence and method-specific signals. Every material result requires human review.</p>
+          </div>
+        </aside>
+      </section>
+    </main>
   );
 }

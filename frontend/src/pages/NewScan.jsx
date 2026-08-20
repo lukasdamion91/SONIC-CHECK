@@ -1,198 +1,138 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { api, formatApiErrorDetail } from "@/lib/api";
-import { useAuth } from "@/context/AuthContext";
+import { FileAudio, FileText, Loader2, ShieldAlert, Upload } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SCAN } from "@/constants/testIds";
-import { UploadCloud, FileAudio2, ScanSearch } from "lucide-react";
-import { toast } from "sonner";
+import { useAuth } from "@/context/AuthContext";
+import { api, formatApiErrorDetail } from "@/lib/api";
 
 export default function NewScan() {
-  const navigate = useNavigate();
   const { user } = useAuth();
-  const [form, setForm] = useState({
-    title: "",
-    artist_name: user?.name || "",
-    lyrics: "",
-    region: user?.region || "US",
-    audio_url: "",
-  });
-  const [file, setFile] = useState(null);
+  const navigate = useNavigate();
   const [regions, setRegions] = useState([]);
+  const [form, setForm] = useState({ title: "", artist_name: user?.name || "", lyrics: "", region: user?.region || "AU" });
+  const [audioFile, setAudioFile] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    api.get("/regions").then((r) => setRegions(r.data)).catch(() => {});
+    api.get("/regions")
+      .then(({ data }) => setRegions(data))
+      .catch(() => setRegions([
+        { code: "AU", name: "Australia", context: "Regional context recorded" },
+        { code: "US", name: "United States", context: "Regional context recorded" },
+        { code: "UK", name: "United Kingdom", context: "Regional context recorded" },
+      ]));
   }, []);
 
-  const onFile = (e) => {
-    const f = e.target.files?.[0];
-    if (!f) return;
-    setFile(f);
-  };
+  const submit = async (event) => {
+    event.preventDefault();
+    setError("");
+    if (!form.lyrics.trim() && !audioFile) {
+      setError("Add an audio file, lyrics, or both before starting the screen.");
+      return;
+    }
 
-  const onSubmit = async (e) => {
-    e.preventDefault();
-    if (!form.title.trim()) return toast.error("Title required");
-    if (!form.lyrics.trim() && !file && !form.audio_url.trim()) return toast.error("Provide lyrics, upload audio, or paste an audio URL");
+    const payload = new FormData();
+    payload.append("title", form.title.trim());
+    payload.append("artist_name", form.artist_name.trim());
+    payload.append("lyrics", form.lyrics);
+    payload.append("region", form.region);
+    if (audioFile) payload.append("file", audioFile);
+
     setSubmitting(true);
     try {
-      let data;
-      if (file || form.audio_url.trim()) {
-        // multipart flow with audio fingerprinting
-        const fd = new FormData();
-        fd.append("title", form.title);
-        fd.append("artist_name", form.artist_name);
-        fd.append("lyrics", form.lyrics);
-        fd.append("region", form.region);
-        if (form.audio_url.trim()) fd.append("audio_url", form.audio_url.trim());
-        if (file) fd.append("file", file);
-        const res = await api.post("/scans/upload", fd, { headers: { "Content-Type": "multipart/form-data" } });
-        data = res.data;
-      } else {
-        const res = await api.post("/scans", form);
-        data = res.data;
-      }
-      toast.success("Scan complete");
-      navigate(`/scan/${data.id}`);
-    } catch (err) {
-      const msg = formatApiErrorDetail(err.response?.data?.detail) || err.message;
-      toast.error(msg);
-      if (err.response?.status === 402) navigate("/pricing");
-    } finally {
+      const { data } = await api.post("/scans/upload", payload);
+      toast.success("Evidence record created");
+      navigate(`/app/scans/${data.id}`);
+    } catch (requestError) {
+      const message = formatApiErrorDetail(requestError?.response?.data?.detail);
+      setError(message);
+      toast.error(message);
       setSubmitting(false);
     }
   };
 
   return (
-    <div className="mx-auto max-w-5xl px-6 py-12">
-      <div className="mb-2 text-[10px] uppercase tracking-widest text-[#F0E9D6]/50 font-mono-data">New scan</div>
-      <h1 className="font-display text-5xl text-[#F0E9D6]">Run analysis.</h1>
-      <p className="mt-3 max-w-xl text-[#F0E9D6]/65">Upload an audio file, paste lyrics, or both. Pick the jurisdiction you intend to release in.</p>
+    <main className="mx-auto max-w-6xl px-6 py-14">
+      <div className="max-w-3xl">
+        <div className="eyebrow">New evidence screen</div>
+        <h1 className="mt-4 font-display text-5xl text-[#F0E9D6] sm:text-6xl">Submit private material.</h1>
+        <p className="mt-5 leading-7 text-[#F0E9D6]/62">Provide decoded audio, lyrics or both. SONIC CHECK will preserve each available channel as method-labelled candidate evidence.</p>
+      </div>
 
-      <form onSubmit={onSubmit} className="mt-10 grid gap-6 lg:grid-cols-3">
-        <div className="space-y-6 lg:col-span-2">
-          <div className="rounded-md border border-white/10 bg-[#24242C] p-6">
-            <Label className="text-[#F0E9D6]/85">Track title</Label>
-            <Input
-              data-testid={SCAN.titleInput}
-              value={form.title}
-              onChange={(e) => setForm({ ...form, title: e.target.value })}
-              className="mt-2 border-white/10 bg-[#1C1C22] text-[#F0E9D6]"
-              placeholder="e.g. Midnight Skyline"
-            />
-            <Label className="mt-5 block text-[#F0E9D6]/85">Artist name</Label>
-            <Input
-              data-testid={SCAN.artistInput}
-              value={form.artist_name}
-              onChange={(e) => setForm({ ...form, artist_name: e.target.value })}
-              className="mt-2 border-white/10 bg-[#1C1C22] text-[#F0E9D6]"
-              placeholder="Stage / legal name"
-            />
-          </div>
-
-          <div className="rounded-md border border-white/10 bg-[#24242C] p-6">
-            <Label className="text-[#F0E9D6]/85">Lyrics (optional)</Label>
-            <Textarea
-              data-testid={SCAN.lyricsInput}
-              value={form.lyrics}
-              onChange={(e) => setForm({ ...form, lyrics: e.target.value })}
-              rows={8}
-              className="mt-2 border-white/10 bg-[#1C1C22] text-[#F0E9D6] font-mono-data text-sm"
-              placeholder="Paste your full lyrics here…"
-            />
-            <p className="mt-2 text-xs text-[#F0E9D6]/50">We scan against millions of registered lyrics. Catches direct lifts and paraphrased hooks.</p>
-          </div>
-
-          <div className="rounded-md border border-white/10 bg-[#24242C] p-6">
-            <Label className="text-[#F0E9D6]/85">Audio file (optional)</Label>
-            <label className="mt-2 flex cursor-pointer items-center justify-center gap-3 rounded-md border border-dashed border-white/15 bg-[#1C1C22] px-6 py-10 text-[#F0E9D6]/65 hover:border-white/30 hover:text-[#F0E9D6]">
-              {file ? (
-                <>
-                  <FileAudio2 className="h-5 w-5 text-[#0047FF]" />
-                  <span className="font-mono-data text-sm">{file.name} · {(file.size/1024/1024).toFixed(2)} MB</span>
-                </>
-              ) : (
-                <>
-                  <UploadCloud className="h-6 w-6" />
-                  <span>Click to upload (mp3, wav, m4a, flac)</span>
-                </>
-              )}
-              <input
-                data-testid={SCAN.audioFileInput}
-                type="file"
-                accept="audio/*"
-                onChange={onFile}
-                className="hidden"
-              />
-            </label>
-            <div className="mt-4 flex items-center gap-3">
-              <div className="h-px flex-1 bg-white/10" />
-              <span className="text-[10px] uppercase tracking-widest text-[#F0E9D6]/50 font-mono-data">or</span>
-              <div className="h-px flex-1 bg-white/10" />
+      <form onSubmit={submit} className="mt-10 grid gap-6 lg:grid-cols-[1fr_0.42fr]">
+        <div className="space-y-6 rounded-2xl border border-white/10 bg-[#202027] p-6 sm:p-8">
+          <div className="grid gap-5 sm:grid-cols-2">
+            <div>
+              <Label htmlFor="title" className="text-[#F0E9D6]/78">Work title</Label>
+              <Input id="title" data-testid={SCAN.titleInput} required value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} placeholder="Unreleased demo" className="mt-2 border-white/10 bg-[#17171C] text-[#F0E9D6]" />
             </div>
-            <Label className="mt-4 block text-[#F0E9D6]/85">Paste direct audio URL</Label>
-            <Input
-              data-testid="scan-audio-url-input"
-              value={form.audio_url}
-              onChange={(e) => setForm({ ...form, audio_url: e.target.value })}
-              className="mt-2 border-white/10 bg-[#1C1C22] text-[#F0E9D6] font-mono-data text-sm"
-              placeholder="https://... direct .mp3/.wav link"
-            />
-            <p className="mt-2 text-xs text-[#F0E9D6]/50">Real fingerprinting via AcoustID + MusicBrainz — matched against the open music catalog, with ACRCloud as fallback.</p>
+            <div>
+              <Label htmlFor="artist" className="text-[#F0E9D6]/78">Creator / artist</Label>
+              <Input id="artist" data-testid={SCAN.artistInput} value={form.artist_name} onChange={(event) => setForm({ ...form, artist_name: event.target.value })} placeholder="Creator name" className="mt-2 border-white/10 bg-[#17171C] text-[#F0E9D6]" />
+            </div>
           </div>
+
+          <div>
+            <div className="flex items-center justify-between gap-4">
+              <Label htmlFor="audio" className="text-[#F0E9D6]/78">Audio file</Label>
+              <span className="text-[10px] uppercase tracking-widest text-[#F0E9D6]/38 font-mono-data">WAV · AIFF · FLAC · MP3 · M4A</span>
+            </div>
+            <label htmlFor="audio" className="mt-2 flex min-h-32 cursor-pointer items-center justify-center rounded-xl border border-dashed border-white/15 bg-[#17171C] p-6 text-center hover:border-[#9DB8F0]/45">
+              <div>
+                {audioFile ? <FileAudio className="mx-auto h-7 w-7 text-[#D4FF00]" /> : <Upload className="mx-auto h-7 w-7 text-[#9DB8F0]" />}
+                <div className="mt-3 text-sm text-[#F0E9D6]">{audioFile ? audioFile.name : "Choose an audio file"}</div>
+                <div className="mt-1 text-xs text-[#F0E9D6]/42">The API validates file size and decodability before a credit is consumed.</div>
+              </div>
+            </label>
+            <input id="audio" data-testid={SCAN.audioFileInput} type="file" accept="audio/wav,audio/x-wav,audio/aiff,audio/flac,audio/mpeg,audio/mp4,.wav,.aiff,.aif,.flac,.mp3,.m4a" className="sr-only" onChange={(event) => setAudioFile(event.target.files?.[0] || null)} />
+          </div>
+
+          <div>
+            <Label htmlFor="lyrics" className="text-[#F0E9D6]/78">Lyrics</Label>
+            <Textarea id="lyrics" data-testid={SCAN.lyricsInput} value={form.lyrics} onChange={(event) => setForm({ ...form, lyrics: event.target.value })} placeholder="Paste the submitted lyrics here…" className="mt-2 min-h-48 border-white/10 bg-[#17171C] text-[#F0E9D6]" />
+            <p className="mt-2 text-xs text-[#F0E9D6]/42">The lyric channel reports distinctive exact phrase overlap with review context; it does not infer ownership.</p>
+          </div>
+
+          <div>
+            <Label className="text-[#F0E9D6]/78">Regional context</Label>
+            <Select value={form.region} onValueChange={(region) => setForm({ ...form, region })}>
+              <SelectTrigger data-testid={SCAN.regionSelect} className="mt-2 border-white/10 bg-[#17171C] text-[#F0E9D6]"><SelectValue /></SelectTrigger>
+              <SelectContent>{regions.map((region) => <SelectItem key={region.code} value={region.code}>{region.name} ({region.code})</SelectItem>)}</SelectContent>
+            </Select>
+            <p className="mt-2 text-xs text-[#F0E9D6]/42">This records context only. No fixed legal threshold or regional conclusion is applied.</p>
+          </div>
+
+          {error && <div className="flex gap-3 rounded-xl border border-red-400/20 bg-red-400/5 p-4 text-sm text-red-200"><ShieldAlert className="h-5 w-5 shrink-0" />{error}</div>}
+
+          <Button type="submit" data-testid={SCAN.submitBtn} disabled={submitting} className="h-12 w-full bg-[#D4FF00] text-[#1C1C22] hover:bg-[#D4FF00]/85">
+            {submitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Screening evidence…</> : "Start evidence screen"}
+          </Button>
         </div>
 
-        <aside className="space-y-6">
-          <div className="rounded-md border border-white/10 bg-[#24242C] p-6">
-            <Label className="text-[#F0E9D6]/85">Jurisdiction</Label>
-            <div data-testid={SCAN.regionSelect} className="mt-2">
-              <Select value={form.region} onValueChange={(v) => setForm({ ...form, region: v })}>
-                <SelectTrigger className="border-white/10 bg-[#1C1C22] text-[#F0E9D6]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="max-h-72 border-white/10 bg-[#24242C] text-[#F0E9D6]">
-                  {regions.map((r) => (
-                    <SelectItem key={r.code} value={r.code}>
-                      {r.code} — {r.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            {regions.find((r) => r.code === form.region) && (
-              <div className="mt-4 space-y-2 text-xs text-[#F0E9D6]/65">
-                <div className="font-mono-data text-[#F0E9D6]/50">Doctrine</div>
-                <div className="text-[#F0E9D6]">{regions.find((r) => r.code === form.region).doctrine}</div>
-                <div className="font-mono-data text-[#F0E9D6]/50 mt-3">Lyric threshold</div>
-                <div className="font-mono-data text-2xl text-[#F0E9D6]">{regions.find((r) => r.code === form.region).lyric_threshold}%</div>
-                <div className="font-mono-data text-[#F0E9D6]/50 mt-3">Melody threshold</div>
-                <div className="font-mono-data text-2xl text-[#F0E9D6]">{regions.find((r) => r.code === form.region).melody_threshold}%</div>
-                <p className="mt-3 text-[#F0E9D6]/50">{regions.find((r) => r.code === form.region).notes}</p>
-              </div>
-            )}
+        <aside className="space-y-5">
+          <div className="rounded-xl border border-white/10 bg-[#24242C] p-6">
+            <FileText className="h-6 w-6 text-[#9DB8F0]" />
+            <h2 className="mt-5 font-semibold text-[#F0E9D6]">What is stored</h2>
+            <ul className="mt-4 space-y-3 text-sm leading-6 text-[#F0E9D6]/56">
+              <li>• Evidence input provenance and hashes</li>
+              <li>• Source and method availability</li>
+              <li>• Candidate references and review context</li>
+              <li>• Versioned limitations and interpretation</li>
+            </ul>
           </div>
-
-          <Button
-            type="submit"
-            disabled={submitting}
-            data-testid={SCAN.submitBtn}
-            className="h-12 w-full rounded-md bg-[#D4FF00] text-[#1C1C22] btn-lift hover:bg-[#D4FF00]/85"
-          >
-            <ScanSearch className="mr-2 h-4 w-4" />
-            {submitting ? "Analyzing…" : "Run scan"}
-          </Button>
-
-          <div className="rounded-md border border-blue-400/20 bg-blue-400/5 p-4 text-xs text-[#0047FF]/90">
-            <strong className="font-mono-data uppercase tracking-widest text-[#0047FF]">Quota</strong>
-            <p className="mt-1 text-blue-100/80">Used {user?.scans_used} scans on {user?.plan === "free" ? "Free (3 included)" : user?.plan?.replace("_", " ")}.</p>
+          <div className="rounded-xl border border-[#D4FF00]/20 bg-[#D4FF00]/5 p-6">
+            <div className="text-[10px] uppercase tracking-widest text-[#D4FF00] font-mono-data">Entitlement use</div>
+            <p className="mt-3 text-sm leading-6 text-[#F0E9D6]/65">A credit or monthly allocation is consumed only after analysis succeeds and the evidence record is stored.</p>
           </div>
         </aside>
       </form>
-    </div>
+    </main>
   );
 }
