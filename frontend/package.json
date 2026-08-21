@@ -66,7 +66,9 @@
     "build": "craco build",
     "test": "craco test",
     "validate:claims": "node scripts/validate-public-claims.mjs",
-    "verify": "npm run validate:claims && npm run build"
+    "verify:build": "node scripts/verify-pages-build.mjs",
+    "test:ops": "node --test scripts/*.test.mjs",
+    "verify": "npm run validate:claims && npm run test:ops && npm run build && npm run verify:build"
   },
   "browserslist": {
     "production": [
