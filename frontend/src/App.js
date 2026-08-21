@@ -47,6 +47,8 @@ function App() {
             <Route path="/app/library" element={<Entitled><Library /></Entitled>} />
 
             <Route path="/register" element={<Navigate to="/join" replace />} />
+            <Route path="/signup" element={<Navigate to="/join" replace />} />
+            <Route path="/signin" element={<Navigate to="/login" replace />} />
             <Route path="/pricing" element={<Navigate to="/#pricing" replace />} />
             <Route path="/dashboard" element={<Navigate to="/app" replace />} />
             <Route path="/scan/new" element={<Navigate to="/app/scan/new" replace />} />

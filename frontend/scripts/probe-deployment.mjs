@@ -18,13 +18,17 @@ function authConfigured(html) {
   return html.match(/<meta\s+name=["']soniccheck-auth-configured["']\s+content=["']([^"']*)["']/i)?.[1] === "true";
 }
 
-async function probePage(base, path, expectedCommit, fetcher) {
+async function probePage(base, path, expectedCommit, fetcher, { requireAuth = false } = {}) {
   try {
     const response = await fetcher(`${base}${path}`, { redirect: "follow" });
     const body = await response.text();
     const observedCommit = deploymentCommit(body);
     return {
-      ok: response.status === 200 && observedCommit === expectedCommit,
+      ok: (
+        response.status === 200
+        && observedCommit === expectedCommit
+        && (!requireAuth || authConfigured(body))
+      ),
       path,
       status: response.status,
       final_url: response.url,
@@ -80,9 +84,9 @@ export async function probeDeployment({
   if (!expectedCommit) throw new Error("expectedCommit is required");
   const [landing, login, join, appRoute, www, legacyApp, health, readiness] = await Promise.all([
     probePage(origins.apex, "/", expectedCommit, fetcher),
-    probePage(origins.apex, "/login", expectedCommit, fetcher),
-    probePage(origins.apex, "/join", expectedCommit, fetcher),
-    probePage(origins.apex, "/app", expectedCommit, fetcher),
+    probePage(origins.apex, "/login", expectedCommit, fetcher, { requireAuth: true }),
+    probePage(origins.apex, "/join", expectedCommit, fetcher, { requireAuth: true }),
+    probePage(origins.apex, "/app", expectedCommit, fetcher, { requireAuth: true }),
     probeRedirect(`${origins.www}/v17-routing?source=deployment-truth`, `${origins.apex}/v17-routing?source=deployment-truth`, fetcher),
     probeRedirect(`${origins.app}/legacy?source=deployment-truth`, `${origins.apex}/app?source=deployment-truth`, fetcher),
     probeJson(`${origins.api}/api/healthz`, 200, fetcher),

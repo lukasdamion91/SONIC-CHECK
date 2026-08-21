@@ -55,3 +55,26 @@ test("a 200 from the wrong deployment is a failed deployment", async () => {
   assert.equal(result.checks.www_redirect.ok, false);
   assert.equal(result.checks.api_readiness.ok, false);
 });
+
+test("the right artifact without configured auth is not deployable", async () => {
+  const commit = "c".repeat(40);
+  const html = `<meta name="soniccheck-deployment-commit" content="${commit}" /><meta name="soniccheck-auth-configured" content="false" />`;
+  const fetcher = async (url) => {
+    if (url.includes("www.soniccheck.io")) {
+      return response(301, { location: "https://soniccheck.io/v17-routing?source=deployment-truth", url });
+    }
+    if (url.includes("app.soniccheck.io")) {
+      return response(301, { location: "https://soniccheck.io/app?source=deployment-truth", url });
+    }
+    if (url.endsWith("/api/healthz") || url.endsWith("/api/readyz")) {
+      return response(200, { body: '{"ok":true}', url });
+    }
+    return response(200, { body: html, url });
+  };
+
+  const result = await probeDeployment({ expectedCommit: commit, fetcher });
+
+  assert.equal(result.ok, false);
+  assert.equal(result.checks.login.auth_configured, false);
+  assert.equal(result.checks.login.ok, false);
+});
