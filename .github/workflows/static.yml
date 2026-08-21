@@ -41,10 +41,18 @@ jobs:
         env:
           CI: "true"
           REACT_APP_BACKEND_URL: https://api.soniccheck.io
-          REACT_APP_CLERK_PUBLISHABLE_KEY: ${{ vars.REACT_APP_CLERK_PUBLISHABLE_KEY }}
+          REACT_APP_CLERK_PUBLISHABLE_KEY: ${{ secrets.REACT_APP_CLERK_PUBLISHABLE_KEY || vars.REACT_APP_CLERK_PUBLISHABLE_KEY }}
+          REACT_APP_CLERK_CONFIGURED: ${{ (secrets.REACT_APP_CLERK_PUBLISHABLE_KEY != '') || (vars.REACT_APP_CLERK_PUBLISHABLE_KEY != '') }}
+          REACT_APP_DEPLOYMENT_COMMIT: ${{ github.sha }}
         run: |
           npm run build
           cp build/index.html build/404.html
+
+      - name: Verify routing artifact and deployment identity
+        run: >-
+          node scripts/verify-pages-build.mjs
+          --expected-commit "${GITHUB_SHA}"
+          --output build-verification.json
 
       - name: Preserve verified build
         uses: actions/upload-artifact@v4
@@ -52,6 +60,13 @@ jobs:
           name: sonic-check-pages
           path: frontend/build
           retention-days: 7
+
+      - name: Preserve build verification
+        uses: actions/upload-artifact@v4
+        with:
+          name: sonic-check-pages-verification
+          path: frontend/build-verification.json
+          retention-days: 30
 
   deploy:
     if: github.event_name != 'pull_request'
@@ -85,3 +100,33 @@ jobs:
       - name: Deploy production site
         id: deployment
         uses: actions/deploy-pages@v5
+
+  verify-production:
+    if: github.event_name != 'pull_request'
+    needs: deploy
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout deployment probe
+        uses: actions/checkout@v4
+
+      - name: Probe exact production identity, routes and readiness
+        id: truth
+        continue-on-error: true
+        run: >-
+          node frontend/scripts/probe-deployment.mjs
+          --expected-commit "${GITHUB_SHA}"
+          --output deployment-truth.json
+
+      - name: Preserve deployment truth
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sonic-check-deployment-truth
+          path: deployment-truth.json
+          retention-days: 30
+
+      - name: Enforce truthful deployment result
+        if: steps.truth.outcome != 'success'
+        run: exit 1

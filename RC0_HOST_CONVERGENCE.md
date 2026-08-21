@@ -71,9 +71,22 @@ Disable the two redirect rules, restore the recorded DNS values, and purge only
 the affected hostnames from cache. Keep the apex deployment in place while the
 failure is diagnosed.
 
-## Current blocker
+## Verified current state — 21 August 2026
 
-The Cloudflare dashboard is presenting a repeating managed human-verification
-challenge in the automation browser, and no Cloudflare API token is configured in
-the workspace. The DNS change therefore remains an operator action until a normal
-dashboard session or an authorised API connection is available.
+The encrypted, GET-only Cloudflare inventory now succeeds. It proves that:
+
+- `www.soniccheck.io` has no DNS record, which explains the 502;
+- `app.soniccheck.io` still points to the obsolete Emergent surface;
+- the apex still points to the older proxied origin; and
+- `api.soniccheck.io` correctly points to the Render API and is outside this
+  routing change.
+
+The GitHub Pages build now carries an exact commit marker, a canonical `CNAME`,
+a byte-identical `404.html` SPA fallback, and an automated post-deployment probe.
+The probe fails if a host merely returns 200 from the wrong build, if either
+redirect is absent, or if `/api/readyz` remains 503.
+
+Cloudflare authority is currently read-only. DNS records and Redirect Rules
+therefore remain an explicitly blocked external change, not an unverified
+application-code task. Do not alter API, MX, TXT or verification records during
+the later authorised cutover.
