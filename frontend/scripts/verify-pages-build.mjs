@@ -17,7 +17,7 @@ function meta(html, name) {
   return html.match(pattern)?.[1] || "";
 }
 
-export function verifyPagesBuild({ root = frontendRoot, expectedCommit = "" } = {}) {
+export function verifyPagesBuild({ root = frontendRoot, expectedCommit = "", requireAuth = false } = {}) {
   const build = join(root, "build");
   const indexPath = join(build, "index.html");
   const fallbackPath = join(build, "404.html");
@@ -48,6 +48,7 @@ export function verifyPagesBuild({ root = frontendRoot, expectedCommit = "" } = 
   if (expectedCommit && deploymentCommit !== expectedCommit) failures.push("DEPLOYMENT_COMMIT_MISMATCH");
   if (productContract !== PRODUCT_CONTRACT) failures.push("PRODUCT_CONTRACT_MISMATCH");
   if (!["true", "false"].includes(authMarker)) failures.push("AUTH_CONFIGURATION_MARKER_INVALID");
+  if (requireAuth && authMarker !== "true") failures.push("AUTH_NOT_CONFIGURED");
   if (missingRoutes.length) failures.push(`ROUTES_MISSING:${missingRoutes.join(",")}`);
   const assetManifest = readFileSync(assetManifestPath, "utf8");
   return {
@@ -81,7 +82,10 @@ function argument(name) {
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  const result = verifyPagesBuild({ expectedCommit: argument("--expected-commit") });
+  const result = verifyPagesBuild({
+    expectedCommit: argument("--expected-commit"),
+    requireAuth: argument("--require-auth") === "true",
+  });
   const output = argument("--output");
   if (output) writeFileSync(resolve(output), `${JSON.stringify(result, null, 2)}\n`);
   process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);

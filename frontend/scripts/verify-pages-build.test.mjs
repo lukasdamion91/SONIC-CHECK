@@ -50,3 +50,12 @@ test("stale fallback or unresolved auth marker fails the artifact", () => {
   assert.ok(result.failures.includes("SPA_FALLBACK_NOT_BYTE_IDENTICAL"));
   assert.ok(result.failures.includes("AUTH_CONFIGURATION_MARKER_INVALID"));
 });
+
+test("production verification fails closed when Clerk is not configured", () => {
+  const { root, commit } = fixture({ auth: "false" });
+
+  const result = verifyPagesBuild({ root, expectedCommit: commit, requireAuth: true });
+
+  assert.equal(result.ok, false);
+  assert.ok(result.failures.includes("AUTH_NOT_CONFIGURED"));
+});

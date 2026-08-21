@@ -52,6 +52,7 @@ jobs:
         run: >-
           node scripts/verify-pages-build.mjs
           --expected-commit "${GITHUB_SHA}"
+          --require-auth "${{ github.event_name != 'pull_request' }}"
           --output build-verification.json
 
       - name: Preserve verified build
