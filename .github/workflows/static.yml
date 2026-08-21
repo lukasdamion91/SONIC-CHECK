@@ -41,8 +41,11 @@ jobs:
         env:
           CI: "true"
           REACT_APP_BACKEND_URL: https://api.soniccheck.io
-          REACT_APP_CLERK_PUBLISHABLE_KEY: ${{ secrets.REACT_APP_CLERK_PUBLISHABLE_KEY || vars.REACT_APP_CLERK_PUBLISHABLE_KEY }}
-          REACT_APP_CLERK_CONFIGURED: ${{ (secrets.REACT_APP_CLERK_PUBLISHABLE_KEY != '') || (vars.REACT_APP_CLERK_PUBLISHABLE_KEY != '') }}
+          # Clerk publishable keys are public identifiers. Keep secret/variable
+          # overrides, but make the canonical production FAPI deployable without
+          # treating its encoded hostname as a secret.
+          REACT_APP_CLERK_PUBLISHABLE_KEY: ${{ secrets.REACT_APP_CLERK_PUBLISHABLE_KEY || vars.REACT_APP_CLERK_PUBLISHABLE_KEY || 'pk_live_Y2xlcmsuc29uaWNjaGVjay5pbyQ' }}
+          REACT_APP_CLERK_CONFIGURED: "true"
           REACT_APP_DEPLOYMENT_COMMIT: ${{ github.sha }}
         run: |
           npm run build
