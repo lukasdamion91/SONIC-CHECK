@@ -219,10 +219,31 @@ export function safeSummary(report) {
       error_codes: response.errors.map(({ code }) => code),
     }]),
   );
+  const cutoverHosts = new Set([
+    "soniccheck.io",
+    "www.soniccheck.io",
+    "app.soniccheck.io",
+    "api.soniccheck.io",
+  ]);
+  const dnsRecords = Array.isArray(report.endpoints?.dns_records?.result)
+    ? report.endpoints.dns_records.result
+      .filter((record) => cutoverHosts.has(String(record?.name || "").toLowerCase()))
+      .map((record) => ({
+        name: String(record.name || "").toLowerCase(),
+        type: String(record.type || ""),
+        content: String(record.content || ""),
+        proxied: Boolean(record.proxied),
+        ttl: Number(record.ttl || 0),
+      }))
+      .sort((left, right) => left.name.localeCompare(right.name)
+        || left.type.localeCompare(right.type)
+        || left.content.localeCompare(right.content))
+    : [];
   return {
     domain: report.meta.domain,
     mode: report.meta.mode,
     zone_found: Boolean(report.zone?.id),
+    public_cutover_dns: dnsRecords,
     endpoints: endpointSummary,
     settings_readable: Object.values(report.settings).filter(({ success }) => success).length,
     ruleset_details_readable: Object.values(report.ruleset_details).filter(({ success }) => success).length,

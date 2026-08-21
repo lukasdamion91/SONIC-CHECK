@@ -112,3 +112,68 @@ test("Cloudflare authentication failures are classified without exposing details
     "TOKEN_HEADER_INVALID",
   );
 });
+
+test("safe summary exposes only public cutover DNS fields", () => {
+  const report = {
+    meta: { domain: "soniccheck.io", mode: "read-only" },
+    zone: { id: "zone-id" },
+    endpoints: {
+      dns_records: {
+        status: 200,
+        success: true,
+        errors: [],
+        result: [
+          {
+            id: "secret-record-id",
+            zone_id: "secret-zone-id",
+            name: "api.soniccheck.io",
+            type: "CNAME",
+            content: "sonic-check-api.onrender.com",
+            proxied: true,
+            ttl: 1,
+            comment: "not public in the summary",
+          },
+          {
+            name: "mail.soniccheck.io",
+            type: "MX",
+            content: "mail.example.invalid",
+            proxied: false,
+            ttl: 3600,
+          },
+          {
+            name: "soniccheck.io",
+            type: "A",
+            content: "203.0.113.10",
+            proxied: true,
+            ttl: 1,
+          },
+        ],
+      },
+    },
+    settings: {},
+    ruleset_details: {},
+  };
+
+  const summary = safeSummary(report);
+
+  assert.deepEqual(summary.public_cutover_dns, [
+    {
+      name: "api.soniccheck.io",
+      type: "CNAME",
+      content: "sonic-check-api.onrender.com",
+      proxied: true,
+      ttl: 1,
+    },
+    {
+      name: "soniccheck.io",
+      type: "A",
+      content: "203.0.113.10",
+      proxied: true,
+      ttl: 1,
+    },
+  ]);
+  assert.equal(JSON.stringify(summary).includes("secret-record-id"), false);
+  assert.equal(JSON.stringify(summary).includes("secret-zone-id"), false);
+  assert.equal(JSON.stringify(summary).includes("mail.example.invalid"), false);
+  assert.equal(JSON.stringify(summary).includes("not public in the summary"), false);
+});
