@@ -243,11 +243,18 @@ export function safeSummary(report) {
         || left.type.localeCompare(right.type)
         || left.content.localeCompare(right.content))
     : [];
+  const edgeSettings = Object.fromEntries(
+    ["ssl", "always_use_https", "automatic_https_rewrites", "min_tls_version"]
+      .map((name) => [name, report.settings?.[name]])
+      .filter(([, response]) => response?.success)
+      .map(([name, response]) => [name, response.result?.value ?? null]),
+  );
   return {
     domain: report.meta.domain,
     mode: report.meta.mode,
     zone_found: Boolean(report.zone?.id),
     public_cutover_dns: dnsRecords,
+    edge_cutover_settings: edgeSettings,
     endpoints: endpointSummary,
     settings_readable: Object.values(report.settings).filter(({ success }) => success).length,
     ruleset_details_readable: Object.values(report.ruleset_details).filter(({ success }) => success).length,

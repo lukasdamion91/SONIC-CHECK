@@ -157,7 +157,16 @@ test("safe summary exposes only public cutover DNS fields", () => {
         ],
       },
     },
-    settings: {},
+    settings: {
+      ssl: {
+        success: true,
+        result: { value: "full", editable: true, hidden_detail: "omit me" },
+      },
+      security_level: {
+        success: true,
+        result: { value: "high" },
+      },
+    },
     ruleset_details: {},
   };
 
@@ -179,9 +188,12 @@ test("safe summary exposes only public cutover DNS fields", () => {
       ttl: 1,
     },
   ]);
+  assert.deepEqual(summary.edge_cutover_settings, { ssl: "full" });
   assert.equal(JSON.stringify(summary).includes("secret-record-id"), false);
   assert.equal(JSON.stringify(summary).includes("secret-zone-id"), false);
   assert.equal(JSON.stringify(summary).includes("mail.example.invalid"), false);
   assert.equal(JSON.stringify(summary).includes("not public in the summary"), false);
   assert.equal(JSON.stringify(summary).includes("verification-token"), false);
+  assert.equal(JSON.stringify(summary).includes("omit me"), false);
+  assert.equal(JSON.stringify(summary).includes('"high"'), false);
 });
