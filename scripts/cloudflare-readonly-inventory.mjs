@@ -225,9 +225,13 @@ export function safeSummary(report) {
     "app.soniccheck.io",
     "api.soniccheck.io",
   ]);
+  const cutoverRecordTypes = new Set(["A", "AAAA", "CNAME"]);
   const dnsRecords = Array.isArray(report.endpoints?.dns_records?.result)
     ? report.endpoints.dns_records.result
-      .filter((record) => cutoverHosts.has(String(record?.name || "").toLowerCase()))
+      .filter((record) => (
+        cutoverHosts.has(String(record?.name || "").toLowerCase())
+        && cutoverRecordTypes.has(String(record?.type || "").toUpperCase())
+      ))
       .map((record) => ({
         name: String(record.name || "").toLowerCase(),
         type: String(record.type || ""),
