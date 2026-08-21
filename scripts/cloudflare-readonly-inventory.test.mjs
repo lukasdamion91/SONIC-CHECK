@@ -147,6 +147,13 @@ test("safe summary exposes only public cutover DNS fields", () => {
             proxied: true,
             ttl: 1,
           },
+          {
+            name: "soniccheck.io",
+            type: "TXT",
+            content: "verification-token-that-is-public-but-unrelated",
+            proxied: false,
+            ttl: 1,
+          },
         ],
       },
     },
@@ -176,4 +183,5 @@ test("safe summary exposes only public cutover DNS fields", () => {
   assert.equal(JSON.stringify(summary).includes("secret-zone-id"), false);
   assert.equal(JSON.stringify(summary).includes("mail.example.invalid"), false);
   assert.equal(JSON.stringify(summary).includes("not public in the summary"), false);
+  assert.equal(JSON.stringify(summary).includes("verification-token"), false);
 });
