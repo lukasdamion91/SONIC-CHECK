@@ -10,6 +10,19 @@ const DEFAULTS = {
   api: "https://api.soniccheck.io",
 };
 
+const REQUIRED_CONTROLLED_BETA_CHECKS = [
+  "database",
+  "clerk",
+  "stripe",
+  "private_audio_storage",
+  "audio_runtime",
+  "api_hostname",
+  "product_convergence",
+  "composition_reference_base",
+  "composition_v16r",
+  "catalogue_release",
+];
+
 function deploymentCommit(html) {
   return html.match(/<meta\s+name=["']soniccheck-deployment-commit["']\s+content=["']([^"']*)["']/i)?.[1] || "";
 }
@@ -76,6 +89,42 @@ async function probeJson(url, expectedStatus, fetcher) {
   }
 }
 
+async function probeControlledBetaReadiness(url, fetcher) {
+  try {
+    const response = await fetcher(url, { redirect: "follow" });
+    let payload = null;
+    try {
+      payload = await response.json();
+    } catch {
+      payload = null;
+    }
+    const checks = payload?.checks || {};
+    const blockingChecks = REQUIRED_CONTROLLED_BETA_CHECKS.filter((name) => checks[name] !== true);
+    const allowedStatus = response.status === 200 || response.status === 503;
+    return {
+      ok: allowedStatus && blockingChecks.length === 0 && payload?.secrets_included === false,
+      status: response.status,
+      accepted_statuses: [200, 503],
+      service_fully_ready: response.status === 200 && payload?.ok === true,
+      controlled_beta_ready: blockingChecks.length === 0,
+      required_checks: REQUIRED_CONTROLLED_BETA_CHECKS,
+      blocking_checks: blockingChecks,
+      nonblocking_provider_checks: {
+        recording_identity: checks.recording_identity === true,
+        lyric_candidate_discovery: checks.lyric_candidate_discovery === true,
+      },
+      payload,
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      error: String(error?.message || error),
+      accepted_statuses: [200, 503],
+      required_checks: REQUIRED_CONTROLLED_BETA_CHECKS,
+    };
+  }
+}
+
 export async function probeDeployment({
   expectedCommit,
   origins = DEFAULTS,
@@ -90,7 +139,7 @@ export async function probeDeployment({
     probeRedirect(`${origins.www}/v17-routing?source=deployment-truth`, `${origins.apex}/v17-routing?source=deployment-truth`, fetcher),
     probeRedirect(`${origins.app}/legacy?source=deployment-truth`, `${origins.apex}/app?source=deployment-truth`, fetcher),
     probeJson(`${origins.api}/api/healthz`, 200, fetcher),
-    probeJson(`${origins.api}/api/readyz`, 200, fetcher),
+    probeControlledBetaReadiness(`${origins.api}/api/readyz`, fetcher),
   ]);
   const checks = { landing, login, join, app: appRoute, www_redirect: www, legacy_app_redirect: legacyApp, api_health: health, api_readiness: readiness };
   return {
