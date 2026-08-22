@@ -151,14 +151,53 @@ export async function probeDeployment({
   };
 }
 
+export async function probeDeploymentWithRetry({
+  expectedCommit,
+  origins = DEFAULTS,
+  fetcher = fetch,
+  attempts = 1,
+  intervalMs = 0,
+  sleeper = (delay) => new Promise((resolveSleep) => setTimeout(resolveSleep, delay)),
+} = {}) {
+  if (!Number.isInteger(attempts) || attempts < 1) {
+    throw new Error("attempts must be a positive integer");
+  }
+  if (!Number.isInteger(intervalMs) || intervalMs < 0) {
+    throw new Error("intervalMs must be a non-negative integer");
+  }
+
+  let result;
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    result = await probeDeployment({ expectedCommit, origins, fetcher });
+    result.attempt = attempt;
+    result.max_attempts = attempts;
+    if (result.ok || attempt === attempts) return result;
+    await sleeper(intervalMs);
+  }
+
+  return result;
+}
+
 function argument(name) {
   const index = process.argv.indexOf(name);
   return index >= 0 ? process.argv[index + 1] : "";
 }
 
+function integerArgument(name, fallback) {
+  const raw = argument(name);
+  if (!raw) return fallback;
+  const value = Number(raw);
+  if (!Number.isInteger(value)) throw new Error(`${name} must be an integer`);
+  return value;
+}
+
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const output = argument("--output");
-  const result = await probeDeployment({ expectedCommit: argument("--expected-commit") });
+  const result = await probeDeploymentWithRetry({
+    expectedCommit: argument("--expected-commit"),
+    attempts: integerArgument("--attempts", 1),
+    intervalMs: integerArgument("--interval-ms", 0),
+  });
   if (output) writeFileSync(resolve(output), `${JSON.stringify(result, null, 2)}\n`);
   process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
   if (!result.ok) process.exitCode = 1;

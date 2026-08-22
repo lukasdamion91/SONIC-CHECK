@@ -121,6 +121,8 @@ jobs:
         run: >-
           node frontend/scripts/probe-deployment.mjs
           --expected-commit "${GITHUB_SHA}"
+          --attempts 60
+          --interval-ms 10000
           --output deployment-truth.json
 
       - name: Preserve deployment truth
