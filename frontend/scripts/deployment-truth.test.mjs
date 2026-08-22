@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { probeDeployment } from "./probe-deployment.mjs";
+import { probeDeployment, probeDeploymentWithRetry } from "./probe-deployment.mjs";
 
 
 function response(status, { body = "", location = null, url = "" } = {}) {
@@ -126,4 +126,52 @@ test("controlled beta readiness still fails if Clerk or Stripe is not ready", as
 
   assert.equal(result.ok, false);
   assert.deepEqual(result.checks.api_readiness.blocking_checks, ["clerk", "stripe"]);
+});
+
+test("deployment truth retries while the independently deployed edge cutover converges", async () => {
+  const commit = "e".repeat(40);
+  const html = `<meta name="soniccheck-deployment-commit" content="${commit}" /><meta name="soniccheck-auth-configured" content="true" />`;
+  let legacyProbeCount = 0;
+  let sleepCount = 0;
+  const fetcher = async (url) => {
+    if (url.includes("www.soniccheck.io")) {
+      return response(301, { location: "https://soniccheck.io/v17-routing?source=deployment-truth", url });
+    }
+    if (url.includes("app.soniccheck.io")) {
+      legacyProbeCount += 1;
+      if (legacyProbeCount === 1) return response(200, { body: "legacy", url });
+      return response(301, { location: "https://soniccheck.io/app?source=deployment-truth", url });
+    }
+    if (url.endsWith("/api/healthz")) return response(200, { body: '{"ok":true}', url });
+    if (url.endsWith("/api/readyz")) return response(503, { body: controlledBetaReadiness, url });
+    return response(200, { body: html, url });
+  };
+
+  const result = await probeDeploymentWithRetry({
+    expectedCommit: commit,
+    fetcher,
+    attempts: 3,
+    intervalMs: 10_000,
+    sleeper: async (delay) => {
+      assert.equal(delay, 10_000);
+      sleepCount += 1;
+    },
+  });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.attempt, 2);
+  assert.equal(result.max_attempts, 3);
+  assert.equal(legacyProbeCount, 2);
+  assert.equal(sleepCount, 1);
+});
+
+test("deployment truth retry arguments reject unsafe values", async () => {
+  await assert.rejects(
+    probeDeploymentWithRetry({ expectedCommit: "f".repeat(40), attempts: 0 }),
+    /attempts must be a positive integer/,
+  );
+  await assert.rejects(
+    probeDeploymentWithRetry({ expectedCommit: "f".repeat(40), intervalMs: -1 }),
+    /intervalMs must be a non-negative integer/,
+  );
 });
