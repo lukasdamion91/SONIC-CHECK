@@ -36,7 +36,7 @@
   ],
   "action_items": [],
   "success_rate": {"backend": "100% (7/7)", "frontend": "100% (all 6 requested checks pass)"},
-  "test_credentials": "admin@soniccheck.io / Admin@Sonic2026 (from /app/memory/test_credentials.md)",
+  "test_credentials": "REDACTED_OBSOLETE_CREDENTIALS",
   "seed_data_creation": "None. No new users, no new scans created. Existing 16 admin scans left intact per instruction.",
   "retest_needed": false,
   "should_main_agent_self_test": true,

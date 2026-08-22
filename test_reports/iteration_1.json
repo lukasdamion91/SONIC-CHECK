@@ -5,7 +5,7 @@
     "GET /api/regions returns 8 regions with correct codes (US,EU,UK,CA,AU,JP,IN,BR) and thresholds",
     "GET /api/plans returns 3 plans (artist_pro $19, producer_pro $49, student $8) with features",
     "POST /api/auth/register creates user, sets httpOnly cookies, returns user JSON (200)",
-    "POST /api/auth/login with admin@soniccheck.io / Admin@Sonic2026 succeeds (200) and persists via /api/auth/me",
+    "Historical prototype password-login regression passed; obsolete credentials were removed before archival.",
     "GET /api/auth/me without cookies returns 401 (unauth protection works)",
     "PATCH /api/auth/region updates region to EU (200)",
     "POST /api/scans creates scan with deterministic result for free user",

@@ -1,0 +1,9 @@
+{
+  "schema_version": "soniccheck-cloudflare-cutover/1.0.0",
+  "phase": "canonical",
+  "canonical_origin": "https://soniccheck.io",
+  "legacy_origin": "https://app.soniccheck.io",
+  "api_origin": "https://api.soniccheck.io",
+  "pricing_revision": "2026-07-26-v2",
+  "paid_public_traffic_enabled": false
+}

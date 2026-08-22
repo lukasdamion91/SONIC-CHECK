@@ -40,6 +40,9 @@ import asyncio
 JWT_ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 1 day for convenience
 REFRESH_TOKEN_EXPIRE_DAYS = 7
+LEGACY_RUNTIME_ENABLED = os.environ.get("LEGACY_PROTOTYPE_RUNTIME_ENABLED", "false").strip().lower() in {
+    "1", "true", "yes", "on"
+}
 
 mongo_url = os.environ["MONGO_URL"]
 client = AsyncIOMotorClient(mongo_url)
@@ -949,6 +952,11 @@ async def root():
 # ----------------------------------------------------------------------------
 @app.on_event("startup")
 async def startup_tasks():
+    if not LEGACY_RUNTIME_ENABLED:
+        raise RuntimeError(
+            "The Emergent-era prototype is archived and cannot be started. "
+            "Use the private Clerk-backed API repository for production."
+        )
     await db.users.create_index("email", unique=True)
     await db.scans.create_index("user_id")
     await db.payment_transactions.create_index("session_id", unique=True)
@@ -959,33 +967,6 @@ async def startup_tasks():
         logger.info("Object storage initialized")
     except Exception as e:
         logger.error(f"Object storage init failed: {e}")
-
-    admin_email = os.environ.get("ADMIN_EMAIL", "admin@example.com").lower()
-    admin_password = os.environ.get("ADMIN_PASSWORD", "admin123")
-    existing = await db.users.find_one({"email": admin_email})
-    if not existing:
-        await db.users.insert_one({
-            "email": admin_email,
-            "password_hash": hash_password(admin_password),
-            "name": "Admin",
-            "role": "admin",
-            "plan": "producer_pro",
-            "scans_used": 0,
-            "region": "US",
-            "email_verified": True,
-            "student_eligible": False,
-            "created_at": datetime.now(timezone.utc),
-        })
-        logger.info(f"Seeded admin user: {admin_email}")
-    else:
-        updates = {}
-        if not verify_password(admin_password, existing["password_hash"]):
-            updates["password_hash"] = hash_password(admin_password)
-        if not existing.get("email_verified"):
-            updates["email_verified"] = True
-        if updates:
-            await db.users.update_one({"email": admin_email}, {"$set": updates})
-
 
 @app.on_event("shutdown")
 async def shutdown():

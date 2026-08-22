@@ -55,7 +55,7 @@
   "updated_files": [],
   "action_items": [],
   "success_rate": {"backend": "100% (15/15 executed; 4 skipped by design)", "frontend": "100% (9/9 flows PASS, 0 page errors)"},
-  "test_credentials": "admin@soniccheck.io / Admin@Sonic2026 used (from /app/memory/test_credentials.md). ADMIN_EMAIL/ADMIN_PASSWORD env-var fallbacks in test_soniccheck.py:14-15 verified working.",
+  "test_credentials": "REDACTED_OBSOLETE_CREDENTIALS. The archived suite now requires explicit disposable environment values.",
   "seed_data_creation": "pytest created a handful of transient TEST_ prefixed users (test_iter5_*, quota_*) and one Playwright registration user regtest_*@example.com; scan docs are deleted by test teardowns; user docs harmless (unique emails).",
   "retest_needed": false,
   "should_main_agent_self_test": true,

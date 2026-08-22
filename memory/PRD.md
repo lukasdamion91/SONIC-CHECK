@@ -131,7 +131,7 @@
 - NOTE: preview fixes after deployment require user to REDEPLOY to reach production
 
 ## Test Credentials
-See `/app/memory/test_credentials.md`. Admin: `admin@soniccheck.io / Admin@Sonic2026`.
+Historical credential reference removed. The Clerk-backed release has no seeded administrator password.
 
 ## Backlog (P0 / P1 / P2)
 

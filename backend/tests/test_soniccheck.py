@@ -11,8 +11,8 @@ BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://audio-plagiarism.pre
 API = f"{BASE_URL}/api"
 BACKEND_LOG = "/var/log/supervisor/backend.err.log"
 
-ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL", "admin@soniccheck.io")
-ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "Admin@Sonic2026")
+ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL", "")
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "")
 
 # Famous Vanilla Ice lyrics (Ice Ice Baby) – used for lyric plagiarism assertion
 VANILLA_LYRICS = (
@@ -37,6 +37,7 @@ UNIQUE_LYRICS = (
 # ---------- Fixtures ----------
 @pytest.fixture(scope="session")
 def admin_session():
+    assert ADMIN_EMAIL and ADMIN_PASSWORD, "Archived test requires explicit disposable credentials"
     s = requests.Session()
     s.headers.update({"Content-Type": "application/json"})
     r = s.post(f"{API}/auth/login", json={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD})
