@@ -2,10 +2,12 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  canonicalSpaRewriteRule,
   desiredEdgeSettings,
   desiredRecords,
   legacyRedirectRule,
   mergeCanonicalRedirects,
+  mergeCanonicalRewrites,
   normalizeToken,
   validateState,
   wwwRedirectRule,
@@ -53,6 +55,17 @@ test("canonical phase proxies only the apex and www for deterministic edge routi
   assert.equal(rule.action_parameters.from_value.preserve_query_string, true);
 });
 
+test("canonical SPA routes are internally rewritten to the deployed entry point", () => {
+  const rule = canonicalSpaRewriteRule();
+  assert.equal(rule.action, "rewrite");
+  assert.equal(rule.action_parameters.uri.path.value, "/index.html");
+  assert.match(rule.expression, /http\.host eq "soniccheck\.io"/);
+  assert.match(rule.expression, /"\/login"/);
+  assert.match(rule.expression, /"\/join"/);
+  assert.match(rule.expression, /"\/app"/);
+  assert.match(rule.expression, /starts_with\(http\.request\.uri\.path, "\/app\/"\)/);
+});
+
 test("cutover hardens HTTPS and rejects obsolete TLS at the Cloudflare edge", () => {
   assert.deepEqual(desiredEdgeSettings(), {
     always_use_https: "on",
@@ -97,6 +110,27 @@ test("redirect merge preserves unrelated rules and remains phase-idempotent", ()
   assert.equal(twice.filter(({ ref }) => ref === "soniccheck_redirect_app_legacy").length, 1);
   assert.equal(twice.filter(({ ref }) => ref === "soniccheck_redirect_www_canonical").length, 1);
   assert.equal(twice[0].ref, "unrelated");
+  assert.equal("id" in twice[0], false);
+  assert.equal("version" in twice[0], false);
+  assert.equal("last_updated" in twice[0], false);
+});
+
+test("rewrite merge preserves unrelated transforms and is idempotent", () => {
+  const unrelated = {
+    id: "read-only-id",
+    version: "3",
+    last_updated: "2026-08-21T00:00:00Z",
+    ref: "unrelated_transform",
+    action: "rewrite",
+    expression: '(http.host eq "assets.example")',
+    action_parameters: { uri: { path: { value: "/assets" } } },
+    enabled: true,
+  };
+  const once = mergeCanonicalRewrites([unrelated]);
+  const twice = mergeCanonicalRewrites(once);
+  assert.equal(twice.length, 2);
+  assert.equal(twice.filter(({ ref }) => ref === "soniccheck_rewrite_canonical_spa").length, 1);
+  assert.equal(twice[0].ref, "unrelated_transform");
   assert.equal("id" in twice[0], false);
   assert.equal("version" in twice[0], false);
   assert.equal("last_updated" in twice[0], false);

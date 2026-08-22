@@ -12,6 +12,7 @@ const GITHUB_PAGES_IPV4 = [
 const MANAGED_RECORD_TYPES = new Set(["A", "AAAA", "CNAME"]);
 const WWW_REDIRECT_REF = "soniccheck_redirect_www_canonical";
 const LEGACY_REDIRECT_REF = "soniccheck_redirect_app_legacy";
+const SPA_REWRITE_REF = "soniccheck_rewrite_canonical_spa";
 const HARDENED_EDGE_SETTINGS = Object.freeze({
   always_use_https: "on",
   min_tls_version: "1.2",
@@ -175,6 +176,37 @@ export function mergeCanonicalRedirects(existingRules = [], phase = "canonical")
   ];
 }
 
+export function canonicalSpaRewriteRule() {
+  return {
+    ref: SPA_REWRITE_REF,
+    description: "Serve SONIC CHECK browser routes from the canonical SPA entry point",
+    expression: [
+      '(http.host eq "soniccheck.io" and (',
+      'http.request.uri.path in {"/login" "/join" "/register" "/signup" "/signin" "/pricing" "/dashboard" "/library" "/payment-success" "/scan/new" "/app"}',
+      ' or starts_with(http.request.uri.path, "/verify/")',
+      ' or starts_with(http.request.uri.path, "/scan/")',
+      ' or starts_with(http.request.uri.path, "/app/")',
+      '))',
+    ].join(""),
+    action: "rewrite",
+    action_parameters: {
+      uri: {
+        path: { value: "/index.html" },
+      },
+    },
+    enabled: true,
+  };
+}
+
+export function mergeCanonicalRewrites(existingRules = []) {
+  return [
+    ...existingRules
+      .filter((rule) => rule.ref !== SPA_REWRITE_REF)
+      .map(editableRule),
+    canonicalSpaRewriteRule(),
+  ];
+}
+
 function recordKey(record) {
   return `${record.type}|${record.name.toLowerCase()}|${String(record.content).toLowerCase()}`;
 }
@@ -211,13 +243,21 @@ async function replaceManagedRecords(zoneId, token, allRecords, desired, options
   }
 }
 
-async function readRedirectRuleset(zoneId, token, options = {}) {
+async function readPhaseRuleset(zoneId, token, phase, options = {}) {
   const listed = await cloudflareRequest(`/zones/${zoneId}/rulesets`, token, options);
   const summary = (listed || []).find(
-    ({ kind, phase }) => kind === "zone" && phase === "http_request_dynamic_redirect",
+    ({ kind, phase: listedPhase }) => kind === "zone" && listedPhase === phase,
   );
   if (!summary) return null;
   return cloudflareRequest(`/zones/${zoneId}/rulesets/${summary.id}`, token, options);
+}
+
+async function readRedirectRuleset(zoneId, token, options = {}) {
+  return readPhaseRuleset(zoneId, token, "http_request_dynamic_redirect", options);
+}
+
+async function readTransformRuleset(zoneId, token, options = {}) {
+  return readPhaseRuleset(zoneId, token, "http_request_transform", options);
 }
 
 async function upsertCanonicalRedirects(zoneId, token, existing, phase, options = {}) {
@@ -227,6 +267,21 @@ async function upsertCanonicalRedirects(zoneId, token, existing, phase, options 
     kind: "zone",
     phase: "http_request_dynamic_redirect",
     rules: mergeCanonicalRedirects(existing?.rules || [], phase),
+  };
+  return cloudflareRequest(
+    existing ? `/zones/${zoneId}/rulesets/${existing.id}` : `/zones/${zoneId}/rulesets`,
+    token,
+    { ...options, method: existing ? "PUT" : "POST", body },
+  );
+}
+
+async function upsertCanonicalSpaRewrite(zoneId, token, existing, options = {}) {
+  const body = {
+    name: existing?.name || "SONIC CHECK URL rewrites",
+    description: existing?.description || "Canonical SPA route rewrites",
+    kind: "zone",
+    phase: "http_request_transform",
+    rules: mergeCanonicalRewrites(existing?.rules || []),
   };
   return cloudflareRequest(
     existing ? `/zones/${zoneId}/rulesets/${existing.id}` : `/zones/${zoneId}/rulesets`,
@@ -287,6 +342,7 @@ export async function executeCutover(state, token, options = {}) {
   const zoneId = zones[0].id;
   const records = await cloudflareRequest(`/zones/${zoneId}/dns_records?per_page=5000`, token, options);
   const redirectRuleset = await readRedirectRuleset(zoneId, token, options);
+  const transformRuleset = await readTransformRuleset(zoneId, token, options);
   const edgeSettings = await readEdgeSettings(zoneId, token, options);
   const touchedNames = new Set([DOMAIN, `www.${DOMAIN}`, `app.${DOMAIN}`]);
   const before = {
@@ -296,6 +352,7 @@ export async function executeCutover(state, token, options = {}) {
     zone_id: zoneId,
     touched_records: records.filter(({ name }) => touchedNames.has(name)).map(publicRecord),
     redirect_ruleset: redirectRuleset,
+    transform_ruleset: transformRuleset,
     edge_settings: Object.fromEntries(
       Object.entries(edgeSettings).map(([setting, value]) => [setting, {
         value: value.value,
@@ -308,12 +365,14 @@ export async function executeCutover(state, token, options = {}) {
 
   await replaceManagedRecords(zoneId, token, records, desiredRecords(state.phase), options);
   await upsertCanonicalRedirects(zoneId, token, redirectRuleset, state.phase, options);
+  await upsertCanonicalSpaRewrite(zoneId, token, transformRuleset, options);
   if (state.phase === "retire_legacy") {
     await reconcileEdgeSettings(zoneId, token, edgeSettings, options);
   }
 
   const afterRecords = await cloudflareRequest(`/zones/${zoneId}/dns_records?per_page=5000`, token, options);
   const afterRuleset = await readRedirectRuleset(zoneId, token, options);
+  const afterTransformRuleset = await readTransformRuleset(zoneId, token, options);
   const afterEdgeSettings = await readEdgeSettings(zoneId, token, options);
   const result = {
     schema_version: "soniccheck-cloudflare-cutover-result/1.0.0",
@@ -325,6 +384,9 @@ export async function executeCutover(state, token, options = {}) {
     ),
     www_redirect_present: Boolean(
       afterRuleset?.rules?.some(({ ref, enabled }) => ref === WWW_REDIRECT_REF && enabled),
+    ),
+    spa_rewrite_present: Boolean(
+      afterTransformRuleset?.rules?.some(({ ref, enabled }) => ref === SPA_REWRITE_REF && enabled),
     ),
     edge_settings: Object.fromEntries(
       Object.entries(afterEdgeSettings).map(([setting, value]) => [setting, value.value]),
@@ -354,6 +416,7 @@ async function main() {
     managed_record_count: result.records.length,
     legacy_redirect_present: result.legacy_redirect_present,
     www_redirect_present: result.www_redirect_present,
+    spa_rewrite_present: result.spa_rewrite_present,
     edge_hardening_requested: result.edge_hardening_requested,
     edge_hardened: result.edge_hardened,
     api_record_touched: result.api_record_touched,
