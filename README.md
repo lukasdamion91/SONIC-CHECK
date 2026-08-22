@@ -55,8 +55,9 @@ verified artifact with its Clerk publishable key configured.
 
 The top-level `backend/`, historical reports, and Emergent-era files are retained
 temporarily as an archival prototype only. They are not part of the build or
-deployment. The canonical production API is maintained in the separate private
-API repository.
+deployment, the archived runtime fails closed unless explicitly enabled, and it
+no longer creates a default administrator. The canonical production API is
+maintained in the separate private API repository.
 
 See [RC0_HOST_CONVERGENCE.md](RC0_HOST_CONVERGENCE.md) for the controlled DNS
 cutover that retires the obsolete public host.

@@ -68,7 +68,7 @@
     "Consider adding a Pydantic model for /auth/verify-email payload for OpenAPI clarity."
   ],
   "success_rate": {"backend": "100% (19/19)", "frontend": "100% (all flows passed after fpBlock fix)"},
-  "test_credentials": "admin@soniccheck.io / Admin@Sonic2026 (verified, producer_pro). edutest1@stanford.edu / test1234 (.edu, quota exhausted). Fresh test users are generated per session by the pytest suite.",
+  "test_credentials": "REDACTED_OBSOLETE_CREDENTIALS. Fresh disposable test users were generated per session by the archived pytest suite.",
   "seed_data_creation": "Pytest creates transient TEST_ prefixed users (test_iter5_*@example.com and test_iter5_*@stanford.edu) and TEST_ prefixed scans; scan docs are deleted at the end of each test. User docs are left in MongoDB (no cleanup fixture) — cheap and safe since emails are unique per run.",
   "retest_needed": false,
   "should_main_agent_self_test": true,

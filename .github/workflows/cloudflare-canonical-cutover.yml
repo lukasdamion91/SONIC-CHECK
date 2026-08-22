@@ -1,0 +1,75 @@
+name: Cloudflare canonical cutover
+
+on:
+  pull_request:
+    branches: ["main"]
+    paths:
+      - ".github/workflows/cloudflare-canonical-cutover.yml"
+      - "operations/cloudflare-cutover-state.json"
+      - "scripts/cloudflare-canonical-cutover.mjs"
+      - "scripts/cloudflare-canonical-cutover.test.mjs"
+  push:
+    branches: ["main"]
+    paths:
+      - ".github/workflows/cloudflare-canonical-cutover.yml"
+      - "operations/cloudflare-cutover-state.json"
+      - "scripts/cloudflare-canonical-cutover.mjs"
+      - "scripts/cloudflare-canonical-cutover.test.mjs"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cloudflare-canonical-cutover
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate exact cutover plan
+        run: |
+          node --check scripts/cloudflare-canonical-cutover.mjs
+          node --test scripts/cloudflare-canonical-cutover.test.mjs
+
+  cutover:
+    if: github.event_name != 'pull_request'
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Confirm private Cloudflare token is configured
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_READ_TOKEN }}
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
+            echo "::error::Cloudflare API token is not configured."
+            exit 1
+          fi
+
+      - name: Snapshot and reconcile approved hosts
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_READ_TOKEN }}
+          CUTOVER_STATE_PATH: operations/cloudflare-cutover-state.json
+          CUTOVER_ROLLBACK_OUTPUT: cloudflare-cutover-rollback.json
+          CUTOVER_RESULT_OUTPUT: cloudflare-cutover-result.json
+        run: node scripts/cloudflare-canonical-cutover.mjs
+
+      - name: Preserve exact rollback and result evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: soniccheck-cloudflare-cutover-${{ github.run_id }}
+          path: |
+            cloudflare-cutover-rollback.json
+            cloudflare-cutover-result.json
+          if-no-files-found: warn
+          retention-days: 30

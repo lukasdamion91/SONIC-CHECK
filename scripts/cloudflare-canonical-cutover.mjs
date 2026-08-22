@@ -1,0 +1,293 @@
+import { readFileSync, writeFileSync } from "node:fs";
+import { pathToFileURL } from "node:url";
+
+const API_ROOT = "https://api.cloudflare.com/client/v4";
+const DOMAIN = "soniccheck.io";
+const GITHUB_PAGES_HOST = "lukasdamion91.github.io";
+const GITHUB_PAGES_IPV4 = [
+  "185.199.108.153",
+  "185.199.109.153",
+  "185.199.110.153",
+  "185.199.111.153",
+];
+const MANAGED_RECORD_TYPES = new Set(["A", "AAAA", "CNAME"]);
+const LEGACY_REDIRECT_REF = "soniccheck_redirect_app_legacy";
+
+export function normalizeToken(value) {
+  let token = String(value || "").trim();
+  token = token.replace(/^CLOUDFLARE_(?:READ_TOKEN|API_TOKEN)\s*=\s*/i, "").trim();
+  token = token.replace(/^Bearer\s+/i, "").trim();
+  if (
+    token.length >= 2
+    && ((token.startsWith('"') && token.endsWith('"'))
+      || (token.startsWith("'") && token.endsWith("'")))
+  ) {
+    token = token.slice(1, -1).trim();
+  }
+  return token;
+}
+
+function errors(payload) {
+  return Array.isArray(payload?.errors)
+    ? payload.errors.map(({ code, message }) => ({ code, message }))
+    : [];
+}
+
+export async function cloudflareRequest(path, token, options = {}) {
+  if (!path.startsWith("/")) throw new Error("Cloudflare API path must start with '/'.");
+  if (!token) throw new Error("A Cloudflare API token is required.");
+  const method = options.method || "GET";
+  const response = await (options.fetchImpl || fetch)(`${options.apiRoot || API_ROOT}${path}`, {
+    method,
+    headers: {
+      Accept: "application/json",
+      Authorization: `Bearer ${token}`,
+      ...(options.body ? { "Content-Type": "application/json" } : {}),
+    },
+    body: options.body ? JSON.stringify(options.body) : undefined,
+    signal: options.signal || AbortSignal.timeout(20_000),
+  });
+  const raw = await response.text();
+  let payload;
+  try {
+    payload = JSON.parse(raw);
+  } catch {
+    payload = { success: false, errors: [{ code: "NON_JSON", message: "Non-JSON response" }] };
+  }
+  if (!response.ok || payload.success === false) {
+    const codes = errors(payload).map(({ code }) => code).join(",") || "unknown";
+    throw new Error(`Cloudflare ${method} ${path} failed (HTTP ${response.status}; codes ${codes}).`);
+  }
+  return payload.result;
+}
+
+export function validateState(state) {
+  if (state?.schema_version !== "soniccheck-cloudflare-cutover/1.0.0") {
+    throw new Error("Unexpected Cloudflare cutover state schema.");
+  }
+  if (!new Set(["canonical", "retire_legacy"]).has(state.phase)) {
+    throw new Error("Cutover phase must be canonical or retire_legacy.");
+  }
+  if (state.canonical_origin !== "https://soniccheck.io") {
+    throw new Error("Canonical origin does not match the approved apex.");
+  }
+  if (state.api_origin !== "https://api.soniccheck.io") {
+    throw new Error("API origin cannot be changed by the web cutover.");
+  }
+  if (state.paid_public_traffic_enabled !== false) {
+    throw new Error("DNS cutover cannot enable paid public traffic.");
+  }
+  return state;
+}
+
+export function desiredRecords(phase) {
+  const records = [
+    ...GITHUB_PAGES_IPV4.map((content) => ({
+      type: "A",
+      name: DOMAIN,
+      content,
+      ttl: 3600,
+      proxied: false,
+      comment: "SONIC CHECK canonical GitHub Pages apex",
+    })),
+    {
+      type: "CNAME",
+      name: `www.${DOMAIN}`,
+      content: GITHUB_PAGES_HOST,
+      ttl: 3600,
+      proxied: false,
+      comment: "SONIC CHECK www variant for GitHub Pages apex redirect",
+    },
+  ];
+  if (phase === "retire_legacy") {
+    records.push({
+      type: "A",
+      name: `app.${DOMAIN}`,
+      content: "192.0.2.1",
+      ttl: 1,
+      proxied: true,
+      comment: "SONIC CHECK retired legacy host; Cloudflare redirect only",
+    });
+  }
+  return records;
+}
+
+function editableRule(rule) {
+  const copy = structuredClone(rule);
+  delete copy.id;
+  delete copy.version;
+  delete copy.last_updated;
+  return copy;
+}
+
+export function legacyRedirectRule() {
+  return {
+    ref: LEGACY_REDIRECT_REF,
+    description: "Retire obsolete SONIC CHECK app host to the canonical protected app",
+    expression: '(http.host eq "app.soniccheck.io")',
+    action: "redirect",
+    action_parameters: {
+      from_value: {
+        target_url: { value: "https://soniccheck.io/app" },
+        status_code: 301,
+        preserve_query_string: true,
+      },
+    },
+    enabled: true,
+  };
+}
+
+export function mergeLegacyRedirect(existingRules = []) {
+  return [
+    ...existingRules
+      .filter((rule) => rule.ref !== LEGACY_REDIRECT_REF)
+      .map(editableRule),
+    legacyRedirectRule(),
+  ];
+}
+
+function recordKey(record) {
+  return `${record.type}|${record.name.toLowerCase()}|${String(record.content).toLowerCase()}`;
+}
+
+async function replaceManagedRecords(zoneId, token, allRecords, desired) {
+  const names = new Set(desired.map(({ name }) => name.toLowerCase()));
+  const existing = allRecords.filter(
+    (record) => names.has(String(record.name).toLowerCase()) && MANAGED_RECORD_TYPES.has(record.type),
+  );
+  const desiredByKey = new Map(desired.map((record) => [recordKey(record), record]));
+  const retained = new Map();
+
+  for (const record of existing) {
+    const key = recordKey(record);
+    if (desiredByKey.has(key) && !retained.has(key)) {
+      retained.set(key, record);
+    } else {
+      await cloudflareRequest(`/zones/${zoneId}/dns_records/${record.id}`, token, {
+        method: "DELETE",
+      });
+    }
+  }
+
+  for (const record of desired) {
+    const current = retained.get(recordKey(record));
+    await cloudflareRequest(
+      current
+        ? `/zones/${zoneId}/dns_records/${current.id}`
+        : `/zones/${zoneId}/dns_records`,
+      token,
+      { method: current ? "PUT" : "POST", body: record },
+    );
+  }
+}
+
+async function readRedirectRuleset(zoneId, token) {
+  const listed = await cloudflareRequest(`/zones/${zoneId}/rulesets`, token);
+  const summary = (listed || []).find(
+    ({ kind, phase }) => kind === "zone" && phase === "http_request_dynamic_redirect",
+  );
+  if (!summary) return null;
+  return cloudflareRequest(`/zones/${zoneId}/rulesets/${summary.id}`, token);
+}
+
+async function upsertLegacyRedirect(zoneId, token, existing) {
+  const body = {
+    name: existing?.name || "SONIC CHECK redirect rules",
+    description: existing?.description || "Canonical host convergence redirects",
+    kind: "zone",
+    phase: "http_request_dynamic_redirect",
+    rules: mergeLegacyRedirect(existing?.rules || []),
+  };
+  return cloudflareRequest(
+    existing ? `/zones/${zoneId}/rulesets/${existing.id}` : `/zones/${zoneId}/rulesets`,
+    token,
+    { method: existing ? "PUT" : "POST", body },
+  );
+}
+
+function publicRecord(record) {
+  return {
+    id: record.id,
+    type: record.type,
+    name: record.name,
+    content: record.content,
+    ttl: record.ttl,
+    proxied: record.proxied,
+    comment: record.comment || null,
+  };
+}
+
+export async function executeCutover(state, token, options = {}) {
+  validateState(state);
+  const zones = await cloudflareRequest(
+    `/zones?${new URLSearchParams({ name: DOMAIN, status: "active", per_page: "50" })}`,
+    token,
+    options,
+  );
+  if (!Array.isArray(zones) || zones.length !== 1 || zones[0].name !== DOMAIN) {
+    throw new Error(`Expected one active ${DOMAIN} zone.`);
+  }
+  const zoneId = zones[0].id;
+  const records = await cloudflareRequest(`/zones/${zoneId}/dns_records?per_page=5000`, token, options);
+  const redirectRuleset = await readRedirectRuleset(zoneId, token);
+  const touchedNames = new Set([DOMAIN, `www.${DOMAIN}`, `app.${DOMAIN}`]);
+  const before = {
+    schema_version: "soniccheck-cloudflare-rollback/1.0.0",
+    captured_at: new Date().toISOString(),
+    phase: state.phase,
+    zone_id: zoneId,
+    touched_records: records.filter(({ name }) => touchedNames.has(name)).map(publicRecord),
+    redirect_ruleset: redirectRuleset,
+    secrets_included: false,
+  };
+  writeFileSync(options.rollbackPath || "cloudflare-cutover-rollback.json", `${JSON.stringify(before, null, 2)}\n`, { mode: 0o600 });
+
+  await replaceManagedRecords(zoneId, token, records, desiredRecords(state.phase));
+  if (state.phase === "retire_legacy") {
+    await upsertLegacyRedirect(zoneId, token, redirectRuleset);
+  }
+
+  const afterRecords = await cloudflareRequest(`/zones/${zoneId}/dns_records?per_page=5000`, token, options);
+  const afterRuleset = await readRedirectRuleset(zoneId, token);
+  const result = {
+    schema_version: "soniccheck-cloudflare-cutover-result/1.0.0",
+    completed_at: new Date().toISOString(),
+    phase: state.phase,
+    records: afterRecords.filter(({ name }) => touchedNames.has(name)).map(publicRecord),
+    legacy_redirect_present: Boolean(
+      afterRuleset?.rules?.some(({ ref, enabled }) => ref === LEGACY_REDIRECT_REF && enabled),
+    ),
+    api_record_touched: false,
+    paid_public_traffic_enabled: false,
+    secrets_included: false,
+  };
+  writeFileSync(options.resultPath || "cloudflare-cutover-result.json", `${JSON.stringify(result, null, 2)}\n`, { mode: 0o600 });
+  return result;
+}
+
+async function main() {
+  const statePath = process.env.CUTOVER_STATE_PATH || "operations/cloudflare-cutover-state.json";
+  const state = validateState(JSON.parse(readFileSync(statePath, "utf8")));
+  const token = normalizeToken(process.env.CLOUDFLARE_API_TOKEN || process.env.CLOUDFLARE_READ_TOKEN);
+  const result = await executeCutover(state, token, {
+    rollbackPath: process.env.CUTOVER_ROLLBACK_OUTPUT,
+    resultPath: process.env.CUTOVER_RESULT_OUTPUT,
+  });
+  console.log(JSON.stringify({
+    phase: result.phase,
+    managed_record_count: result.records.length,
+    legacy_redirect_present: result.legacy_redirect_present,
+    api_record_touched: result.api_record_touched,
+    paid_public_traffic_enabled: result.paid_public_traffic_enabled,
+  }, null, 2));
+}
+
+const invokedDirectly = process.argv[1]
+  && import.meta.url === pathToFileURL(process.argv[1]).href;
+
+if (invokedDirectly) {
+  main().catch((error) => {
+    console.error(`Cloudflare canonical cutover failed: ${error.message}`);
+    process.exitCode = 1;
+  });
+}
