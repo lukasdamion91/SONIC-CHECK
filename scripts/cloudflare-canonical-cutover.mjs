@@ -3,7 +3,6 @@ import { pathToFileURL } from "node:url";
 
 const API_ROOT = "https://api.cloudflare.com/client/v4";
 const DOMAIN = "soniccheck.io";
-const GITHUB_PAGES_HOST = "lukasdamion91.github.io";
 const GITHUB_PAGES_IPV4 = [
   "185.199.108.153",
   "185.199.109.153",
@@ -11,7 +10,12 @@ const GITHUB_PAGES_IPV4 = [
   "185.199.111.153",
 ];
 const MANAGED_RECORD_TYPES = new Set(["A", "AAAA", "CNAME"]);
+const WWW_REDIRECT_REF = "soniccheck_redirect_www_canonical";
 const LEGACY_REDIRECT_REF = "soniccheck_redirect_app_legacy";
+const HARDENED_EDGE_SETTINGS = Object.freeze({
+  always_use_https: "on",
+  min_tls_version: "1.2",
+});
 
 export function normalizeToken(value) {
   let token = String(value || "").trim();
@@ -87,16 +91,16 @@ export function desiredRecords(phase) {
       name: DOMAIN,
       content,
       ttl: 3600,
-      proxied: false,
+      proxied: true,
       comment: "SONIC CHECK canonical GitHub Pages apex",
     })),
     {
-      type: "CNAME",
+      type: "A",
       name: `www.${DOMAIN}`,
-      content: GITHUB_PAGES_HOST,
-      ttl: 3600,
-      proxied: false,
-      comment: "SONIC CHECK www variant for GitHub Pages apex redirect",
+      content: "192.0.2.1",
+      ttl: 1,
+      proxied: true,
+      comment: "SONIC CHECK www host; Cloudflare redirect only",
     },
   ];
   if (phase === "retire_legacy") {
@@ -110,6 +114,10 @@ export function desiredRecords(phase) {
     });
   }
   return records;
+}
+
+export function desiredEdgeSettings() {
+  return { ...HARDENED_EDGE_SETTINGS };
 }
 
 function editableRule(rule) {
@@ -137,12 +145,33 @@ export function legacyRedirectRule() {
   };
 }
 
-export function mergeLegacyRedirect(existingRules = []) {
+export function wwwRedirectRule() {
+  return {
+    ref: WWW_REDIRECT_REF,
+    description: "Converge SONIC CHECK www traffic on the canonical apex",
+    expression: '(http.host eq "www.soniccheck.io")',
+    action: "redirect",
+    action_parameters: {
+      from_value: {
+        target_url: {
+          expression: 'concat("https://soniccheck.io", http.request.uri.path)',
+        },
+        status_code: 301,
+        preserve_query_string: true,
+      },
+    },
+    enabled: true,
+  };
+}
+
+export function mergeCanonicalRedirects(existingRules = [], phase = "canonical") {
+  const managedRefs = new Set([WWW_REDIRECT_REF, LEGACY_REDIRECT_REF]);
   return [
     ...existingRules
-      .filter((rule) => rule.ref !== LEGACY_REDIRECT_REF)
+      .filter((rule) => !managedRefs.has(rule.ref))
       .map(editableRule),
-    legacyRedirectRule(),
+    wwwRedirectRule(),
+    ...(phase === "retire_legacy" ? [legacyRedirectRule()] : []),
   ];
 }
 
@@ -150,7 +179,7 @@ function recordKey(record) {
   return `${record.type}|${record.name.toLowerCase()}|${String(record.content).toLowerCase()}`;
 }
 
-async function replaceManagedRecords(zoneId, token, allRecords, desired) {
+async function replaceManagedRecords(zoneId, token, allRecords, desired, options = {}) {
   const names = new Set(desired.map(({ name }) => name.toLowerCase()));
   const existing = allRecords.filter(
     (record) => names.has(String(record.name).toLowerCase()) && MANAGED_RECORD_TYPES.has(record.type),
@@ -164,6 +193,7 @@ async function replaceManagedRecords(zoneId, token, allRecords, desired) {
       retained.set(key, record);
     } else {
       await cloudflareRequest(`/zones/${zoneId}/dns_records/${record.id}`, token, {
+        ...options,
         method: "DELETE",
       });
     }
@@ -176,33 +206,60 @@ async function replaceManagedRecords(zoneId, token, allRecords, desired) {
         ? `/zones/${zoneId}/dns_records/${current.id}`
         : `/zones/${zoneId}/dns_records`,
       token,
-      { method: current ? "PUT" : "POST", body: record },
+      { ...options, method: current ? "PUT" : "POST", body: record },
     );
   }
 }
 
-async function readRedirectRuleset(zoneId, token) {
-  const listed = await cloudflareRequest(`/zones/${zoneId}/rulesets`, token);
+async function readRedirectRuleset(zoneId, token, options = {}) {
+  const listed = await cloudflareRequest(`/zones/${zoneId}/rulesets`, token, options);
   const summary = (listed || []).find(
     ({ kind, phase }) => kind === "zone" && phase === "http_request_dynamic_redirect",
   );
   if (!summary) return null;
-  return cloudflareRequest(`/zones/${zoneId}/rulesets/${summary.id}`, token);
+  return cloudflareRequest(`/zones/${zoneId}/rulesets/${summary.id}`, token, options);
 }
 
-async function upsertLegacyRedirect(zoneId, token, existing) {
+async function upsertCanonicalRedirects(zoneId, token, existing, phase, options = {}) {
   const body = {
     name: existing?.name || "SONIC CHECK redirect rules",
     description: existing?.description || "Canonical host convergence redirects",
     kind: "zone",
     phase: "http_request_dynamic_redirect",
-    rules: mergeLegacyRedirect(existing?.rules || []),
+    rules: mergeCanonicalRedirects(existing?.rules || [], phase),
   };
   return cloudflareRequest(
     existing ? `/zones/${zoneId}/rulesets/${existing.id}` : `/zones/${zoneId}/rulesets`,
     token,
-    { method: existing ? "PUT" : "POST", body },
+    { ...options, method: existing ? "PUT" : "POST", body },
   );
+}
+
+async function readEdgeSettings(zoneId, token, options = {}) {
+  const entries = await Promise.all(
+    Object.keys(HARDENED_EDGE_SETTINGS).map(async (setting) => {
+      const result = await cloudflareRequest(`/zones/${zoneId}/settings/${setting}`, token, options);
+      return [setting, result];
+    }),
+  );
+  return Object.fromEntries(entries);
+}
+
+async function reconcileEdgeSettings(zoneId, token, current, options = {}) {
+  const desired = desiredEdgeSettings();
+  for (const [setting, value] of Object.entries(desired)) {
+    const observed = current[setting];
+    if (!observed) throw new Error(`Cloudflare edge setting ${setting} was not readable.`);
+    if (observed.value === value) continue;
+    if (observed.editable === false) {
+      throw new Error(`Cloudflare edge setting ${setting} is not editable for this zone.`);
+    }
+    await cloudflareRequest(`/zones/${zoneId}/settings/${setting}`, token, {
+      ...options,
+      method: "PATCH",
+      body: { value },
+    });
+  }
 }
 
 function publicRecord(record) {
@@ -229,7 +286,8 @@ export async function executeCutover(state, token, options = {}) {
   }
   const zoneId = zones[0].id;
   const records = await cloudflareRequest(`/zones/${zoneId}/dns_records?per_page=5000`, token, options);
-  const redirectRuleset = await readRedirectRuleset(zoneId, token);
+  const redirectRuleset = await readRedirectRuleset(zoneId, token, options);
+  const edgeSettings = await readEdgeSettings(zoneId, token, options);
   const touchedNames = new Set([DOMAIN, `www.${DOMAIN}`, `app.${DOMAIN}`]);
   const before = {
     schema_version: "soniccheck-cloudflare-rollback/1.0.0",
@@ -238,17 +296,25 @@ export async function executeCutover(state, token, options = {}) {
     zone_id: zoneId,
     touched_records: records.filter(({ name }) => touchedNames.has(name)).map(publicRecord),
     redirect_ruleset: redirectRuleset,
+    edge_settings: Object.fromEntries(
+      Object.entries(edgeSettings).map(([setting, value]) => [setting, {
+        value: value.value,
+        editable: value.editable,
+      }]),
+    ),
     secrets_included: false,
   };
   writeFileSync(options.rollbackPath || "cloudflare-cutover-rollback.json", `${JSON.stringify(before, null, 2)}\n`, { mode: 0o600 });
 
-  await replaceManagedRecords(zoneId, token, records, desiredRecords(state.phase));
+  await replaceManagedRecords(zoneId, token, records, desiredRecords(state.phase), options);
+  await upsertCanonicalRedirects(zoneId, token, redirectRuleset, state.phase, options);
   if (state.phase === "retire_legacy") {
-    await upsertLegacyRedirect(zoneId, token, redirectRuleset);
+    await reconcileEdgeSettings(zoneId, token, edgeSettings, options);
   }
 
   const afterRecords = await cloudflareRequest(`/zones/${zoneId}/dns_records?per_page=5000`, token, options);
-  const afterRuleset = await readRedirectRuleset(zoneId, token);
+  const afterRuleset = await readRedirectRuleset(zoneId, token, options);
+  const afterEdgeSettings = await readEdgeSettings(zoneId, token, options);
   const result = {
     schema_version: "soniccheck-cloudflare-cutover-result/1.0.0",
     completed_at: new Date().toISOString(),
@@ -256,6 +322,16 @@ export async function executeCutover(state, token, options = {}) {
     records: afterRecords.filter(({ name }) => touchedNames.has(name)).map(publicRecord),
     legacy_redirect_present: Boolean(
       afterRuleset?.rules?.some(({ ref, enabled }) => ref === LEGACY_REDIRECT_REF && enabled),
+    ),
+    www_redirect_present: Boolean(
+      afterRuleset?.rules?.some(({ ref, enabled }) => ref === WWW_REDIRECT_REF && enabled),
+    ),
+    edge_settings: Object.fromEntries(
+      Object.entries(afterEdgeSettings).map(([setting, value]) => [setting, value.value]),
+    ),
+    edge_hardening_requested: state.phase === "retire_legacy",
+    edge_hardened: Object.entries(desiredEdgeSettings()).every(
+      ([setting, value]) => afterEdgeSettings[setting]?.value === value,
     ),
     api_record_touched: false,
     paid_public_traffic_enabled: false,
@@ -277,6 +353,9 @@ async function main() {
     phase: result.phase,
     managed_record_count: result.records.length,
     legacy_redirect_present: result.legacy_redirect_present,
+    www_redirect_present: result.www_redirect_present,
+    edge_hardening_requested: result.edge_hardening_requested,
+    edge_hardened: result.edge_hardened,
     api_record_touched: result.api_record_touched,
     paid_public_traffic_enabled: result.paid_public_traffic_enabled,
   }, null, 2));
