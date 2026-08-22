@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "release": "V25 Operational Unification",
+  "generated_from": "repository audit",
+  "baselines": {
+    "web": {
+      "repository": "lukasdamion91/SONIC-CHECK",
+      "commit": "f4a0bd65637827c779a0357c27cb668f95a304b3",
+      "deploy_order": 2
+    },
+    "api": {
+      "repository": "lukasdamion91/sonic-check-api",
+      "commit": "cc004bd3a203ba6e65ac7661308bb80791d2292e",
+      "deploy_order": 1
+    }
+  },
+  "canonical": {
+    "web": "https://soniccheck.io",
+    "api": "https://api.soniccheck.io"
+  },
+  "traffic": {
+    "controlled_beta": true,
+    "public_checkout_enabled": false,
+    "paid_public_traffic_enabled": false
+  },
+  "promotions": {
+    "v16r": "shadow-only",
+    "failed_retrieval_candidates": "shadow-only",
+    "indexed_records_71126": "not-registry-authorized"
+  },
+  "sequence": [
+    "V25.1 contracts, component inventory and release manifest",
+    "V25.2 Clerk identity and ownership enforcement",
+    "V25.3 Stripe entitlement state and idempotent webhook enforcement",
+    "V25.4 private upload and explicit scan lifecycle",
+    "V25.5 safe catalogue/analysis/evidence composition",
+    "V25.6 results, retention and deletion proof",
+    "V25.7 end-to-end tests, observability and controlled-beta certification"
+  ],
+  "deployment": {
+    "strategy": "backward-compatible-api-first",
+    "deployed_web_commit": null,
+    "deployed_api_commit": null,
+    "certified": false
+  },
+  "stop_conditions": [
+    "public-traffic enablement",
+    "authoritative model promotion",
+    "destructive action",
+    "unsupported public claim"
+  ]
+}
