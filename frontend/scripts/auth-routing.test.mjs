@@ -14,6 +14,7 @@ test("Clerk publishes canonical routes for OAuth transfer flows", async () => {
 test("sign-in preserves the protected destination when OAuth transfers to sign-up", async () => {
   const login = await source("../src/pages/Login.jsx");
 
+  assert.match(login, /<SignIn[\s\S]*withSignUp=\{true\}/);
   assert.match(login, /<SignIn[\s\S]*signUpUrl="\/join"/);
   assert.match(login, /signUpFallbackRedirectUrl=\{redirect\}/);
   assert.match(login, /signUpForceRedirectUrl=\{redirect\}/);
