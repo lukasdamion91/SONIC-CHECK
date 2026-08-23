@@ -37,6 +37,9 @@ jobs:
       - name: Validate public claims
         run: npm run validate:claims
 
+      - name: Test operational contracts
+        run: npm run test:ops
+
       - name: Build canonical-domain application
         env:
           CI: "true"

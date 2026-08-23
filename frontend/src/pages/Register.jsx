@@ -51,6 +51,8 @@ export default function Register() {
             signInUrl="/login"
             fallbackRedirectUrl={redirect}
             forceRedirectUrl={redirect}
+            signInFallbackRedirectUrl={redirect}
+            signInForceRedirectUrl={redirect}
             appearance={clerkAppearance}
           />
         ) : (
