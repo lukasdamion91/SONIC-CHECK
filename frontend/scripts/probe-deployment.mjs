@@ -10,6 +10,8 @@ const DEFAULTS = {
   api: "https://api.soniccheck.io",
 };
 
+const PRODUCTION_VERIFIER_USER_AGENT = "sonic-check-production-verifier/1.0";
+
 const REQUIRED_CONTROLLED_BETA_CHECKS = [
   "database",
   "clerk",
@@ -31,9 +33,16 @@ function authConfigured(html) {
   return html.match(/<meta\s+name=["']soniccheck-auth-configured["']\s+content=["']([^"']*)["']/i)?.[1] === "true";
 }
 
+function webRequestOptions(redirect) {
+  return {
+    redirect,
+    headers: { "User-Agent": PRODUCTION_VERIFIER_USER_AGENT },
+  };
+}
+
 async function probePage(base, path, expectedCommit, fetcher, { requireAuth = false } = {}) {
   try {
-    const response = await fetcher(`${base}${path}`, { redirect: "follow" });
+    const response = await fetcher(`${base}${path}`, webRequestOptions("follow"));
     const body = await response.text();
     const observedCommit = deploymentCommit(body);
     return {
@@ -56,7 +65,7 @@ async function probePage(base, path, expectedCommit, fetcher, { requireAuth = fa
 
 async function probeRedirect(url, expectedLocation, fetcher) {
   try {
-    const response = await fetcher(url, { redirect: "manual" });
+    const response = await fetcher(url, webRequestOptions("manual"));
     const location = response.headers.get("location");
     return {
       ok: response.status === 301 && location === expectedLocation,
