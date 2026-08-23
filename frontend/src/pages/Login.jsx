@@ -48,6 +48,7 @@ export default function Login() {
         {authConfigured ? (
           <SignIn
             routing="hash"
+            withSignUp={true}
             signUpUrl="/join"
             fallbackRedirectUrl={redirect}
             forceRedirectUrl={redirect}
