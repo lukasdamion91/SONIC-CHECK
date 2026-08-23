@@ -51,6 +51,8 @@ export default function Login() {
             signUpUrl="/join"
             fallbackRedirectUrl={redirect}
             forceRedirectUrl={redirect}
+            signUpFallbackRedirectUrl={redirect}
+            signUpForceRedirectUrl={redirect}
             appearance={clerkAppearance}
           />
         ) : (

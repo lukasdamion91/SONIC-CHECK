@@ -108,7 +108,12 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <ClerkProvider publishableKey={publishableKey} afterSignOutUrl="/">
+    <ClerkProvider
+      publishableKey={publishableKey}
+      signInUrl="/login"
+      signUpUrl="/join"
+      afterSignOutUrl="/"
+    >
       <ClerkAuthBridge>{children}</ClerkAuthBridge>
     </ClerkProvider>
   );
