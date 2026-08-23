@@ -63,6 +63,40 @@ test("deployment truth requires exact artifact identity and routing", async () =
   assert.equal(result.checks.api_readiness.nonblocking_provider_checks.recording_identity, false);
 });
 
+test("web probes identify the verifier while preserving truthful HTTP failures", async () => {
+  const commit = "1".repeat(40);
+  const html = `<meta name="soniccheck-deployment-commit" content="${commit}" /><meta name="soniccheck-auth-configured" content="true" />`;
+  const calls = [];
+  const fetcher = async (url, options) => {
+    calls.push({ url, options });
+    if (url.includes("www.soniccheck.io")) {
+      return response(301, { location: "https://soniccheck.io/v17-routing?source=deployment-truth", url });
+    }
+    if (url.includes("app.soniccheck.io")) {
+      return response(301, { location: "https://soniccheck.io/app?source=deployment-truth", url });
+    }
+    if (url.endsWith("/api/healthz")) return response(200, { body: '{"ok":true}', url });
+    if (url.endsWith("/api/readyz")) return response(503, { body: controlledBetaReadiness, url });
+    if (url.endsWith("/login")) return response(403, { body: "Cloudflare error 1010", url });
+    return response(200, { body: html, url });
+  };
+
+  const result = await probeDeployment({ expectedCommit: commit, fetcher });
+  const webCalls = calls.filter(({ url }) => !url.includes("api.soniccheck.io"));
+  const apiCalls = calls.filter(({ url }) => url.includes("api.soniccheck.io"));
+
+  assert.equal(webCalls.length, 6);
+  for (const { options } of webCalls) {
+    assert.equal(options.headers["User-Agent"], "sonic-check-production-verifier/1.0");
+  }
+  for (const { options } of apiCalls) {
+    assert.equal(options.headers, undefined);
+  }
+  assert.equal(result.ok, false);
+  assert.equal(result.checks.login.ok, false);
+  assert.equal(result.checks.login.status, 403);
+});
+
 test("a 200 from the wrong deployment is a failed deployment", async () => {
   const fetcher = async (url) => {
     if (url.includes("www.soniccheck.io") || url.includes("app.soniccheck.io")) {
