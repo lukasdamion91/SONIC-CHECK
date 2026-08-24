@@ -1,6 +1,5 @@
 import { SignIn } from "@clerk/react";
-import { useEffect } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, Navigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 
 const clerkAppearance = {
@@ -24,14 +23,13 @@ function safeRedirect(value) {
 }
 
 export default function Login() {
-  const { authConfigured, user } = useAuth();
+  const { authConfigured, isSignedIn, loading } = useAuth();
   const [params] = useSearchParams();
-  const navigate = useNavigate();
   const redirect = safeRedirect(params.get("redirect"));
 
-  useEffect(() => {
-    if (user) navigate(redirect, { replace: true });
-  }, [navigate, redirect, user]);
+  if (authConfigured && isSignedIn) {
+    return <Navigate to={redirect} replace />;
+  }
 
   return (
     <main className="mx-auto grid min-h-[calc(100vh-4rem)] max-w-7xl gap-12 px-6 py-14 lg:grid-cols-2 lg:items-center lg:gap-24">
@@ -46,16 +44,20 @@ export default function Login() {
 
       <div className="flex min-h-[520px] items-center justify-center rounded-2xl border border-white/10 bg-[#202027] p-5 sm:p-8">
         {authConfigured ? (
-          <SignIn
-            routing="hash"
-            withSignUp={true}
-            signUpUrl="/join"
-            fallbackRedirectUrl={redirect}
-            forceRedirectUrl={redirect}
-            signUpFallbackRedirectUrl={redirect}
-            signUpForceRedirectUrl={redirect}
-            appearance={clerkAppearance}
-          />
+          loading ? (
+            <div className="font-mono-data text-sm text-[#F0E9D6]/50">Completing secure sign-in…</div>
+          ) : (
+            <SignIn
+              routing="hash"
+              withSignUp={true}
+              signUpUrl="/join"
+              fallbackRedirectUrl={redirect}
+              forceRedirectUrl={redirect}
+              signUpFallbackRedirectUrl={redirect}
+              signUpForceRedirectUrl={redirect}
+              appearance={clerkAppearance}
+            />
+          )
         ) : (
           <div className="max-w-md text-center">
             <h2 className="font-display text-3xl text-[#F0E9D6]">Account access is not configured.</h2>

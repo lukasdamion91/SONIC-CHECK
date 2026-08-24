@@ -27,3 +27,17 @@ test("sign-up preserves the protected destination when OAuth transfers to sign-i
   assert.match(register, /signInFallbackRedirectUrl=\{redirect\}/);
   assert.match(register, /signInForceRedirectUrl=\{redirect\}/);
 });
+
+test("authenticated callbacks leave Clerk components before API profile sync completes", async () => {
+  const [authContext, login, register] = await Promise.all([
+    source("../src/context/AuthContext.jsx"),
+    source("../src/pages/Login.jsx"),
+    source("../src/pages/Register.jsx"),
+  ]);
+
+  assert.match(authContext, /isSignedIn:\s*Boolean\(isSignedIn\)/);
+  for (const page of [login, register]) {
+    assert.match(page, /if \(authConfigured && isSignedIn\) \{[\s\S]*<Navigate to=\{redirect\} replace \/>/);
+    assert.match(page, /authConfigured \? \([\s\S]*loading \? \([\s\S]*Completing secure/);
+  }
+});
