@@ -18,6 +18,7 @@ const AuthContext = createContext(null);
 
 const unavailableValue = {
   authConfigured: false,
+  isSignedIn: false,
   clerkUser: null,
   user: false,
   loading: false,
@@ -86,6 +87,7 @@ function ClerkAuthBridge({ children }) {
   const value = useMemo(
     () => ({
       authConfigured: true,
+      isSignedIn: Boolean(isSignedIn),
       clerkUser,
       user: isSignedIn ? user : false,
       loading: !isLoaded || (Boolean(isSignedIn) && (profileLoading || user === null) && !error),

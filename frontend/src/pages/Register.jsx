@@ -1,6 +1,5 @@
 import { SignUp } from "@clerk/react";
-import { useEffect } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, Navigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 
 const clerkAppearance = {
@@ -24,14 +23,13 @@ function safeRedirect(value) {
 }
 
 export default function Register() {
-  const { authConfigured, user } = useAuth();
+  const { authConfigured, isSignedIn, loading } = useAuth();
   const [params] = useSearchParams();
-  const navigate = useNavigate();
   const redirect = safeRedirect(params.get("redirect"));
 
-  useEffect(() => {
-    if (user) navigate(redirect, { replace: true });
-  }, [navigate, redirect, user]);
+  if (authConfigured && isSignedIn) {
+    return <Navigate to={redirect} replace />;
+  }
 
   return (
     <main className="mx-auto grid min-h-[calc(100vh-4rem)] max-w-7xl gap-12 px-6 py-14 lg:grid-cols-2 lg:items-center lg:gap-24">
@@ -46,15 +44,19 @@ export default function Register() {
 
       <div className="flex min-h-[580px] items-center justify-center rounded-2xl border border-white/10 bg-[#202027] p-5 sm:p-8">
         {authConfigured ? (
-          <SignUp
-            routing="hash"
-            signInUrl="/login"
-            fallbackRedirectUrl={redirect}
-            forceRedirectUrl={redirect}
-            signInFallbackRedirectUrl={redirect}
-            signInForceRedirectUrl={redirect}
-            appearance={clerkAppearance}
-          />
+          loading ? (
+            <div className="font-mono-data text-sm text-[#F0E9D6]/50">Completing secure sign-up…</div>
+          ) : (
+            <SignUp
+              routing="hash"
+              signInUrl="/login"
+              fallbackRedirectUrl={redirect}
+              forceRedirectUrl={redirect}
+              signInFallbackRedirectUrl={redirect}
+              signInForceRedirectUrl={redirect}
+              appearance={clerkAppearance}
+            />
+          )
         ) : (
           <div className="max-w-md text-center">
             <h2 className="font-display text-3xl text-[#F0E9D6]">Joining is temporarily closed.</h2>
