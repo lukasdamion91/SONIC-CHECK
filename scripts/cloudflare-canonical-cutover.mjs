@@ -182,7 +182,7 @@ export function canonicalSpaRewriteRule() {
     description: "Serve SONIC CHECK browser routes from the canonical SPA entry point",
     expression: [
       '(http.host eq "soniccheck.io" and (',
-      'http.request.uri.path in {"/login" "/join" "/register" "/signup" "/signin" "/pricing" "/dashboard" "/library" "/payment-success" "/scan/new" "/app"}',
+      'http.request.uri.path in {"/login" "/join" "/register" "/signup" "/signin" "/pricing" "/privacy" "/terms" "/dashboard" "/library" "/payment-success" "/scan/new" "/app"}',
       ' or starts_with(http.request.uri.path, "/verify/")',
       ' or starts_with(http.request.uri.path, "/scan/")',
       ' or starts_with(http.request.uri.path, "/app/")',

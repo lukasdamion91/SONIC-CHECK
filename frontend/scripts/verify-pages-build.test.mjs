@@ -7,7 +7,10 @@ import test from "node:test";
 import { verifyPagesBuild } from "./verify-pages-build.mjs";
 
 
-const routes = ["/", "/login", "/join", "/app", "/app/billing", "/app/scan/new", "/app/library"];
+const routes = [
+  "/", "/login", "/join", "/privacy", "/terms", "/app",
+  "/app/billing", "/app/scan/new", "/app/library",
+];
 
 function fixture({ fallback = null, auth = "true" } = {}) {
   const root = mkdtempSync(join(tmpdir(), "soniccheck-pages-v17-"));

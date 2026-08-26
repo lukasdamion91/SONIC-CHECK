@@ -64,6 +64,7 @@
   "scripts": {
     "start": "craco start",
     "build": "craco build",
+    "postbuild": "node scripts/prepare-pages-build.mjs",
     "test": "craco test",
     "validate:claims": "node scripts/validate-public-claims.mjs",
     "verify:build": "node scripts/verify-pages-build.mjs",

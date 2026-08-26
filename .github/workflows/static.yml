@@ -50,9 +50,7 @@ jobs:
           REACT_APP_CLERK_PUBLISHABLE_KEY: ${{ secrets.REACT_APP_CLERK_PUBLISHABLE_KEY || vars.REACT_APP_CLERK_PUBLISHABLE_KEY || 'pk_live_Y2xlcmsuc29uaWNjaGVjay5pbyQ' }}
           REACT_APP_CLERK_CONFIGURED: "true"
           REACT_APP_DEPLOYMENT_COMMIT: ${{ github.sha }}
-        run: |
-          npm run build
-          cp build/index.html build/404.html
+        run: npm run build
 
       - name: Verify routing artifact and deployment identity
         run: >-

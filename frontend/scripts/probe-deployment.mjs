@@ -8,6 +8,7 @@ const DEFAULTS = {
   www: "https://www.soniccheck.io",
   app: "https://app.soniccheck.io",
   api: "https://api.soniccheck.io",
+  clerk: "https://clerk.soniccheck.io",
 };
 
 const PRODUCTION_VERIFIER_USER_AGENT = "sonic-check-production-verifier/1.0";
@@ -40,20 +41,30 @@ function webRequestOptions(redirect) {
   };
 }
 
-async function probePage(base, path, expectedCommit, fetcher, { requireAuth = false } = {}) {
+async function probePage(
+  base,
+  path,
+  expectedCommit,
+  fetcher,
+  { requireAuth = false, requireCanonicalPath = false } = {},
+) {
   try {
-    const response = await fetcher(`${base}${path}`, webRequestOptions("follow"));
+    const requestedUrl = `${base}${path}`;
+    const response = await fetcher(requestedUrl, webRequestOptions("follow"));
     const body = await response.text();
     const observedCommit = deploymentCommit(body);
+    const canonicalPath = !requireCanonicalPath || response.url === requestedUrl;
     return {
       ok: (
         response.status === 200
         && observedCommit === expectedCommit
         && (!requireAuth || authConfigured(body))
+        && canonicalPath
       ),
       path,
       status: response.status,
       final_url: response.url,
+      canonical_path: canonicalPath,
       expected_commit: expectedCommit,
       observed_commit: observedCommit || null,
       auth_configured: authConfigured(body),
@@ -134,23 +145,86 @@ async function probeControlledBetaReadiness(url, fetcher) {
   }
 }
 
+export async function probeGoogleProviderConfiguration(url, fetcher = fetch) {
+  try {
+    const response = await fetcher(url, webRequestOptions("follow"));
+    let payload = null;
+    try {
+      payload = await response.json();
+    } catch {
+      payload = null;
+    }
+
+    const authConfig = payload?.auth_config || {};
+    const displayConfig = payload?.display_config || {};
+    const google = payload?.user_settings?.social?.oauth_google || {};
+    const checks = {
+      production_instance: displayConfig.instance_environment_type === "production",
+      identification_strategy: Array.isArray(authConfig.identification_strategies)
+        && authConfig.identification_strategies.includes("oauth_google"),
+      first_factor: Array.isArray(authConfig.first_factors)
+        && authConfig.first_factors.includes("oauth_google"),
+      enabled: google.enabled === true,
+      authenticatable: google.authenticatable === true,
+      selectable: google.not_selectable === false,
+      subaddresses_blocked: google.block_email_subaddresses === true,
+      privacy_policy: displayConfig.privacy_policy_url === "https://soniccheck.io/privacy",
+      terms: displayConfig.terms_url === "https://soniccheck.io/terms",
+    };
+
+    return {
+      ok: response.status === 200 && Object.values(checks).every(Boolean),
+      status: response.status,
+      checks,
+      provider: google.name || "Google",
+      strategy: google.strategy || "oauth_google",
+      scope: "public_configuration_only",
+      end_to_end_acceptance_required: true,
+      secrets_included: false,
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      error: String(error?.message || error),
+      scope: "public_configuration_only",
+      end_to_end_acceptance_required: true,
+      secrets_included: false,
+    };
+  }
+}
+
 export async function probeDeployment({
   expectedCommit,
   origins = DEFAULTS,
   fetcher = fetch,
 } = {}) {
   if (!expectedCommit) throw new Error("expectedCommit is required");
-  const [landing, login, join, appRoute, www, legacyApp, health, readiness] = await Promise.all([
+  const [landing, login, join, privacy, terms, appRoute, www, legacyApp, health, readiness, googleProviderConfig] = await Promise.all([
     probePage(origins.apex, "/", expectedCommit, fetcher),
     probePage(origins.apex, "/login", expectedCommit, fetcher, { requireAuth: true }),
     probePage(origins.apex, "/join", expectedCommit, fetcher, { requireAuth: true }),
+    probePage(origins.apex, "/privacy", expectedCommit, fetcher, { requireCanonicalPath: true }),
+    probePage(origins.apex, "/terms", expectedCommit, fetcher, { requireCanonicalPath: true }),
     probePage(origins.apex, "/app", expectedCommit, fetcher, { requireAuth: true }),
     probeRedirect(`${origins.www}/v17-routing?source=deployment-truth`, `${origins.apex}/v17-routing?source=deployment-truth`, fetcher),
     probeRedirect(`${origins.app}/legacy?source=deployment-truth`, `${origins.apex}/app?source=deployment-truth`, fetcher),
     probeJson(`${origins.api}/api/healthz`, 200, fetcher),
     probeControlledBetaReadiness(`${origins.api}/api/readyz`, fetcher),
+    probeGoogleProviderConfiguration(`${origins.clerk}/v1/environment`, fetcher),
   ]);
-  const checks = { landing, login, join, app: appRoute, www_redirect: www, legacy_app_redirect: legacyApp, api_health: health, api_readiness: readiness };
+  const checks = {
+    landing,
+    login,
+    join,
+    privacy,
+    terms,
+    app: appRoute,
+    www_redirect: www,
+    legacy_app_redirect: legacyApp,
+    api_health: health,
+    api_readiness: readiness,
+    google_provider_config: googleProviderConfig,
+  };
   return {
     schema_version: "soniccheck-deployment-truth/1.0.0",
     expected_commit: expectedCommit,

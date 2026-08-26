@@ -14,6 +14,8 @@ import Pricing from "@/pages/Pricing";
 import PaymentSuccess from "@/pages/PaymentSuccess";
 import Library from "@/pages/Library";
 import VerifyBadge from "@/pages/VerifyBadge";
+import Privacy from "@/pages/Privacy";
+import Terms from "@/pages/Terms";
 
 const baseName = process.env.PUBLIC_URL && !process.env.PUBLIC_URL.startsWith("http")
   ? process.env.PUBLIC_URL
@@ -38,6 +40,8 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/join" element={<Register />} />
             <Route path="/verify/:badgeId" element={<VerifyBadge />} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="/terms" element={<Terms />} />
 
             <Route path="/app" element={<Protected><Dashboard /></Protected>} />
             <Route path="/app/billing" element={<Protected><Pricing /></Protected>} />
