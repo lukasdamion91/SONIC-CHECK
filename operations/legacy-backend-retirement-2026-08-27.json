@@ -1,0 +1,83 @@
+{
+  "schema_version": "soniccheck-legacy-backend-retirement/1.0.0",
+  "retirement_id": "SC-V27-LEGACY-BACKEND-2026-08-27",
+  "observed_at": "2026-08-26T17:47:54Z",
+  "release_posture": "CONTROLLED_PRIVATE_BETA",
+  "source": {
+    "repository": "lukasdamion91/SONIC-CHECK",
+    "commit": "1e5871d6b76ccaa46a79179f1b261a6f87bad7ab",
+    "tree": "32f74a44acdf9d233221e7329ba2903d6dc3661a",
+    "path": "backend/",
+    "runtime_status": "NOT_BUILT_OR_DEPLOYED"
+  },
+  "recovery": {
+    "branch": "archive/legacy-web-backend-20260827",
+    "commit": "1e5871d6b76ccaa46a79179f1b261a6f87bad7ab",
+    "git_history_retained": true
+  },
+  "files": [
+    {"path": "backend/acr.py", "git_blob_sha": "2fc99483f0a6aa58066ece382f405fb1ea03de64", "size_bytes": 4439},
+    {"path": "backend/assets/logo-full.png", "git_blob_sha": "bec1861f35979faca9b02683c792a0c1ed1781d6", "size_bytes": 146040},
+    {"path": "backend/assets/logo-icon.png", "git_blob_sha": "74819bddf44b29df54a2119c264bcca5f96bba0c", "size_bytes": 24952},
+    {"path": "backend/fingerprint.py", "git_blob_sha": "5e5717e082027854e9ca1895c51c25fa8aec59d9", "size_bytes": 6676},
+    {"path": "backend/lyrics_free.py", "git_blob_sha": "7cba577a2ea58031b71c5466a6b9effb86370ad2", "size_bytes": 3419},
+    {"path": "backend/pytest.ini", "git_blob_sha": "fa65fb41d013cff95b96a0591f786a3390a76bf3", "size_bytes": 646},
+    {"path": "backend/report.py", "git_blob_sha": "63e174ffd8b8268f8a86073ae74677d5105d2a9e", "size_bytes": 10193},
+    {"path": "backend/requirements.txt", "git_blob_sha": "fd4a92579eb297542a3de116ddb8c5fa488f31a9", "size_bytes": 2472},
+    {"path": "backend/semantic.py", "git_blob_sha": "3ece95c2c17e5b3ee6ec591bd50a40a414333704", "size_bytes": 4612},
+    {"path": "backend/server.py", "git_blob_sha": "f4f541a2fcb0cf621f151826ee7cd55fce7e2e52", "size_bytes": 43322},
+    {"path": "backend/storage.py", "git_blob_sha": "b4db406c6ed1c916fbf52a5fc9666aab72735e0d", "size_bytes": 2356},
+    {"path": "backend/tests/test_scans_projection.py", "git_blob_sha": "922965ee0f95b753b6557dda3c37ac5e1bf2f519", "size_bytes": 6319},
+    {"path": "backend/tests/test_soniccheck.py", "git_blob_sha": "a4cce8c38945878f043b133e96a16fc202a62b7d", "size_bytes": 13605}
+  ],
+  "extracted_value": [
+    {
+      "legacy_path": "backend/acr.py",
+      "destination": "lukasdamion91/sonic-check-api:acr.py",
+      "decision": "ALREADY_BYTE_IDENTICAL"
+    },
+    {
+      "legacy_path": "backend/pytest.ini",
+      "destination": "lukasdamion91/sonic-check-api:pytest.ini",
+      "decision": "ALREADY_BYTE_IDENTICAL"
+    },
+    {
+      "legacy_path": "backend/tests/test_scans_projection.py",
+      "destination": "lukasdamion91/sonic-check-api:tests/test_scan_list_projection.py",
+      "pull_request": 30,
+      "merge_commit": "ef64b9f46279b77ab0f02bdb748a065fac1411db",
+      "decision": "RECOVERED_AS_OFFLINE_OWNER_AND_PROJECTION_GUARDS"
+    }
+  ],
+  "superseded_or_rejected": [
+    "password_and_cookie_jwt_authentication",
+    "default_seeded_administrator",
+    "browser_or_legacy_plan_checkout_contract",
+    "credentialed_live_regression_fixtures",
+    "llm_generated_originality_scores",
+    "legal_verdict_thresholds_and_claims",
+    "legacy_storage_and_report_implementations",
+    "duplicate_backend_brand_assets"
+  ],
+  "production_verification": {
+    "web_commit": "1e5871d6b76ccaa46a79179f1b261a6f87bad7ab",
+    "deployment_truth_sha256": "e8afafcc23a76478e32707f13ce0a66e91ef3567416fecc2473b5f11f7b08200",
+    "canonical_web_routes": true,
+    "api_health": true,
+    "legacy_app_permanent_redirect": true,
+    "legacy_session_or_checkout_reachable": false,
+    "controlled_beta_ready": true
+  },
+  "financial_safety": {
+    "public_paid_traffic_enabled": false,
+    "checkout_session_created": false,
+    "live_payment_performed": false
+  },
+  "scientific_core": {
+    "analyzer_source_changed": false,
+    "scoring_or_threshold_change": false,
+    "legacy_algorithm_promoted": false
+  },
+  "secrets_included": false,
+  "personal_data_included": false
+}
