@@ -1,23 +1,32 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
+import { matchPath } from "react-router-dom";
 import test from "node:test";
 
 const source = async (path) => readFile(new URL(path, import.meta.url), "utf8");
 
 test("privacy and terms remain public canonical routes", async () => {
-  const [app, landing, register] = await Promise.all([
+  const [app, landing, register, legalPage] = await Promise.all([
     source("../src/App.js"),
     source("../src/pages/Landing.jsx"),
     source("../src/pages/Register.jsx"),
+    source("../src/components/LegalPage.jsx"),
   ]);
 
   assert.match(app, /path="\/privacy" element=\{<Privacy \/>\}/);
   assert.match(app, /path="\/terms" element=\{<Terms \/>\}/);
-  assert.match(landing, /to="\/privacy"/);
-  assert.match(landing, /to="\/terms"/);
+  assert.match(landing, /to="\/privacy\/"/);
+  assert.match(landing, /to="\/terms\/"/);
   assert.match(register, /By continuing to create an account/);
-  assert.match(register, /to="\/privacy"/);
-  assert.match(register, /to="\/terms"/);
+  assert.match(register, /to="\/privacy\/"/);
+  assert.match(register, /to="\/terms\/"/);
+  assert.match(legalPage, /to="\/privacy\/"/);
+  assert.match(legalPage, /to="\/terms\/"/);
+});
+
+test("React Router accepts the canonical trailing-slash policy URLs", () => {
+  assert.ok(matchPath({ path: "/privacy", end: true }, "/privacy/"));
+  assert.ok(matchPath({ path: "/terms", end: true }, "/terms/"));
 });
 
 test("privacy copy describes Google basic identity without broader Google access", async () => {

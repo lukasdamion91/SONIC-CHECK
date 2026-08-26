@@ -65,7 +65,7 @@ export default function Register() {
         )}
         {authConfigured && !loading ? (
           <p className="max-w-md text-center text-xs leading-5 text-[#F0E9D6]/48">
-            By continuing to create an account, you agree to the <Link className="text-[#D4FF00] hover:underline" to="/terms">Terms of Use</Link> and acknowledge the <Link className="text-[#D4FF00] hover:underline" to="/privacy">Privacy Policy</Link>.
+            By continuing to create an account, you agree to the <Link className="text-[#D4FF00] hover:underline" to="/terms/">Terms of Use</Link> and acknowledge the <Link className="text-[#D4FF00] hover:underline" to="/privacy/">Privacy Policy</Link>.
           </p>
         ) : null}
       </div>

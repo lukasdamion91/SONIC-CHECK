@@ -17,16 +17,29 @@ function meta(html, name) {
   return html.match(pattern)?.[1] || "";
 }
 
+function canonical(html) {
+  return html.match(/<link\s+rel=["']canonical["']\s+href=["']([^"']*)["']\s*\/?>/i)?.[1] || "";
+}
+
+function title(html) {
+  return html.match(/<title>([^<]*)<\/title>/i)?.[1] || "";
+}
+
 export function verifyPagesBuild({ root = frontendRoot, expectedCommit = "", requireAuth = false } = {}) {
   const build = join(root, "build");
   const indexPath = join(build, "index.html");
   const fallbackPath = join(build, "404.html");
+  const privacyPath = join(build, "privacy", "index.html");
+  const termsPath = join(build, "terms", "index.html");
   const cnamePath = join(build, "CNAME");
   const assetManifestPath = join(build, "asset-manifest.json");
   const javascriptPath = join(build, "static", "js");
   const appPath = join(root, "src", "App.js");
   const failures = [];
-  for (const path of [indexPath, fallbackPath, cnamePath, assetManifestPath, javascriptPath, appPath]) {
+  for (const path of [
+    indexPath, fallbackPath, privacyPath, termsPath, cnamePath,
+    assetManifestPath, javascriptPath, appPath,
+  ]) {
     if (!existsSync(path)) failures.push(`MISSING:${path.slice(root.length + 1)}`);
   }
   if (failures.length) {
@@ -34,7 +47,11 @@ export function verifyPagesBuild({ root = frontendRoot, expectedCommit = "", req
   }
   const index = readFileSync(indexPath);
   const fallback = readFileSync(fallbackPath);
+  const privacy = readFileSync(privacyPath);
+  const terms = readFileSync(termsPath);
   const html = index.toString("utf8");
+  const privacyHtml = privacy.toString("utf8");
+  const termsHtml = terms.toString("utf8");
   const cname = readFileSync(cnamePath, "utf8").trim();
   const app = readFileSync(appPath, "utf8");
   const deploymentCommit = meta(html, "soniccheck-deployment-commit");
@@ -46,6 +63,18 @@ export function verifyPagesBuild({ root = frontendRoot, expectedCommit = "", req
   ];
   const missingRoutes = requiredRoutes.filter((route) => !app.includes(`path="${route}"`));
   if (!index.equals(fallback)) failures.push("SPA_FALLBACK_NOT_BYTE_IDENTICAL");
+  const privacyEntryValid = canonical(privacyHtml) === "https://soniccheck.io/privacy/"
+    && title(privacyHtml) === "Privacy Policy — SONIC CHECK"
+    && meta(privacyHtml, "soniccheck-deployment-commit") === deploymentCommit
+    && meta(privacyHtml, "soniccheck-product-contract") === productContract
+    && meta(privacyHtml, "soniccheck-auth-configured") === authMarker;
+  const termsEntryValid = canonical(termsHtml) === "https://soniccheck.io/terms/"
+    && title(termsHtml) === "Terms of Use — SONIC CHECK"
+    && meta(termsHtml, "soniccheck-deployment-commit") === deploymentCommit
+    && meta(termsHtml, "soniccheck-product-contract") === productContract
+    && meta(termsHtml, "soniccheck-auth-configured") === authMarker;
+  if (!privacyEntryValid) failures.push("PRIVACY_ENTRY_INVALID");
+  if (!termsEntryValid) failures.push("TERMS_ENTRY_INVALID");
   if (cname !== "soniccheck.io") failures.push("CANONICAL_CNAME_MISMATCH");
   if (!deploymentCommit || deploymentCommit.includes("%REACT_APP_")) failures.push("DEPLOYMENT_COMMIT_NOT_STAMPED");
   if (expectedCommit && deploymentCommit !== expectedCommit) failures.push("DEPLOYMENT_COMMIT_MISMATCH");
@@ -62,13 +91,14 @@ export function verifyPagesBuild({ root = frontendRoot, expectedCommit = "", req
       index_sha256: sha256(index),
       fallback_sha256: sha256(fallback),
       fallback_byte_identical: index.equals(fallback),
+      policy_entries_canonical: privacyEntryValid && termsEntryValid,
       cname,
       deployment_commit: deploymentCommit,
       product_contract: productContract,
       asset_manifest_sha256: sha256(assetManifest),
     },
     routing: {
-      strategy: "github-pages-404-spa-fallback",
+      strategy: "github-pages-static-policy-entry-and-404-spa-fallback",
       required_routes: requiredRoutes,
       missing_routes: missingRoutes,
     },

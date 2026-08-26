@@ -29,8 +29,8 @@ export default function LegalPage({ eyebrow, title, summary, updated, children }
 
       <footer className="mt-8 flex flex-wrap gap-x-5 gap-y-2 text-sm text-[#F0E9D6]/55">
         <Link className="hover:text-[#D4FF00]" to="/">Home</Link>
-        <Link className="hover:text-[#D4FF00]" to="/privacy">Privacy</Link>
-        <Link className="hover:text-[#D4FF00]" to="/terms">Terms</Link>
+        <Link className="hover:text-[#D4FF00]" to="/privacy/">Privacy</Link>
+        <Link className="hover:text-[#D4FF00]" to="/terms/">Terms</Link>
         <a className="hover:text-[#D4FF00]" href="mailto:info@soniccheck.io">info@soniccheck.io</a>
       </footer>
     </main>
