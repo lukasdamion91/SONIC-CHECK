@@ -34,6 +34,10 @@ function authConfigured(html) {
   return html.match(/<meta\s+name=["']soniccheck-auth-configured["']\s+content=["']([^"']*)["']/i)?.[1] === "true";
 }
 
+function canonicalUrl(html) {
+  return html.match(/<link\s+rel=["']canonical["']\s+href=["']([^"']*)["']\s*\/?>/i)?.[1] || "";
+}
+
 function webRequestOptions(redirect) {
   return {
     redirect,
@@ -46,7 +50,7 @@ async function probePage(
   path,
   expectedCommit,
   fetcher,
-  { requireAuth = false, requireCanonicalPath = false } = {},
+  { requireAuth = false, requireCanonicalPath = false, expectedCanonical = "" } = {},
 ) {
   try {
     const requestedUrl = `${base}${path}`;
@@ -54,17 +58,23 @@ async function probePage(
     const body = await response.text();
     const observedCommit = deploymentCommit(body);
     const canonicalPath = !requireCanonicalPath || response.url === requestedUrl;
+    const observedCanonical = canonicalUrl(body);
+    const canonicalMetadata = !expectedCanonical || observedCanonical === expectedCanonical;
     return {
       ok: (
         response.status === 200
         && observedCommit === expectedCommit
         && (!requireAuth || authConfigured(body))
         && canonicalPath
+        && canonicalMetadata
       ),
       path,
       status: response.status,
       final_url: response.url,
       canonical_path: canonicalPath,
+      canonical_metadata: canonicalMetadata,
+      expected_canonical: expectedCanonical || null,
+      observed_canonical: observedCanonical || null,
       expected_commit: expectedCommit,
       observed_commit: observedCommit || null,
       auth_configured: authConfigured(body),
@@ -168,8 +178,8 @@ export async function probeGoogleProviderConfiguration(url, fetcher = fetch) {
       authenticatable: google.authenticatable === true,
       selectable: google.not_selectable === false,
       subaddresses_blocked: google.block_email_subaddresses === true,
-      privacy_policy: displayConfig.privacy_policy_url === "https://soniccheck.io/privacy",
-      terms: displayConfig.terms_url === "https://soniccheck.io/terms",
+      privacy_policy: displayConfig.privacy_policy_url === "https://soniccheck.io/privacy/",
+      terms: displayConfig.terms_url === "https://soniccheck.io/terms/",
     };
 
     return {
@@ -203,8 +213,14 @@ export async function probeDeployment({
     probePage(origins.apex, "/", expectedCommit, fetcher),
     probePage(origins.apex, "/login", expectedCommit, fetcher, { requireAuth: true }),
     probePage(origins.apex, "/join", expectedCommit, fetcher, { requireAuth: true }),
-    probePage(origins.apex, "/privacy", expectedCommit, fetcher, { requireCanonicalPath: true }),
-    probePage(origins.apex, "/terms", expectedCommit, fetcher, { requireCanonicalPath: true }),
+    probePage(origins.apex, "/privacy/", expectedCommit, fetcher, {
+      requireCanonicalPath: true,
+      expectedCanonical: "https://soniccheck.io/privacy/",
+    }),
+    probePage(origins.apex, "/terms/", expectedCommit, fetcher, {
+      requireCanonicalPath: true,
+      expectedCanonical: "https://soniccheck.io/terms/",
+    }),
     probePage(origins.apex, "/app", expectedCommit, fetcher, { requireAuth: true }),
     probeRedirect(`${origins.www}/v17-routing?source=deployment-truth`, `${origins.apex}/v17-routing?source=deployment-truth`, fetcher),
     probeRedirect(`${origins.app}/legacy?source=deployment-truth`, `${origins.apex}/app?source=deployment-truth`, fetcher),

@@ -4,7 +4,7 @@ This repository contains the converged SONIC CHECK web experience for RC-0.
 It intentionally exposes two product components on one canonical host:
 
 1. A public landing, account-entry and customer-policy surface at `/`, `/join`,
-   `/login`, `/privacy`, and `/terms`.
+   `/login`, `/privacy/`, and `/terms/`.
 2. The authenticated product under `/app`, with scan and library features gated
    by the entitlement returned by the canonical API.
 
