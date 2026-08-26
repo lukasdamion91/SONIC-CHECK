@@ -3,7 +3,8 @@
 This repository contains the converged SONIC CHECK web experience for RC-0.
 It intentionally exposes two product components on one canonical host:
 
-1. A public landing and account-entry surface at `/`, `/join`, and `/login`.
+1. A public landing, account-entry and customer-policy surface at `/`, `/join`,
+   `/login`, `/privacy`, and `/terms`.
 2. The authenticated product under `/app`, with scan and library features gated
    by the entitlement returned by the canonical API.
 
@@ -14,7 +15,9 @@ shareable evidence surface outside authentication.
 
 - Canonical web origin: `https://soniccheck.io`
 - Canonical API origin: `https://api.soniccheck.io`
-- Authentication: Clerk bearer tokens
+- Authentication: Clerk bearer tokens; production Google provider configuration
+  is checked through Clerk's public environment contract, with a separate
+  end-to-end sign-in acceptance test required before release
 - Pricing currency: AUD
 - Plans: A$2.99 single screen, A$5.00 PDF add-on, A$18.99/month,
   A$149.99/year, and A$499.99/year enterprise

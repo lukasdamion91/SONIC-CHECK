@@ -34,10 +34,39 @@ const controlledBetaReadiness = JSON.stringify({
   secrets_included: false,
 });
 
+const googleClerkEnvironment = JSON.stringify({
+  auth_config: {
+    identification_strategies: ["email_address", "oauth_github", "oauth_google"],
+    first_factors: ["email_code", "oauth_github", "oauth_google", "password"],
+  },
+  display_config: {
+    instance_environment_type: "production",
+    privacy_policy_url: "https://soniccheck.io/privacy",
+    terms_url: "https://soniccheck.io/terms",
+  },
+  user_settings: {
+    social: {
+      oauth_google: {
+        enabled: true,
+        authenticatable: true,
+        not_selectable: false,
+        block_email_subaddresses: true,
+        strategy: "oauth_google",
+        name: "Google",
+      },
+    },
+  },
+});
+
+function googleEnvironment(url, body = googleClerkEnvironment) {
+  return response(200, { body, url });
+}
+
 test("deployment truth requires exact artifact identity and routing", async () => {
   const commit = "a".repeat(40);
   const html = `<meta name="soniccheck-deployment-commit" content="${commit}" /><meta name="soniccheck-auth-configured" content="true" />`;
   const fetcher = async (url, options) => {
+    if (url.includes("clerk.soniccheck.io")) return googleEnvironment(url);
     if (url.includes("www.soniccheck.io")) {
       return response(301, { location: "https://soniccheck.io/v17-routing?source=deployment-truth", url });
     }
@@ -61,6 +90,11 @@ test("deployment truth requires exact artifact identity and routing", async () =
   assert.equal(result.checks.api_readiness.controlled_beta_ready, true);
   assert.deepEqual(result.checks.api_readiness.blocking_checks, []);
   assert.equal(result.checks.api_readiness.nonblocking_provider_checks.recording_identity, false);
+  assert.equal(result.checks.google_provider_config.ok, true);
+  assert.equal(result.checks.google_provider_config.checks.subaddresses_blocked, true);
+  assert.equal(result.checks.google_provider_config.scope, "public_configuration_only");
+  assert.equal(result.checks.google_provider_config.end_to_end_acceptance_required, true);
+  assert.equal(result.checks.google_provider_config.secrets_included, false);
 });
 
 test("web probes identify the verifier while preserving truthful HTTP failures", async () => {
@@ -69,6 +103,7 @@ test("web probes identify the verifier while preserving truthful HTTP failures",
   const calls = [];
   const fetcher = async (url, options) => {
     calls.push({ url, options });
+    if (url.includes("clerk.soniccheck.io")) return googleEnvironment(url);
     if (url.includes("www.soniccheck.io")) {
       return response(301, { location: "https://soniccheck.io/v17-routing?source=deployment-truth", url });
     }
@@ -85,7 +120,7 @@ test("web probes identify the verifier while preserving truthful HTTP failures",
   const webCalls = calls.filter(({ url }) => !url.includes("api.soniccheck.io"));
   const apiCalls = calls.filter(({ url }) => url.includes("api.soniccheck.io"));
 
-  assert.equal(webCalls.length, 6);
+  assert.equal(webCalls.length, 9);
   for (const { options } of webCalls) {
     assert.equal(options.headers["User-Agent"], "sonic-check-production-verifier/1.0");
   }
@@ -99,6 +134,7 @@ test("web probes identify the verifier while preserving truthful HTTP failures",
 
 test("a 200 from the wrong deployment is a failed deployment", async () => {
   const fetcher = async (url) => {
+    if (url.includes("clerk.soniccheck.io")) return googleEnvironment(url);
     if (url.includes("www.soniccheck.io") || url.includes("app.soniccheck.io")) {
       return response(200, { body: "legacy", url });
     }
@@ -118,6 +154,7 @@ test("the right artifact without configured auth is not deployable", async () =>
   const commit = "c".repeat(40);
   const html = `<meta name="soniccheck-deployment-commit" content="${commit}" /><meta name="soniccheck-auth-configured" content="false" />`;
   const fetcher = async (url) => {
+    if (url.includes("clerk.soniccheck.io")) return googleEnvironment(url);
     if (url.includes("www.soniccheck.io")) {
       return response(301, { location: "https://soniccheck.io/v17-routing?source=deployment-truth", url });
     }
@@ -145,6 +182,7 @@ test("controlled beta readiness still fails if Clerk or Stripe is not ready", as
   notReady.checks.clerk = false;
   notReady.checks.stripe = false;
   const fetcher = async (url) => {
+    if (url.includes("clerk.soniccheck.io")) return googleEnvironment(url);
     if (url.includes("www.soniccheck.io")) {
       return response(301, { location: "https://soniccheck.io/v17-routing?source=deployment-truth", url });
     }
@@ -168,6 +206,7 @@ test("deployment truth retries while the independently deployed edge cutover con
   let legacyProbeCount = 0;
   let sleepCount = 0;
   const fetcher = async (url) => {
+    if (url.includes("clerk.soniccheck.io")) return googleEnvironment(url);
     if (url.includes("www.soniccheck.io")) {
       return response(301, { location: "https://soniccheck.io/v17-routing?source=deployment-truth", url });
     }
@@ -197,6 +236,71 @@ test("deployment truth retries while the independently deployed edge cutover con
   assert.equal(result.max_attempts, 3);
   assert.equal(legacyProbeCount, 2);
   assert.equal(sleepCount, 1);
+});
+
+test("deployment truth fails closed when Google or customer policy links are absent", async () => {
+  const commit = "9".repeat(40);
+  const html = `<meta name="soniccheck-deployment-commit" content="${commit}" /><meta name="soniccheck-auth-configured" content="true" />`;
+  const environment = JSON.parse(googleClerkEnvironment);
+  environment.auth_config.identification_strategies = ["email_address", "oauth_github"];
+  environment.auth_config.first_factors = ["email_code", "oauth_github", "password"];
+  environment.display_config.privacy_policy_url = null;
+  environment.display_config.terms_url = null;
+  delete environment.user_settings.social.oauth_google;
+
+  const fetcher = async (url) => {
+    if (url.includes("clerk.soniccheck.io")) {
+      return googleEnvironment(url, JSON.stringify(environment));
+    }
+    if (url.includes("www.soniccheck.io")) {
+      return response(301, { location: "https://soniccheck.io/v17-routing?source=deployment-truth", url });
+    }
+    if (url.includes("app.soniccheck.io")) {
+      return response(301, { location: "https://soniccheck.io/app?source=deployment-truth", url });
+    }
+    if (url.endsWith("/api/healthz")) return response(200, { body: '{"ok":true}', url });
+    if (url.endsWith("/api/readyz")) return response(503, { body: controlledBetaReadiness, url });
+    return response(200, { body: html, url });
+  };
+
+  const result = await probeDeployment({ expectedCommit: commit, fetcher });
+
+  assert.equal(result.ok, false);
+  assert.equal(result.checks.google_provider_config.ok, false);
+  assert.equal(result.checks.google_provider_config.checks.identification_strategy, false);
+  assert.equal(result.checks.google_provider_config.checks.first_factor, false);
+  assert.equal(result.checks.google_provider_config.checks.enabled, false);
+  assert.equal(result.checks.google_provider_config.checks.privacy_policy, false);
+  assert.equal(result.checks.google_provider_config.checks.terms, false);
+  assert.equal("payload" in result.checks.google_provider_config, false);
+});
+
+test("customer policy probes reject redirects to the landing page", async () => {
+  const commit = "8".repeat(40);
+  const html = `<meta name="soniccheck-deployment-commit" content="${commit}" /><meta name="soniccheck-auth-configured" content="true" />`;
+  const fetcher = async (url) => {
+    if (url.includes("clerk.soniccheck.io")) return googleEnvironment(url);
+    if (url.includes("www.soniccheck.io")) {
+      return response(301, { location: "https://soniccheck.io/v17-routing?source=deployment-truth", url });
+    }
+    if (url.includes("app.soniccheck.io")) {
+      return response(301, { location: "https://soniccheck.io/app?source=deployment-truth", url });
+    }
+    if (url.endsWith("/api/healthz")) return response(200, { body: '{"ok":true}', url });
+    if (url.endsWith("/api/readyz")) return response(503, { body: controlledBetaReadiness, url });
+    if (url.endsWith("/privacy") || url.endsWith("/terms")) {
+      return response(200, { body: html, url: "https://soniccheck.io/" });
+    }
+    return response(200, { body: html, url });
+  };
+
+  const result = await probeDeployment({ expectedCommit: commit, fetcher });
+
+  assert.equal(result.ok, false);
+  assert.equal(result.checks.privacy.ok, false);
+  assert.equal(result.checks.privacy.canonical_path, false);
+  assert.equal(result.checks.terms.ok, false);
+  assert.equal(result.checks.terms.canonical_path, false);
 });
 
 test("deployment truth retry arguments reject unsafe values", async () => {

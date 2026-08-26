@@ -211,7 +211,11 @@ export default function Landing() {
         </div>
         <footer className="mt-10 flex flex-wrap items-center justify-between gap-4 text-xs text-[#F0E9D6]/38 font-mono-data">
           <span>© SONIC CHECK</span>
-          <span>{contract?.contract_revision || "RC-0 operational convergence"}</span>
+          <span className="flex flex-wrap items-center gap-x-4 gap-y-2">
+            <Link className="hover:text-[#D4FF00]" to="/privacy">Privacy</Link>
+            <Link className="hover:text-[#D4FF00]" to="/terms">Terms</Link>
+            <span>{contract?.contract_revision || "RC-0 operational convergence"}</span>
+          </span>
         </footer>
       </section>
     </main>

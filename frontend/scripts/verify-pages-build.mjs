@@ -40,7 +40,10 @@ export function verifyPagesBuild({ root = frontendRoot, expectedCommit = "", req
   const deploymentCommit = meta(html, "soniccheck-deployment-commit");
   const productContract = meta(html, "soniccheck-product-contract");
   const authMarker = meta(html, "soniccheck-auth-configured");
-  const requiredRoutes = ["/", "/login", "/join", "/app", "/app/billing", "/app/scan/new", "/app/library"];
+  const requiredRoutes = [
+    "/", "/login", "/join", "/privacy", "/terms", "/app",
+    "/app/billing", "/app/scan/new", "/app/library",
+  ];
   const missingRoutes = requiredRoutes.filter((route) => !app.includes(`path="${route}"`));
   if (!index.equals(fallback)) failures.push("SPA_FALLBACK_NOT_BYTE_IDENTICAL");
   if (cname !== "soniccheck.io") failures.push("CANONICAL_CNAME_MISMATCH");

@@ -42,7 +42,7 @@ export default function Register() {
         <p className="mt-8 text-sm text-[#F0E9D6]/50">Already joined? <Link to="/login" className="text-[#D4FF00] hover:underline">Log in</Link></p>
       </div>
 
-      <div className="flex min-h-[580px] items-center justify-center rounded-2xl border border-white/10 bg-[#202027] p-5 sm:p-8">
+      <div className="flex min-h-[580px] flex-col items-center justify-center gap-5 rounded-2xl border border-white/10 bg-[#202027] p-5 sm:p-8">
         {authConfigured ? (
           loading ? (
             <div className="font-mono-data text-sm text-[#F0E9D6]/50">Completing secure sign-up…</div>
@@ -63,6 +63,11 @@ export default function Register() {
             <p className="mt-4 leading-7 text-[#F0E9D6]/60">This deployment needs its Clerk publishable key before private-beta account creation can open.</p>
           </div>
         )}
+        {authConfigured && !loading ? (
+          <p className="max-w-md text-center text-xs leading-5 text-[#F0E9D6]/48">
+            By continuing to create an account, you agree to the <Link className="text-[#D4FF00] hover:underline" to="/terms">Terms of Use</Link> and acknowledge the <Link className="text-[#D4FF00] hover:underline" to="/privacy">Privacy Policy</Link>.
+          </p>
+        ) : null}
       </div>
     </main>
   );

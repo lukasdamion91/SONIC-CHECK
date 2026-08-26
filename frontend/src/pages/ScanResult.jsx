@@ -102,6 +102,10 @@ export default function ScanResult() {
   };
 
   const createBadge = async () => {
+    const confirmed = window.confirm(
+      "Publish a public record showing the title, artist, region, submission channels, screening status, analysis version, screening time and badge ID? Anyone with the link can view it. Raw audio, full lyrics and your account email are not shown.",
+    );
+    if (!confirmed) return;
     setAction("badge");
     try {
       const { data } = await api.post(`/scans/${id}/badge`);

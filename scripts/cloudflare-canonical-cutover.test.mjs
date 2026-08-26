@@ -62,6 +62,8 @@ test("canonical SPA routes are internally rewritten to the deployed entry point"
   assert.match(rule.expression, /http\.host eq "soniccheck\.io"/);
   assert.match(rule.expression, /"\/login"/);
   assert.match(rule.expression, /"\/join"/);
+  assert.match(rule.expression, /"\/privacy"/);
+  assert.match(rule.expression, /"\/terms"/);
   assert.match(rule.expression, /"\/app"/);
   assert.match(rule.expression, /starts_with\(http\.request\.uri\.path, "\/app\/"\)/);
 });

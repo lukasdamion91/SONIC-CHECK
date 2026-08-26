@@ -11,6 +11,8 @@ const deployedFiles = [
   "src/pages/Landing.jsx",
   "src/pages/Login.jsx",
   "src/pages/Register.jsx",
+  "src/pages/Privacy.jsx",
+  "src/pages/Terms.jsx",
   "src/pages/Pricing.jsx",
   "src/pages/Dashboard.jsx",
   "src/pages/NewScan.jsx",
