@@ -134,7 +134,9 @@ test("scanner markup exposes progress and reduced-motion accessibility", async (
   assert.equal((newScan.match(/startProgressPolling\(progressId\)/g) || []).length, 1);
   assert.match(newScan, /activePoll\.controller\.abort\(\)/);
   assert.match(newScan, /useEffect\(\(\) => \(\) => stopProgressPolling\(\)/);
-  assert.match(newScan, /pollError\?\.response\?\.status === 404/);
+  assert.match(newScan, /status === 404/);
+  assert.match(newScan, /status === 503 && activePoll\.unavailableAttempts < 4/);
+  assert.match(newScan, /headers\?\.get\?\.\("retry-after"\)/);
   assert.match(newScan, /<ScannerAnalyzer progress=\{scanProgress\}/);
   assert.match(analyzer, /role="progressbar"/);
   assert.match(analyzer, /className="sr-only"[\s\S]*aria-live="polite"/);

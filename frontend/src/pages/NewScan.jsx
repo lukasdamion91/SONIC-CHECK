@@ -43,6 +43,7 @@ export default function NewScan() {
       controller: new AbortController(),
       timer: null,
       notFoundAttempts: 0,
+      unavailableAttempts: 0,
       uploadComplete: false,
     };
     progressPollRef.current = activePoll;
@@ -65,6 +66,7 @@ export default function NewScan() {
         }
 
         activePoll.notFoundAttempts = 0;
+        activePoll.unavailableAttempts = 0;
         activePoll.uploadComplete = true;
         dispatchScanProgress({
           type: "SERVER_PROGRESS",
@@ -90,9 +92,19 @@ export default function NewScan() {
         schedule(report.retryAfterMs);
       } catch (pollError) {
         if (activePoll.controller.signal.aborted) return;
-        if (pollError?.response?.status === 404 && (!activePoll.uploadComplete || activePoll.notFoundAttempts < 4)) {
+        const status = pollError?.response?.status;
+        if (status === 404 && (!activePoll.uploadComplete || activePoll.notFoundAttempts < 4)) {
           if (activePoll.uploadComplete) activePoll.notFoundAttempts += 1;
           schedule(1_000);
+          return;
+        }
+        if (status === 503 && activePoll.unavailableAttempts < 4) {
+          activePoll.unavailableAttempts += 1;
+          const retryAfter = Number(
+            pollError?.response?.headers?.get?.("retry-after")
+              ?? pollError?.response?.headers?.["retry-after"],
+          );
+          schedule(Number.isFinite(retryAfter) ? Math.min(3_000, Math.max(750, retryAfter * 1_000)) : 1_000);
           return;
         }
 
