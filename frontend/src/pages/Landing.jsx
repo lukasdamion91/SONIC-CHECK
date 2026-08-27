@@ -11,6 +11,7 @@ import {
   Music2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import ChromaticText from "@/components/ChromaticText";
 import { LANDING } from "@/constants/testIds";
 import { api } from "@/lib/api";
 
@@ -52,7 +53,7 @@ export default function Landing() {
             </div>
             <img src={asset("/brand/logo-full.png")} alt="SONIC CHECK" className="mb-10 h-20 w-auto sm:h-28" />
             <h1 className="max-w-5xl font-display text-6xl text-[#F0E9D6] sm:text-7xl lg:text-[6.4rem]">
-              Originality,<br /><span className="holo-text">checked through evidence.</span>
+              Originality,<br /><ChromaticText>checked through evidence.</ChromaticText>
             </h1>
             <p className="mt-8 max-w-2xl text-lg leading-8 text-[#F0E9D6]/66">
               SONIC CHECK brings recording identity, lyric phrase overlap and governed symbolic-composition signals into one traceable evidence screen for qualified human review.
