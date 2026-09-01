@@ -4,6 +4,7 @@ import { AlertCircle, ArrowRight, FileClock, FileSearch, Loader2, ShieldCheck } 
 import { Button } from "@/components/ui/button";
 import { hasScanEntitlement, useAuth } from "@/context/AuthContext";
 import { api, formatApiErrorDetail } from "@/lib/api";
+import { resolveAccessPolicy, scanDenialCopy } from "@/lib/accessPolicy.mjs";
 
 const statusCopy = {
   REVIEW_REQUIRED: { label: "Candidate evidence", className: "border-amber-300/25 bg-amber-300/5 text-amber-200" },
@@ -33,6 +34,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const entitled = hasScanEntitlement(user);
+  const accessPolicy = resolveAccessPolicy(user);
 
   useEffect(() => {
     api.get("/scans")
@@ -57,7 +59,7 @@ export default function Dashboard() {
         </div>
         <Link to={entitled ? "/app/scan/new" : "/app/billing?reason=entitlement"}>
           <Button className="h-11 bg-[#D4FF00] px-6 text-[#1C1C22] hover:bg-[#D4FF00]/85">
-            {entitled ? "Start evidence screen" : "Choose an AUD entitlement"}<ArrowRight className="ml-2 h-4 w-4" />
+            {entitled ? "Start evidence screen" : "Review access status"}<ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </Link>
       </div>
@@ -76,7 +78,7 @@ export default function Dashboard() {
               <div className="eyebrow">Recent records</div>
               <h2 className="mt-2 text-xl font-semibold text-[#F0E9D6]">Evidence-screen history</h2>
             </div>
-            {entitled && <Link to="/app/library" className="text-sm text-[#9DB8F0] hover:text-[#F0E9D6]">Open library</Link>}
+            <Link to="/app/library" className="text-sm text-[#9DB8F0] hover:text-[#F0E9D6]">Open library</Link>
           </div>
 
           {loading ? (
@@ -102,7 +104,7 @@ export default function Dashboard() {
                     <span className={`rounded-full border px-3 py-1 text-[10px] uppercase tracking-widest font-mono-data ${state.className}`}>{state.label}</span>
                   </>
                 );
-                return entitled ? <Link key={scan.id} to={`/app/scans/${scan.id}`} className="flex items-center gap-4 py-4 hover:bg-white/[0.02]">{body}</Link> : <div key={scan.id} className="flex items-center gap-4 py-4">{body}</div>;
+                return <Link key={scan.id} to={`/app/scans/${scan.id}`} className="flex items-center gap-4 py-4 hover:bg-white/[0.02]">{body}</Link>;
               })}
             </div>
           )}
@@ -113,8 +115,8 @@ export default function Dashboard() {
             <ShieldCheck className="h-6 w-6 text-[#D4FF00]" />
             <div className="mt-5 text-[10px] uppercase tracking-widest text-[#F0E9D6]/42 font-mono-data">Account entitlement</div>
             <div className="mt-2 text-2xl font-semibold text-[#F0E9D6]">{user?.plan || "account"}</div>
-            <div className="mt-3 text-sm leading-6 text-[#F0E9D6]/58">{entitled ? "Screening routes are available for this account." : "Identity is active; paid screening routes remain locked until an entitlement is added."}</div>
-            <div className="mt-5 border-t border-white/10 pt-4 text-xs text-[#F0E9D6]/45 font-mono-data">Credits: {user?.scan_credits || 0} · Used this period: {user?.scans_used || 0}</div>
+            <div className="mt-3 text-sm leading-6 text-[#F0E9D6]/58">{entitled ? "A new evidence screen is available for this account." : scanDenialCopy(accessPolicy.scan_denial_reason)}</div>
+            <div className="mt-5 border-t border-white/10 pt-4 text-xs text-[#F0E9D6]/45 font-mono-data">Remaining: {accessPolicy.scan_remaining == null ? "unmetered" : accessPolicy.scan_remaining} · Used this period: {user?.scans_used || 0}</div>
           </div>
           <div className="rounded-xl border border-white/10 bg-[#24242C] p-6">
             <FileClock className="h-6 w-6 text-[#9DB8F0]" />

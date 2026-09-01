@@ -1,6 +1,7 @@
 import { SignIn } from "@clerk/react";
 import { Link, Navigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
+import { safeAppRedirect } from "@/lib/safeAppRedirect.mjs";
 
 const clerkAppearance = {
   variables: {
@@ -18,14 +19,10 @@ const clerkAppearance = {
   },
 };
 
-function safeRedirect(value) {
-  return value?.startsWith("/app") ? value : "/app";
-}
-
 export default function Login() {
   const { authConfigured, isSignedIn, loading } = useAuth();
   const [params] = useSearchParams();
-  const redirect = safeRedirect(params.get("redirect"));
+  const redirect = safeAppRedirect(params.get("redirect"));
 
   if (authConfigured && isSignedIn) {
     return <Navigate to={redirect} replace />;

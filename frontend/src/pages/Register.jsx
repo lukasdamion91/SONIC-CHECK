@@ -1,6 +1,10 @@
 import { SignUp } from "@clerk/react";
+import { useEffect, useState } from "react";
 import { Link, Navigate, useSearchParams } from "react-router-dom";
+import CommercialLicenseNotice from "@/components/CommercialLicenseNotice";
 import { useAuth } from "@/context/AuthContext";
+import { api } from "@/lib/api";
+import { safeAppRedirect } from "@/lib/safeAppRedirect.mjs";
 
 const clerkAppearance = {
   variables: {
@@ -18,14 +22,19 @@ const clerkAppearance = {
   },
 };
 
-function safeRedirect(value) {
-  return value?.startsWith("/app") ? value : "/app";
-}
-
 export default function Register() {
   const { authConfigured, isSignedIn, loading } = useAuth();
   const [params] = useSearchParams();
-  const redirect = safeRedirect(params.get("redirect"));
+  const [contract, setContract] = useState(null);
+  const redirect = safeAppRedirect(params.get("redirect"));
+
+  useEffect(() => {
+    let active = true;
+    api.get("/product-contract")
+      .then(({ data }) => { if (active) setContract(data); })
+      .catch(() => undefined);
+    return () => { active = false; };
+  }, []);
 
   if (authConfigured && isSignedIn) {
     return <Navigate to={redirect} replace />;
@@ -37,8 +46,9 @@ export default function Register() {
         <div className="eyebrow">Join SONIC CHECK</div>
         <h1 className="mt-4 font-display text-6xl text-[#F0E9D6]">One account.<br />One protected app.</h1>
         <p className="mt-6 max-w-lg text-lg leading-8 text-[#F0E9D6]/62">
-          Create your identity first. Inside the application you can select an AUD plan, receive an entitlement and use only the functionality available to your account.
+          Create a protected identity for private-beta access. Account creation does not grant paid screening, create an entitlement or open checkout while the formal commercial-licence gate remains closed.
         </p>
+        <CommercialLicenseNotice contract={contract} className="mt-8 max-w-lg" />
         <p className="mt-8 text-sm text-[#F0E9D6]/50">Already joined? <Link to="/login" className="text-[#D4FF00] hover:underline">Log in</Link></p>
       </div>
 

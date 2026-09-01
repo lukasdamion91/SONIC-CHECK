@@ -3,8 +3,9 @@ import { Link, useNavigate } from "react-router-dom";
 import { FileAudio, Loader2, Play, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/context/AuthContext";
+import { hasScanEntitlement, useAuth } from "@/context/AuthContext";
 import { api, formatApiErrorDetail } from "@/lib/api";
+import { resolveAccessPolicy, scanDenialCopy } from "@/lib/accessPolicy.mjs";
 
 const labels = {
   REVIEW_REQUIRED: "Candidate evidence",
@@ -13,7 +14,7 @@ const labels = {
 };
 
 export default function Library() {
-  const { user } = useAuth();
+  const { user, refresh } = useAuth();
   const navigate = useNavigate();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -21,6 +22,8 @@ export default function Library() {
   const [action, setAction] = useState("");
   const [audioUrls, setAudioUrls] = useState({});
   const audioUrlsRef = useRef({});
+  const canScan = hasScanEntitlement(user);
+  const accessPolicy = resolveAccessPolicy(user);
 
   useEffect(() => {
     api.get("/library")
@@ -51,9 +54,14 @@ export default function Library() {
   };
 
   const rescan = async (item) => {
+    if (!canScan) {
+      toast.error(scanDenialCopy(accessPolicy.scan_denial_reason));
+      return;
+    }
     setAction(`rescan:${item.id}`);
     try {
       const { data } = await api.post(`/scans/${item.id}/rescan`, { region: user?.region || item.region || "AU" });
+      await refresh();
       toast.success("New evidence record created");
       navigate(`/app/scans/${data.id}`);
     } catch (requestError) {
@@ -67,7 +75,11 @@ export default function Library() {
       <div className="max-w-3xl">
         <div className="eyebrow">Private library</div>
         <h1 className="mt-4 font-display text-5xl text-[#F0E9D6] sm:text-6xl">Stored source material.</h1>
-        <p className="mt-5 leading-7 text-[#F0E9D6]/62">Audio appears here only when the account entitlement permits private retention and the upload was stored successfully.</p>
+        <p className="mt-5 leading-7 text-[#F0E9D6]/62">
+          {accessPolicy.can_retain_audio
+            ? "This account may retain audio from successful uploads. Owned retained audio remains readable if a later scan allocation is exhausted."
+            : "This account cannot retain new audio. Any previously retained owner-scoped audio remains readable even though new scan or retention access is unavailable."}
+        </p>
       </div>
 
       {loading ? (
@@ -79,7 +91,7 @@ export default function Library() {
           <FileAudio className="mx-auto h-9 w-9 text-[#9DB8F0]" />
           <h2 className="mt-5 text-xl font-semibold text-[#F0E9D6]">No retained audio yet.</h2>
           <p className="mt-2 text-sm text-[#F0E9D6]/52">Start an entitled audio evidence screen to populate the library.</p>
-          <Link to="/app/scan/new"><Button className="mt-6 bg-[#D4FF00] text-[#1C1C22] hover:bg-[#D4FF00]/85">New evidence screen</Button></Link>
+          <Link to={canScan ? "/app/scan/new" : "/app/billing?reason=entitlement"}><Button className="mt-6 bg-[#D4FF00] text-[#1C1C22] hover:bg-[#D4FF00]/85">{canScan ? "New evidence screen" : "Review access status"}</Button></Link>
         </div>
       ) : (
         <div className="mt-10 grid gap-4 md:grid-cols-2">
@@ -100,7 +112,7 @@ export default function Library() {
                 <Button onClick={() => loadAudio(item)} disabled={Boolean(action) || Boolean(audioUrls[item.id])} variant="outline" className="border-white/15 bg-transparent text-[#F0E9D6] hover:bg-white/10">
                   {action === `audio:${item.id}` ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Play className="mr-2 h-4 w-4" />}{audioUrls[item.id] ? "Audio loaded" : "Load audio"}
                 </Button>
-                <Button onClick={() => rescan(item)} disabled={Boolean(action)} variant="outline" className="border-[#D4FF00]/25 bg-transparent text-[#D4FF00] hover:bg-[#D4FF00]/5">
+                <Button onClick={() => rescan(item)} disabled={Boolean(action) || !canScan} title={canScan ? "Create a new evidence record" : scanDenialCopy(accessPolicy.scan_denial_reason)} variant="outline" className="border-[#D4FF00]/25 bg-transparent text-[#D4FF00] hover:bg-[#D4FF00]/5">
                   {action === `rescan:${item.id}` ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}Re-screen
                 </Button>
                 <Link to={`/app/scans/${item.id}`}><Button variant="ghost" className="text-[#F0E9D6]/65 hover:bg-white/10">Open record</Button></Link>
