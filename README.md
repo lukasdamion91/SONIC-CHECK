@@ -27,8 +27,10 @@ shareable evidence surface outside authentication.
   MusicBrainz identity/metadata context; it is not a claim that SONIC CHECK hosts
   71,000 licensed audio recordings
 
-Pricing and launch state are fetched from the API at runtime. Paid checkout is
-fail-closed until the API readiness contract explicitly enables it.
+Pricing and launch state are fetched from the API at runtime. Payment gates
+remain closed until a formal commercial licence is granted and reviewed. The
+API's source-governed licence lock prevents deployment flags or an environment
+claim of approval from opening checkout on their own.
 
 ## Local development
 
