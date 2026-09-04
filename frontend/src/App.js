@@ -47,8 +47,8 @@ function App() {
             <Route path="/app/billing" element={<Protected><Pricing /></Protected>} />
             <Route path="/app/payment-success" element={<Protected><PaymentSuccess /></Protected>} />
             <Route path="/app/scan/new" element={<Entitled><NewScan /></Entitled>} />
-            <Route path="/app/scans/:id" element={<Entitled><ScanResult /></Entitled>} />
-            <Route path="/app/library" element={<Entitled><Library /></Entitled>} />
+            <Route path="/app/scans/:id" element={<Protected><ScanResult /></Protected>} />
+            <Route path="/app/library" element={<Protected><Library /></Protected>} />
 
             <Route path="/register" element={<Navigate to="/join" replace />} />
             <Route path="/signup" element={<Navigate to="/join" replace />} />

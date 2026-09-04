@@ -12,8 +12,10 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ChromaticText from "@/components/ChromaticText";
+import CommercialLicenseNotice from "@/components/CommercialLicenseNotice";
 import { LANDING } from "@/constants/testIds";
 import { api } from "@/lib/api";
+import { commercialLicenseState } from "@/lib/productContract.mjs";
 
 const asset = (path) => `${process.env.PUBLIC_URL || ""}${path}`;
 const aud = new Intl.NumberFormat("en-AU", { style: "currency", currency: "AUD" });
@@ -39,7 +41,7 @@ export default function Landing() {
 
   const plans = contract?.pricing?.plans || [];
   const activeProfiles = catalogue?.coverage_summary?.comparison_eligible_entries;
-  const paidOpen = contract?.paid_public_scanning === "enabled";
+  const paidOpen = commercialLicenseState(contract).checkoutOpen;
 
   return (
     <main>
@@ -171,9 +173,11 @@ export default function Landing() {
       <section id="pricing" className="mx-auto max-w-7xl px-6 py-24">
         <div className="max-w-3xl">
           <div className="eyebrow">AUD pricing</div>
-          <h2 className="mt-4 font-display text-5xl text-[#F0E9D6] sm:text-6xl">A clear path from one screen to a team.</h2>
-          <p className="mt-6 text-[#F0E9D6]/62">The API is the pricing authority. Create an account to purchase or manage an entitlement.</p>
+          <h2 className="mt-4 font-display text-5xl text-[#F0E9D6] sm:text-6xl">Published terms.<br />Gated access.</h2>
+          <p className="mt-6 text-[#F0E9D6]/62">The API is the pricing and checkout authority. Listed prices do not mean paid checkout is open, and account creation does not unlock purchase.</p>
         </div>
+
+        <CommercialLicenseNotice contract={contract} className="mt-8 max-w-3xl" />
 
         {plans.length ? (
           <div className="mt-12 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -186,7 +190,7 @@ export default function Landing() {
                   {plan.features.map((feature) => <li key={feature} className="flex gap-2"><span className="text-[#D4FF00]">•</span>{feature}</li>)}
                 </ul>
                 <Link to="/join" className="mt-8">
-                  <Button variant="outline" className="w-full border-white/15 bg-transparent text-[#F0E9D6] hover:bg-white/10">Join to continue</Button>
+                  <Button variant="outline" className="w-full border-white/15 bg-transparent text-[#F0E9D6] hover:bg-white/10">Join private beta</Button>
                 </Link>
               </article>
             ))}
@@ -196,7 +200,7 @@ export default function Landing() {
         )}
 
         <div className="mt-6 rounded-lg border border-white/10 bg-white/[0.025] px-4 py-3 text-xs text-[#F0E9D6]/50 font-mono-data">
-          Paid public checkout: {paidOpen ? "enabled" : "closed until the operational readiness gate is green"}.
+          Paid public checkout: {paidOpen ? "API-authorized" : "closed"}.
         </div>
       </section>
 
@@ -204,7 +208,7 @@ export default function Landing() {
         <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-[#202027] p-10 sm:p-16">
           <div className="absolute right-0 top-0 h-64 w-64 translate-x-1/3 -translate-y-1/3 rounded-full bg-[#9DB8F0]/10 blur-3xl" />
           <h2 className="relative max-w-3xl font-display text-5xl text-[#F0E9D6] sm:text-6xl">Enter through one trusted front door.</h2>
-          <p className="relative mt-5 max-w-2xl text-[#F0E9D6]/62">Join or log in at soniccheck.io. Account, subscription and individual functionality then remain inside the protected application.</p>
+          <p className="relative mt-5 max-w-2xl text-[#F0E9D6]/62">Join or log in at soniccheck.io for protected account access. Creating an account does not grant paid screening or bypass the commercial-licence gate.</p>
           <div className="relative mt-8 flex flex-wrap gap-3">
             <Link to="/join"><Button className="h-12 bg-[#D4FF00] px-7 text-[#1C1C22] hover:bg-[#D4FF00]/85">Join</Button></Link>
             <Link to="/login"><Button variant="outline" className="h-12 border-white/15 bg-transparent px-7 text-[#F0E9D6] hover:bg-white/10">Log in</Button></Link>

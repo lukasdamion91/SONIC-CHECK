@@ -3,11 +3,11 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   AlertCircle,
   ArrowLeft,
-  CheckCircle2,
   Copy,
   Download,
   ExternalLink,
   FileSearch,
+  Link2Off,
   Loader2,
   Share2,
   Trash2,
@@ -15,7 +15,19 @@ import {
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { SCAN } from "@/constants/testIds";
+import { useAuth } from "@/context/AuthContext";
 import { api, formatApiErrorDetail } from "@/lib/api";
+import { resolveAccessPolicy } from "@/lib/accessPolicy.mjs";
+import {
+  prepareScanResultIntegrity,
+  ReportIntegrityError,
+  verifyReportDelivery,
+} from "@/lib/scanResultIntegrity.mjs";
+import {
+  buildChannelCoverageRows,
+  compositionComparisonDisclosure,
+} from "@/lib/scanResultPresentation.mjs";
+import { copyTextBestEffort, refreshAfterCreditAttempt } from "@/lib/userActions.mjs";
 
 const statuses = {
   REVIEW_REQUIRED: {
@@ -25,7 +37,7 @@ const statuses = {
   },
   NO_CANDIDATE_IDENTIFIED: {
     label: "No candidate identified in searched sources",
-    icon: CheckCircle2,
+    icon: FileSearch,
     className: "border-sky-300/30 bg-sky-300/5 text-sky-200",
   },
   INCONCLUSIVE: {
@@ -45,18 +57,89 @@ function Metric({ label, value, suffix = "", note }) {
   );
 }
 
+const coverageStateClasses = {
+  not_submitted: "border-white/12 bg-white/[0.035] text-[#F0E9D6]/55",
+  searched_no_candidate: "border-sky-300/20 bg-sky-300/5 text-sky-100/75",
+  unavailable_degraded: "border-amber-300/20 bg-amber-300/5 text-amber-100/75",
+  candidate_evidence: "border-amber-300/25 bg-amber-300/8 text-amber-100",
+  comparison_coverage: "border-violet-300/20 bg-violet-300/5 text-violet-100/80",
+};
+
+function ChannelCoverage({ rows }) {
+  return (
+    <section className="mt-6 rounded-2xl border border-white/10 bg-[#202027] p-6 sm:p-8">
+      <div className="eyebrow">Channel coverage</div>
+      <h2 className="mt-2 text-xl font-semibold text-[#F0E9D6]">What was and was not checked</h2>
+      <div className="mt-5 overflow-x-auto">
+        <table className="w-full min-w-[680px] border-separate border-spacing-y-2 text-left text-xs">
+          <thead className="text-[9px] uppercase tracking-widest text-[#F0E9D6]/38 font-mono-data">
+            <tr><th className="px-3 py-2">Channel</th><th className="px-3 py-2">Input</th><th className="px-3 py-2">Outcome</th><th className="px-3 py-2">Coverage</th></tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr key={row.key} className="bg-[#17171C] text-[#F0E9D6]/62">
+                <th scope="row" className="rounded-l-xl px-3 py-4 font-medium text-[#F0E9D6]/82">{row.channel}</th>
+                <td className="px-3 py-4">{row.input}</td>
+                <td className="px-3 py-4"><span className={`inline-flex rounded-full border px-2.5 py-1 ${coverageStateClasses[row.state]}`}>{row.outcome}</span></td>
+                <td className="rounded-r-xl px-3 py-4 leading-5">{row.coverage}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  );
+}
+
 export default function ScanResult() {
+  const { user, refresh } = useAuth();
   const { id } = useParams();
   const navigate = useNavigate();
   const [scan, setScan] = useState(null);
   const [error, setError] = useState("");
   const [action, setAction] = useState("");
   const [badgeUrl, setBadgeUrl] = useState("");
+  const [scanResultEnvelopeHash, setScanResultEnvelopeHash] = useState("");
+  const [integrityError, setIntegrityError] = useState("");
+  const accessPolicy = resolveAccessPolicy(user);
 
   useEffect(() => {
-    api.get(`/scans/${id}`)
-      .then(({ data }) => setScan(data))
-      .catch((requestError) => setError(formatApiErrorDetail(requestError?.response?.data?.detail)));
+    let active = true;
+    setError("");
+    setIntegrityError("");
+    setScanResultEnvelopeHash("");
+    setBadgeUrl("");
+    setScan(null);
+    api.get(`/scans/${id}`, { transformResponse: [(data) => data] })
+      .then(async ({ data }) => {
+        try {
+          const prepared = await prepareScanResultIntegrity(data);
+          if (!active) return;
+          setScan(prepared.scan);
+          setScanResultEnvelopeHash(prepared.scanResultEnvelopeHash);
+          if (prepared.scan.badge_id) {
+            setBadgeUrl(`${window.location.origin}/verify/${prepared.scan.badge_id}`);
+          }
+        } catch (verificationError) {
+          if (!active) return;
+          try {
+            setScan(typeof data === "string" ? JSON.parse(data) : data);
+          } catch {
+            setError("The stored evidence record could not be read.");
+            return;
+          }
+          setIntegrityError(verificationError.message || "Report consistency checks are unavailable.");
+        }
+      })
+      .catch((requestError) => {
+        if (!active) return;
+        let detail = requestError?.response?.data?.detail;
+        if (typeof requestError?.response?.data === "string") {
+          try { detail = JSON.parse(requestError.response.data)?.detail; } catch { detail = requestError.response.data; }
+        }
+        setError(formatApiErrorDetail(detail));
+      });
+    return () => { active = false; };
   }, [id]);
 
   const result = scan?.result || {};
@@ -71,6 +154,9 @@ export default function ScanResult() {
   const matches = result.matches || [];
   const compositionComparisons = composition.comparisons || [];
   const limitations = result.evidence?.limitations || [];
+  const channelCoverageRows = buildChannelCoverageRows(result);
+  const comparisonDisclosure = compositionComparisonDisclosure(composition);
+  const reportAvailable = accessPolicy.can_download_report && Boolean(scanResultEnvelopeHash) && !integrityError;
 
   const provenanceRows = useMemo(() => {
     const provenance = result.evidence?.provenance || {};
@@ -82,9 +168,31 @@ export default function ScanResult() {
   }, [result.evidence?.provenance]);
 
   const downloadReport = async () => {
+    if (!accessPolicy.can_download_report) {
+      toast.error("This account does not currently have report access.");
+      return;
+    }
+    if (!scanResultEnvelopeHash || integrityError) {
+      toast.error(integrityError || "This report cannot be downloaded without a valid local scan-result envelope integrity hash.");
+      return;
+    }
+    if (accessPolicy.report_credit_will_be_consumed) {
+      const creditCopy = accessPolicy.report_remaining === 1
+        ? "your one-time report credit"
+        : `one of your ${accessPolicy.report_remaining ?? "available"} report credits`;
+      const confirmed = window.confirm(
+        `Generate this PDF and consume ${creditCopy}? The server consumes the credit when it generates the report; SonicCheck then checks that its scan-result envelope hash matches this loaded record and that its PDF-byte hash matches the delivered file before saving it.`,
+      );
+      if (!confirmed) return;
+    }
     setAction("report");
     try {
       const response = await api.get(`/scans/${id}/report`, { responseType: "blob" });
+      await verifyReportDelivery({
+        blob: response.data,
+        headers: response.headers,
+        expectedScanResultEnvelopeHash: scanResultEnvelopeHash,
+      });
       const url = URL.createObjectURL(response.data);
       const anchor = document.createElement("a");
       anchor.href = url;
@@ -93,15 +201,27 @@ export default function ScanResult() {
       anchor.click();
       anchor.remove();
       URL.revokeObjectURL(url);
-      toast.success("Evidence report downloaded");
+      toast.success("Integrity-checked evidence report downloaded");
     } catch (requestError) {
-      toast.error(formatApiErrorDetail(requestError?.response?.data?.detail));
+      toast.error(
+        requestError instanceof ReportIntegrityError
+          ? requestError.message
+          : formatApiErrorDetail(requestError?.response?.data?.detail),
+      );
     } finally {
+      await refreshAfterCreditAttempt(
+        accessPolicy.report_credit_will_be_consumed,
+        refresh,
+      );
       setAction("");
     }
   };
 
   const createBadge = async () => {
+    if (!accessPolicy.can_create_badge) {
+      toast.error("This account cannot publish a public evidence-record link.");
+      return;
+    }
     const confirmed = window.confirm(
       "Publish a public record showing the title, artist, region, submission channels, screening status, analysis version, screening time and badge ID? Anyone with the link can view it. Raw audio, full lyrics and your account email are not shown.",
     );
@@ -111,8 +231,28 @@ export default function ScanResult() {
       const { data } = await api.post(`/scans/${id}/badge`);
       const url = `${window.location.origin}/verify/${data.badge_id}`;
       setBadgeUrl(url);
-      await navigator.clipboard?.writeText(url);
-      toast.success("Public evidence-record link created");
+      setScan((current) => ({ ...current, badge_id: data.badge_id }));
+      const copied = await copyTextBestEffort(url);
+      toast.success(
+        copied
+          ? "Public evidence-record link created and copied"
+          : "Public evidence-record link created; copy it manually from the record",
+      );
+    } catch (requestError) {
+      toast.error(formatApiErrorDetail(requestError?.response?.data?.detail));
+    } finally {
+      setAction("");
+    }
+  };
+
+  const unpublishBadge = async () => {
+    if (!window.confirm("Unpublish this public evidence-record link? The private evidence record will remain in your account.")) return;
+    setAction("unpublish");
+    try {
+      await api.delete(`/scans/${id}/badge`);
+      setBadgeUrl("");
+      setScan((current) => ({ ...current, badge_id: null }));
+      toast.success("Public evidence-record link unpublished");
     } catch (requestError) {
       toast.error(formatApiErrorDetail(requestError?.response?.data?.detail));
     } finally {
@@ -141,11 +281,11 @@ export default function ScanResult() {
       <div className="flex flex-wrap items-center justify-between gap-4">
         <Link to="/app" className="inline-flex items-center gap-2 text-sm text-[#F0E9D6]/55 hover:text-[#F0E9D6]"><ArrowLeft className="h-4 w-4" />Dashboard</Link>
         <div className="flex flex-wrap gap-2">
-          <Button onClick={downloadReport} disabled={Boolean(action)} variant="outline" className="border-white/15 bg-transparent text-[#F0E9D6] hover:bg-white/10">
-            {action === "report" ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}PDF report
+          <Button onClick={downloadReport} disabled={Boolean(action) || !reportAvailable} title={reportAvailable ? "Download PDF with integrity checks" : (integrityError || "Report access unavailable")} variant="outline" className="border-white/15 bg-transparent text-[#F0E9D6] hover:bg-white/10">
+            {action === "report" ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}{reportAvailable ? "PDF report" : "Report unavailable"}
           </Button>
-          <Button onClick={createBadge} disabled={Boolean(action)} variant="outline" className="border-white/15 bg-transparent text-[#F0E9D6] hover:bg-white/10">
-            {action === "badge" ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Share2 className="mr-2 h-4 w-4" />}Share record
+          <Button onClick={createBadge} disabled={Boolean(action) || !accessPolicy.can_create_badge} title={accessPolicy.can_create_badge ? "Publish a public evidence-record link" : "Public sharing unavailable"} variant="outline" className="border-white/15 bg-transparent text-[#F0E9D6] hover:bg-white/10">
+            {action === "badge" ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Share2 className="mr-2 h-4 w-4" />}{accessPolicy.can_create_badge ? "Share record" : "Sharing unavailable"}
           </Button>
           <Button data-testid={SCAN.deleteBtn} onClick={remove} disabled={Boolean(action)} variant="ghost" className="text-red-200 hover:bg-red-400/10 hover:text-red-100"><Trash2 className="h-4 w-4" /></Button>
         </div>
@@ -166,16 +306,25 @@ export default function ScanResult() {
 
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Metric label="Similarity signal" value={similarity.similarity_signal?.value_percent} suffix="%" note="Method-specific signal, not a probability." />
-          <Metric label="Evidence confidence" value={similarity.evidence_confidence?.value} suffix="/100" note={similarity.evidence_confidence?.band || "Coverage dependent"} />
+          <Metric label="Aggregate evidence score" value={similarity.evidence_confidence?.value} suffix="/100" note={`${similarity.evidence_confidence?.band || "Coverage dependent"}${similarity.evidence_confidence?.channel_coverage_percent != null ? ` · ${similarity.evidence_confidence.channel_coverage_percent}% weighted channel coverage` : ""}`} />
           <Metric label="Candidates" value={matches.length} note="Named candidate-evidence rows." />
           <Metric label="Regional context" value={result.region || scan.region} note={result.regional_context || "Context recorded only."} />
         </div>
       </section>
 
+      {integrityError && (
+        <div className="mt-5 rounded-xl border border-amber-300/20 bg-amber-300/5 p-4 text-sm leading-6 text-amber-100/75">
+          PDF download is disabled because the locally loaded analysis result could not be prepared for the report consistency checks. {integrityError}
+        </div>
+      )}
+
+      <ChannelCoverage rows={channelCoverageRows} />
+
       {badgeUrl && (
         <div className="mt-5 flex flex-wrap items-center gap-3 rounded-xl border border-[#D4FF00]/20 bg-[#D4FF00]/5 p-4 text-sm text-[#F0E9D6]/70">
           <ExternalLink className="h-4 w-4 text-[#D4FF00]" /><a href={badgeUrl} target="_blank" rel="noreferrer" className="min-w-0 flex-1 truncate hover:underline">{badgeUrl}</a>
           <Button size="sm" variant="ghost" onClick={() => navigator.clipboard?.writeText(badgeUrl)}><Copy className="mr-2 h-4 w-4" />Copy</Button>
+          <Button size="sm" variant="ghost" onClick={unpublishBadge} disabled={Boolean(action)} className="text-amber-100 hover:bg-amber-300/10"><Link2Off className="mr-2 h-4 w-4" />Unpublish</Button>
         </div>
       )}
 
@@ -215,11 +364,17 @@ export default function ScanResult() {
                   <div key={comparison.reference_id} className="rounded-xl border border-white/10 bg-[#17171C] p-5">
                     <div className="flex flex-wrap justify-between gap-3">
                       <div><div className="font-medium text-[#F0E9D6]">{comparison.title}</div><div className="mt-1 text-xs text-[#F0E9D6]/42">{comparison.creator} · {comparison.rights_basis}</div></div>
-                      <div className="text-right font-mono-data"><div className="text-2xl text-[#F0E9D6]">{comparison.composition_signal_percent}%</div><div className="text-[9px] uppercase tracking-widest text-[#F0E9D6]/38">feature agreement</div></div>
+                      <div className="text-right font-mono-data">
+                        <div className="text-2xl text-[#F0E9D6]">{comparison.composition_signal_percent != null ? `${comparison.composition_signal_percent}%` : "Unavailable"}</div>
+                        <div className="text-[9px] uppercase tracking-widest text-[#F0E9D6]/38">{comparison.composition_signal_percent != null ? "feature agreement" : "comparison status"}</div>
+                        {comparison.measurement_confidence_percent != null && <div className="mt-2 text-[10px] text-[#F0E9D6]/48">{comparison.measurement_confidence_percent}% measurement quality</div>}
+                      </div>
                     </div>
+                    {comparison.composition_signal_percent == null && comparison.reason && <p className="mt-3 text-xs leading-5 text-[#F0E9D6]/45">{comparison.reason}</p>}
                   </div>
                 ))}
               </div>
+              {comparisonDisclosure && <p className="mt-4 text-xs leading-5 text-[#F0E9D6]/48">{comparisonDisclosure.text}</p>}
             </div>
           )}
         </section>

@@ -4,8 +4,10 @@ import { Check, CreditCard, Loader2, LockKeyhole } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import CommercialLicenseNotice from "@/components/CommercialLicenseNotice";
 import { api, formatApiErrorDetail } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
+import { commercialLicenseState } from "@/lib/productContract.mjs";
 
 const aud = new Intl.NumberFormat("en-AU", { style: "currency", currency: "AUD" });
 
@@ -18,6 +20,7 @@ export default function Pricing() {
   const { user } = useAuth();
   const [params] = useSearchParams();
   const [plans, setPlans] = useState([]);
+  const [contract, setContract] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [starting, setStarting] = useState("");
@@ -25,17 +28,40 @@ export default function Pricing() {
   const [portalLoading, setPortalLoading] = useState(false);
 
   useEffect(() => {
-    api.get("/plans")
-      .then(({ data }) => setPlans(data))
-      .catch((requestError) => setError(formatApiErrorDetail(requestError?.response?.data?.detail)))
-      .finally(() => setLoading(false));
+    let active = true;
+    Promise.allSettled([api.get("/product-contract"), api.get("/plans")])
+      .then(([contractResult, plansResult]) => {
+        if (!active) return;
+        const nextContract = contractResult.status === "fulfilled"
+          ? contractResult.value.data
+          : null;
+        const nextPlans = nextContract?.pricing?.plans
+          || (plansResult.status === "fulfilled" ? plansResult.value.data : null);
+        if (nextContract) setContract(nextContract);
+        if (Array.isArray(nextPlans)) {
+          setPlans(nextPlans);
+        } else {
+          const requestError = contractResult.status === "rejected"
+            ? contractResult.reason
+            : plansResult.reason;
+          setError(formatApiErrorDetail(requestError?.response?.data?.detail));
+        }
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => { active = false; };
   }, []);
 
-  const checkoutOpen = useMemo(() => plans.some((plan) => plan.checkout_enabled), [plans]);
+  const licenseState = useMemo(() => commercialLicenseState(contract), [contract]);
+  const checkoutOpen = useMemo(
+    () => licenseState.checkoutOpen && plans.some((plan) => plan.checkout_enabled),
+    [licenseState.checkoutOpen, plans],
+  );
   const hasSubscription = ["pro_monthly", "pro_annual", "enterprise_annual"].includes(user?.plan);
 
   const beginCheckout = async (plan) => {
-    if (!plan.checkout_enabled || plan.sales_only) return;
+    if (!checkoutOpen || !plan.checkout_enabled || plan.sales_only) return;
     setStarting(plan.id);
     try {
       const { data } = await api.post("/checkout/session", {
@@ -80,7 +106,7 @@ export default function Pricing() {
       {params.get("reason") === "entitlement" && (
         <div className="mt-8 flex gap-3 rounded-xl border border-[#D4FF00]/25 bg-[#D4FF00]/5 p-4 text-sm text-[#F0E9D6]/72">
           <LockKeyhole className="h-5 w-5 shrink-0 text-[#D4FF00]" />
-          A paid Single Scan credit or an active workflow subscription is required before the screening routes open.
+          This account cannot create a new evidence screen. Historical owner-scoped records remain available; current access and checkout gates are shown below.
         </div>
       )}
 
@@ -94,11 +120,7 @@ export default function Pricing() {
         </div>
       </div>
 
-      {!loading && !checkoutOpen && !error && (
-        <div className="mt-6 rounded-xl border border-amber-300/20 bg-amber-300/5 p-4 text-sm leading-6 text-[#F0E9D6]/68">
-          Paid checkout is deliberately closed while RC-0 provider, identity, catalogue and billing readiness is completed. Prices remain visible but no charge can start.
-        </div>
-      )}
+      <CommercialLicenseNotice contract={contract} className="mt-6" />
 
       {error && <div className="mt-8 rounded-xl border border-red-400/20 bg-red-400/5 p-4 text-sm text-red-200">{error}</div>}
       {loading ? (
@@ -107,15 +129,22 @@ export default function Pricing() {
         <div className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {plans.map((plan) => {
             const current = user?.plan === plan.id;
-            const disabled = !plan.checkout_enabled || Boolean(plan.sales_only) || current;
+            const disabled = !checkoutOpen || !plan.checkout_enabled || Boolean(plan.sales_only) || current;
             return (
               <article key={plan.id} className={`flex flex-col rounded-xl border p-6 ${current ? "border-[#D4FF00]/35 bg-[#D4FF00]/5" : "border-white/10 bg-[#24242C]"}`}>
                 <div className="text-xs uppercase tracking-[0.16em] text-[#F0E9D6]/45 font-mono-data">{plan.name}</div>
                 <div className="mt-6 text-4xl font-semibold text-[#F0E9D6]">{aud.format(plan.price)}</div>
                 <div className="mt-1 text-xs text-[#F0E9D6]/45">AUD · {cadence(plan)}</div>
                 {plan.id === "single_scan" && (
-                  <label className="mt-5 flex items-center gap-2 rounded-lg border border-white/10 bg-black/10 p-3 text-xs text-[#F0E9D6]/65">
-                    <Checkbox checked={includeReport} onCheckedChange={(checked) => setIncludeReport(checked === true)} />
+                  <label
+                    aria-disabled={!checkoutOpen || !plan.checkout_enabled}
+                    className={`mt-5 flex items-center gap-2 rounded-lg border border-white/10 bg-black/10 p-3 text-xs ${checkoutOpen && plan.checkout_enabled ? "text-[#F0E9D6]/65" : "text-[#F0E9D6]/35"}`}
+                  >
+                    <Checkbox
+                      checked={includeReport}
+                      disabled={!checkoutOpen || !plan.checkout_enabled}
+                      onCheckedChange={(checked) => setIncludeReport(checked === true)}
+                    />
                     Add detailed PDF report ({aud.format(plan.report_addon_price || 5)})
                   </label>
                 )}
@@ -128,7 +157,7 @@ export default function Pricing() {
                   className="mt-8 w-full bg-[#D4FF00] text-[#1C1C22] hover:bg-[#D4FF00]/85 disabled:bg-white/10 disabled:text-[#F0E9D6]/40"
                 >
                   {starting === plan.id && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  {current ? "Current plan" : plan.sales_only ? "Organisation review required" : plan.checkout_enabled ? "Continue to secure checkout" : "Checkout gated"}
+                  {current ? "Current plan" : !checkoutOpen ? "Paid checkout closed" : plan.sales_only ? "Organisation review required" : plan.checkout_enabled ? "Continue to secure checkout" : "Checkout gated"}
                 </Button>
               </article>
             );

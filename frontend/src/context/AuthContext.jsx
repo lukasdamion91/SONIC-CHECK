@@ -12,6 +12,7 @@ import {
   useState,
 } from "react";
 import { api, formatApiErrorDetail, setApiTokenProvider } from "@/lib/api";
+import { canStartScan } from "@/lib/accessPolicy.mjs";
 
 const publishableKey = process.env.REACT_APP_CLERK_PUBLISHABLE_KEY || "";
 const AuthContext = createContext(null);
@@ -122,10 +123,7 @@ export function AuthProvider({ children }) {
 }
 
 export function hasScanEntitlement(user) {
-  if (!user) return false;
-  if (user.role === "admin") return true;
-  if (["pro_monthly", "pro_annual", "enterprise_annual"].includes(user.plan)) return true;
-  return Number(user.scan_credits || 0) > 0;
+  return canStartScan(user);
 }
 
 export const useAuth = () => {

@@ -12,6 +12,7 @@ export function setApiTokenProvider(provider) {
 export const api = axios.create({
   baseURL: API,
   withCredentials: false,
+  timeout: 30000,
 });
 
 api.interceptors.request.use(async (config) => {

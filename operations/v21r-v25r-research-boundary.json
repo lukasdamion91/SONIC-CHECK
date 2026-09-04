@@ -1,0 +1,52 @@
+{
+  "schema_version": "soniccheck-web-research-boundary/1.0.0",
+  "program_id": "SC-RL-V21R-V25R-2026-09-01",
+  "status": "DRAFT_RESEARCH_ONLY",
+  "namespace": "SC-RL",
+  "historical_versions_preserved": true,
+  "research_versions": [
+    "V21R",
+    "V22R",
+    "V23R",
+    "V24R",
+    "V25R"
+  ],
+  "stacked_baseline": {
+    "public_repository": "lukasdamion91/SONIC-CHECK",
+    "public_commit_sha": "f2ab418e311ae9058e5d7e574d596937bd334b2e",
+    "private_repository": "lukasdamion91/sonic-check-api",
+    "private_commit_sha": "8dfcab7dd1d8bb773946de52757c3828147fdf30"
+  },
+  "web_boundary": {
+    "runtime_effect": false,
+    "public_research_route": false,
+    "research_environment_switch": false,
+    "experiment_selector": false,
+    "private_corpus_data": false,
+    "private_audio_hashes": false,
+    "unadjudicated_metrics": false,
+    "customer_upload_research_reuse_without_separate_consent": false
+  },
+  "authority": {
+    "merge": false,
+    "deployment": false,
+    "analyser_activation": false,
+    "paid_traffic": false,
+    "payments": false,
+    "commercial_claims": false,
+    "verified_originality_claim": false
+  },
+  "api_only_surfaces": [
+    "corpus custody and truth",
+    "transformation and negative-selection plans",
+    "provider raw-response provenance",
+    "ranking and uncertainty evidence",
+    "holdout and promotion machinery"
+  ],
+  "stop_conditions": [
+    "a public research route, experiment selector or activation switch is added",
+    "private corpus data or unadjudicated research metrics enter deployed source",
+    "customer uploads are reused for research without separate consent",
+    "a research result is presented as launch, commercial, legal or originality authority"
+  ]
+}

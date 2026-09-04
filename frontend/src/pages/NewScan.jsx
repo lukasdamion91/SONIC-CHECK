@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { FileAudio, FileText, Loader2, ShieldAlert, Upload } from "lucide-react";
 import { toast } from "sonner";
 import ChromaticText from "@/components/ChromaticText";
@@ -13,26 +13,76 @@ import { SCAN } from "@/constants/testIds";
 import { useAuth } from "@/context/AuthContext";
 import { api, formatApiErrorDetail } from "@/lib/api";
 import { INITIAL_SCAN_PROGRESS, scanProgressReducer, uploadCompletedByEvent } from "@/lib/scanProgress.mjs";
-import { createScanProgressId, parseScanProgressResponse } from "@/lib/scanProgressPolling.mjs";
+import {
+  createScanPostRecovery,
+  createScanProgressId,
+  parseScanProgressResponse,
+  scanPollFailureDecision,
+  SCAN_POST_PENDING_TIMEOUT_MS,
+  SCAN_RECONCILIATION_RETRY_MS,
+} from "@/lib/scanProgressPolling.mjs";
 
 export default function NewScan() {
-  const { user } = useAuth();
+  const { user, refresh } = useAuth();
   const navigate = useNavigate();
   const [regions, setRegions] = useState([]);
   const [form, setForm] = useState({ title: "", artist_name: user?.name || "", lyrics: "", region: user?.region || "AU" });
   const [audioFile, setAudioFile] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [reconciling, setReconciling] = useState(false);
+  const [reconciliationNotice, setReconciliationNotice] = useState("");
+  const [ambiguousOutcome, setAmbiguousOutcome] = useState(false);
   const [error, setError] = useState("");
   const [scanProgress, dispatchScanProgress] = useReducer(scanProgressReducer, INITIAL_SCAN_PROGRESS);
   const progressPollRef = useRef(null);
+  const activeUploadRef = useRef(null);
+  const terminalStateRef = useRef(null);
 
   const stopProgressPolling = useCallback(() => {
     const activePoll = progressPollRef.current;
     if (!activePoll) return;
     if (activePoll.timer) window.clearTimeout(activePoll.timer);
+    activePoll.recovery?.cancel();
     activePoll.controller.abort();
     progressPollRef.current = null;
   }, []);
+
+  const abortActiveUpload = useCallback(() => {
+    const activeUpload = activeUploadRef.current;
+    if (!activeUpload) return;
+    if (activeUpload.deadline) window.clearTimeout(activeUpload.deadline);
+    activeUpload.controller.abort();
+    activeUploadRef.current = null;
+  }, []);
+
+  const completeSubmission = useCallback((scanId) => {
+    if (!scanId || terminalStateRef.current) return;
+    terminalStateRef.current = { state: "completed", scanId };
+    stopProgressPolling();
+    abortActiveUpload();
+    setSubmitting(false);
+    setReconciling(false);
+    setReconciliationNotice("");
+    setAmbiguousOutcome(false);
+    dispatchScanProgress({ type: "COMPLETE" });
+    void refresh();
+    toast.success("Evidence record created");
+    navigate(`/app/scans/${scanId}`);
+  }, [abortActiveUpload, navigate, refresh, stopProgressPolling]);
+
+  const failSubmission = useCallback((message, state) => {
+    if (terminalStateRef.current) return;
+    terminalStateRef.current = { state: "failed" };
+    stopProgressPolling();
+    abortActiveUpload();
+    setSubmitting(false);
+    setReconciling(false);
+    setReconciliationNotice("");
+    setAmbiguousOutcome(["recovery_timeout", "recovery_unavailable"].includes(state));
+    setError(message);
+    dispatchScanProgress({ type: "FAIL", message, state });
+    toast.error(message);
+  }, [abortActiveUpload, stopProgressPolling]);
 
   const startProgressPolling = useCallback((progressId) => {
     if (!progressId || progressPollRef.current?.progressId === progressId) return;
@@ -44,8 +94,33 @@ export default function NewScan() {
       timer: null,
       notFoundAttempts: 0,
       unavailableAttempts: 0,
+      transportAttempts: 0,
       uploadComplete: false,
+      recovery: null,
     };
+    activePoll.recovery = createScanPostRecovery({
+      progressId,
+      onCompleted: completeSubmission,
+      onFailed: failSubmission,
+      onRecoveryStarted: (reason) => {
+        const notice = reason === "pending_timeout"
+          ? "The maximum upload-response wait ended. SonicCheck stopped waiting for that response and is checking the owner-scoped durable record. Do not start another screen yet."
+          : reason === "user_stop"
+            ? "SonicCheck stopped waiting for the upload response and is checking the owner-scoped durable record. Do not start another screen yet."
+            : "The upload response was interrupted. SonicCheck is checking the owner-scoped durable record before it is safe to retry.";
+        setReconciling(true);
+        setReconciliationNotice(notice);
+        toast.message(notice);
+        const activeUpload = activeUploadRef.current;
+        if (activeUpload?.progressId === progressId) {
+          if (activeUpload.deadline) window.clearTimeout(activeUpload.deadline);
+          activeUpload.controller.abort();
+          activeUploadRef.current = null;
+        }
+      },
+      setTimer: window.setTimeout,
+      clearTimer: window.clearTimeout,
+    });
     progressPollRef.current = activePoll;
 
     const schedule = (delay) => {
@@ -61,12 +136,15 @@ export default function NewScan() {
         });
         const report = parseScanProgressResponse(data, progressId);
         if (!report) {
-          stopProgressPolling();
+          // Invalid optional telemetry must not discard the owner-scoped
+          // reconciliation handle while the authoritative POST is unresolved.
+          schedule(SCAN_RECONCILIATION_RETRY_MS);
           return;
         }
 
         activePoll.notFoundAttempts = 0;
         activePoll.unavailableAttempts = 0;
+        activePoll.transportAttempts = 0;
         activePoll.uploadComplete = true;
         dispatchScanProgress({
           type: "SERVER_PROGRESS",
@@ -76,16 +154,16 @@ export default function NewScan() {
         });
 
         if (report.state === "completed") {
-          stopProgressPolling();
+          // The durable progress record recovers a successful scan even if
+          // the long-running upload POST response is lost at the browser.
+          if (!activePoll.recovery.handleProgress(report)) completeSubmission(report.scanId);
           return;
         }
         if (report.state === "failed") {
           const message = report.errorCode
             ? `The server stopped this evidence screen (${report.errorCode}).`
             : "The server stopped this evidence screen before a result was stored.";
-          setError(message);
-          dispatchScanProgress({ type: "FAIL", message, state: report.state });
-          stopProgressPolling();
+          if (!activePoll.recovery.handleProgress(report, message)) failSubmission(message, report.state);
           return;
         }
 
@@ -93,31 +171,45 @@ export default function NewScan() {
       } catch (pollError) {
         if (activePoll.controller.signal.aborted) return;
         const status = pollError?.response?.status;
-        if (status === 404 && (!activePoll.uploadComplete || activePoll.notFoundAttempts < 4)) {
-          if (activePoll.uploadComplete) activePoll.notFoundAttempts += 1;
-          schedule(1_000);
-          return;
-        }
-        if (status === 503 && activePoll.unavailableAttempts < 4) {
-          activePoll.unavailableAttempts += 1;
-          const retryAfter = Number(
-            pollError?.response?.headers?.get?.("retry-after")
-              ?? pollError?.response?.headers?.["retry-after"],
-          );
-          schedule(Number.isFinite(retryAfter) ? Math.min(3_000, Math.max(750, retryAfter * 1_000)) : 1_000);
-          return;
-        }
-
-        // Progress telemetry is optional. The submission remains active with
-        // exact upload progress and an indeterminate server-analysis stage.
-        stopProgressPolling();
+        const retry = scanPollFailureDecision({
+          status,
+          uploadComplete: activePoll.uploadComplete,
+          notFoundAttempts: activePoll.notFoundAttempts,
+          unavailableAttempts: activePoll.unavailableAttempts,
+          transportAttempts: activePoll.transportAttempts,
+          retryAfterSeconds: pollError?.response?.headers?.get?.("retry-after")
+            ?? pollError?.response?.headers?.["retry-after"],
+        });
+        activePoll.notFoundAttempts = retry.notFoundAttempts;
+        activePoll.unavailableAttempts = retry.unavailableAttempts;
+        activePoll.transportAttempts = retry.transportAttempts;
+        // Progress telemetry is optional. Keep the owner-scoped handle alive;
+        // the pending and reconciliation deadlines bound the operation.
+        schedule(retry.retryAfterMs);
       }
     };
 
     void poll();
-  }, [stopProgressPolling]);
+  }, [completeSubmission, failSubmission, stopProgressPolling]);
 
-  useEffect(() => () => stopProgressPolling(), [stopProgressPolling]);
+  const stopWaitingAndReconcile = () => {
+    const activePoll = progressPollRef.current;
+    if (activePoll?.recovery.start(
+      { code: "USER_STOP_RECONCILE" },
+      activePoll.progressId,
+      "user_stop",
+    )) return;
+    failSubmission(
+      "SonicCheck stopped waiting, but this browser could not reconcile whether the server stored the submission. Do not immediately retry; check your dashboard first.",
+      "recovery_unavailable",
+    );
+  };
+
+  useEffect(() => () => {
+    terminalStateRef.current ||= { state: "unmounted" };
+    stopProgressPolling();
+    abortActiveUpload();
+  }, [abortActiveUpload, stopProgressPolling]);
 
   useEffect(() => {
     api.get("/regions")
@@ -132,6 +224,10 @@ export default function NewScan() {
   const submit = async (event) => {
     event.preventDefault();
     setError("");
+    if (ambiguousOutcome) {
+      setError("Check the dashboard for the prior submission before starting another evidence screen.");
+      return;
+    }
     if (!form.lyrics.trim() && !audioFile) {
       setError("Add an audio file, lyrics, or both before starting the screen.");
       return;
@@ -145,12 +241,31 @@ export default function NewScan() {
     if (audioFile) payload.append("file", audioFile);
     const progressId = createScanProgressId();
     if (progressId) payload.append("progress_id", progressId);
+    const uploadController = new AbortController();
 
+    terminalStateRef.current = null;
+    setReconciling(false);
+    setReconciliationNotice("");
+    setAmbiguousOutcome(false);
+    activeUploadRef.current = { controller: uploadController, progressId, deadline: null };
+    if (!progressId) {
+      activeUploadRef.current.deadline = window.setTimeout(() => {
+        failSubmission(
+          "The maximum wait ended, and this browser could not reconcile whether the server stored the submission. Do not immediately retry; check your dashboard first.",
+          "recovery_unavailable",
+        );
+      }, SCAN_POST_PENDING_TIMEOUT_MS);
+    }
     setSubmitting(true);
     dispatchScanProgress({ type: "BEGIN" });
     if (progressId) startProgressPolling(progressId);
     try {
       const { data } = await api.post("/scans/upload", payload, {
+        signal: uploadController.signal,
+        // Analysis is a long-running upload operation. Ordinary API calls keep
+        // the shared outage timeout; this request is bounded by the visible
+        // stop-waiting action and the durable-progress deadlines instead.
+        timeout: 0,
         onUploadProgress: (event) => {
           dispatchScanProgress({ type: "UPLOAD_PROGRESS", event });
           if (progressId && uploadCompletedByEvent(event) && progressPollRef.current?.progressId === progressId) {
@@ -158,17 +273,33 @@ export default function NewScan() {
           }
         },
       });
-      stopProgressPolling();
-      dispatchScanProgress({ type: "COMPLETE" });
-      toast.success("Evidence record created");
-      navigate(`/app/scans/${data.id}`);
+      if (typeof data?.id !== "string" || !data.id) {
+        failSubmission("The server stored no usable evidence-record identifier.");
+        return;
+      }
+      completeSubmission(data.id);
     } catch (requestError) {
-      stopProgressPolling();
+      // Polling may already have supplied the durable terminal result and
+      // deliberately cancelled the still-pending POST request.
+      if (terminalStateRef.current) return;
+      const activePoll = progressPollRef.current;
+      if (activePoll?.recovery.awaitingRecovery) return;
+      if (activePoll?.recovery.start(requestError, activePoll.progressId)) {
+        return;
+      }
+      if (requestError?.response == null) {
+        failSubmission(
+          "The upload connection ended without a response, and this browser could not reconcile whether the server stored the submission. Do not immediately retry; check your dashboard first.",
+          "recovery_unavailable",
+        );
+        return;
+      }
       const message = formatApiErrorDetail(requestError?.response?.data?.detail);
-      setError(message);
-      toast.error(message);
-      setSubmitting(false);
-      dispatchScanProgress({ type: "FAIL", message });
+      failSubmission(message);
+    } finally {
+      if (activeUploadRef.current?.controller === uploadController) {
+        activeUploadRef.current = null;
+      }
     }
   };
 
@@ -225,11 +356,24 @@ export default function NewScan() {
             <p className="mt-2 text-xs text-[#F0E9D6]/42">This records context only. No fixed legal threshold or regional conclusion is applied.</p>
           </div>
 
+          {reconciliationNotice && <div role="status" className="flex gap-3 rounded-lg border border-amber-300/20 bg-amber-300/5 p-4 text-sm leading-6 text-amber-100"><ShieldAlert className="h-5 w-5 shrink-0" />{reconciliationNotice}</div>}
           {error && <div role="alert" className="flex gap-3 rounded-lg border border-red-400/20 bg-red-400/5 p-4 text-sm text-red-200"><ShieldAlert className="h-5 w-5 shrink-0" />{error}</div>}
 
-          <Button type="submit" data-testid={SCAN.submitBtn} disabled={submitting} className="h-12 w-full bg-[#D4FF00] text-[#1C1C22] hover:bg-[#D4FF00]/85">
-            {submitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Evidence screen in progress…</> : "Start evidence screen"}
-          </Button>
+          <div className={`grid gap-3 ${submitting && !reconciling ? "sm:grid-cols-[1fr_auto]" : ""}`}>
+            <Button type="submit" data-testid={SCAN.submitBtn} disabled={submitting || ambiguousOutcome} className="h-12 w-full bg-[#D4FF00] text-[#1C1C22] hover:bg-[#D4FF00]/85">
+              {submitting
+                ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />{reconciling ? "Checking stored status…" : "Evidence screen in progress…"}</>
+                : ambiguousOutcome ? "Check dashboard before another screen" : "Start evidence screen"}
+            </Button>
+            {submitting && !reconciling && (
+              <Button type="button" onClick={stopWaitingAndReconcile} variant="outline" className="h-12 border-white/15 bg-transparent text-[#F0E9D6] hover:bg-white/10">
+                Cancel wait &amp; check status
+              </Button>
+            )}
+            {ambiguousOutcome && (
+              <Link to="/app"><Button type="button" variant="outline" className="h-12 w-full border-white/15 bg-transparent text-[#F0E9D6] hover:bg-white/10">Open dashboard</Button></Link>
+            )}
+          </div>
         </div>
 
         <aside className="space-y-5">

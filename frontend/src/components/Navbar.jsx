@@ -7,7 +7,7 @@ import { NAV } from "@/constants/testIds";
 const asset = (path) => `${process.env.PUBLIC_URL || ""}${path}`;
 
 export default function Navbar() {
-  const { user, loading, logout } = useAuth();
+  const { user, clerkUser, isSignedIn, loading, logout } = useAuth();
   const navigate = useNavigate();
   const { pathname } = useLocation();
 
@@ -21,13 +21,13 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-50 border-b border-white/10 bg-[#111116]/90 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5 sm:px-6">
-        <Link to={user ? "/app" : "/"} data-testid={NAV.logo} className="flex items-center gap-3">
+        <Link to={isSignedIn ? "/app" : "/"} data-testid={NAV.logo} className="flex items-center gap-3">
           <img src={asset("/brand/logo-icon.png")} alt="" className="h-9 w-9 object-contain" />
           <img src={asset("/brand/logo-wordmark.png")} alt="SonicCheck" className="h-5 w-auto object-contain" />
         </Link>
 
         <nav className="hidden items-center gap-7 lg:flex" aria-label="Primary navigation">
-          {user ? (
+          {isSignedIn ? (
             <>
               <Link to="/app" data-testid={NAV.dashboardLink} className={active("/app")}>Dashboard</Link>
               <Link to="/app/scan/new" data-testid={NAV.newScanLink} className={active("/app/scan/new")}>New screen</Link>
@@ -44,9 +44,11 @@ export default function Navbar() {
         </nav>
 
         <div className="flex items-center gap-2 sm:gap-3">
-          {user ? (
+          {isSignedIn ? (
             <>
-              <span className="hidden max-w-48 truncate text-xs text-[#F0E9D6]/55 md:inline font-mono-data">{user.email}</span>
+              <span className="hidden max-w-48 truncate text-xs text-[#F0E9D6]/55 md:inline font-mono-data">
+                {user?.email || clerkUser?.primaryEmailAddress?.emailAddress || "Signed in"}
+              </span>
               <Button data-testid={NAV.logoutBtn} onClick={handleLogout} variant="ghost" className="text-[#F0E9D6]/80 hover:bg-white/10 hover:text-[#F0E9D6]">
                 <LogOut className="h-4 w-4 sm:mr-2" />
                 <span className="hidden sm:inline">Log out</span>
