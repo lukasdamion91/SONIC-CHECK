@@ -1,5 +1,6 @@
 import { AudioLines, Check, ShieldCheck } from "lucide-react";
 import ChromaticText from "@/components/ChromaticText";
+import { ANALYZER_IDENTITY } from "@/constants/analyzerIdentity.mjs";
 import { SCAN } from "@/constants/testIds";
 import { getScanProgressView, SCAN_STAGE_ORDER } from "@/lib/scanProgress.mjs";
 
@@ -22,19 +23,25 @@ export default function ScannerAnalyzer({ progress }) {
       data-testid={SCAN.progressPanel}
     >
       <div className="scanner-console-inner">
-        <header className="flex items-center justify-between gap-4 border-b border-white/10 pb-4">
-          <div className="flex items-center gap-3">
+        <header className="scanner-console-header border-b border-white/10 pb-4">
+          <div className="flex min-w-0 items-center gap-3">
             <span className="scanner-console-icon" aria-hidden="true">
               <AudioLines className="h-4 w-4" />
             </span>
-            <div>
+            <div className="min-w-0">
               <div className="font-mono-data text-[10px] uppercase tracking-[0.2em] text-[#F0E9D6]/55">SC analyser</div>
               <div id="scanner-console-heading" className="mt-1 text-sm font-semibold text-[#F0E9D6]">Live process display</div>
             </div>
           </div>
-          <div className="scanner-status-chip">
-            <span className="scanner-status-dot" aria-hidden="true" />
-            {view.statusLabel}
+          <div className="scanner-console-meta">
+            <span className="scanner-analyzer-mark font-mono-data" data-testid={SCAN.analyzerIdentity}>
+              <span className="sr-only">Analyzer identity: </span>
+              {ANALYZER_IDENTITY}
+            </span>
+            <div className="scanner-status-chip">
+              <span className="scanner-status-dot" aria-hidden="true" />
+              {view.statusLabel}
+            </div>
           </div>
         </header>
 

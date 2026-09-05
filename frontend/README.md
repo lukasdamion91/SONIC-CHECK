@@ -27,6 +27,14 @@ The API supplies the current product contract, pricing, catalogue status,
 entitlement, and checkout readiness. The client does not independently enable
 paid checkout.
 
+## Analyzer identity
+
+The scanner displays the build-owned analyzer mark `HARRY_V36`. Its single
+runtime source is `src/constants/analyzerIdentity.mjs`, so a future analyzer
+revision changes one value. API responses and other runtime metadata do not
+relabel the interface. `SONIC CHECK` remains the product and legal namespace;
+the analyzer mark identifies the scanner implementation only.
+
 ## Routes
 
 - Public: `/`, `/join`, `/login`, `/verify/:badgeId`

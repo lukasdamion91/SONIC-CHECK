@@ -284,6 +284,34 @@ input:focus, textarea:focus, select:focus { outline: none; box-shadow: 0 0 0 2px
 .scanner-console-inner {
   padding: 1.35rem;
 }
+.scanner-console-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 1rem;
+}
+.scanner-console-meta {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.45rem;
+}
+.scanner-analyzer-mark {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid rgba(141,239,228,0.24);
+  border-radius: 9999px;
+  background: rgba(141,239,228,0.055);
+  padding: 0.26rem 0.48rem;
+  color: rgba(141,239,228,0.82);
+  font-size: 0.59rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
 .scanner-console-icon {
   display: inline-flex;
   width: 2rem;
@@ -488,6 +516,10 @@ input:focus, textarea:focus, select:focus { outline: none; box-shadow: 0 0 0 2px
 
 @media (max-width: 420px) {
   .scanner-console-inner { padding: 1rem; }
+  .scanner-console-header { gap: 0.65rem; }
+  .scanner-console-meta { gap: 0.35rem; }
+  .scanner-analyzer-mark { font-size: 0.54rem; letter-spacing: 0.09em; }
+  .scanner-status-chip { max-width: 7.75rem; justify-content: flex-end; font-size: 0.56rem; letter-spacing: 0.055em; }
   .scanner-spectrum { height: 8.75rem; }
   .scanner-stages { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 0.75rem; }
   .scanner-stage { gap: 0.35rem; }
@@ -528,5 +560,10 @@ input:focus, textarea:focus, select:focus { outline: none; box-shadow: 0 0 0 2px
     background: none;
     color: CanvasText;
     -webkit-text-fill-color: CanvasText;
+  }
+  .scanner-analyzer-mark {
+    border-color: CanvasText;
+    background: Canvas;
+    color: CanvasText;
   }
 }
