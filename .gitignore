@@ -73,6 +73,24 @@ agenthub/agents/youtube/db
 *.deb
 *.dylib
 
+# Private audio and research evidence
+project_sources/
+*.wav
+*.wave
+*.aif
+*.aiff
+*.flac
+*.mp3
+*.m4a
+*.aac
+*.ogg
+*.opus
+*.private.json
+private-corpus/
+private-custody/
+frontend/build-verification.local.json
+frontend/deployment-privacy.local.json
+
 # Build caches
 .cache/
 tmp/
