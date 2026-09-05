@@ -11,6 +11,16 @@ It intentionally exposes two product components on one canonical host:
 The public verification route at `/verify/:badgeId` is the only intentional
 shareable evidence surface outside authentication.
 
+## Living operating authority
+
+All work in this repository is governed by the
+[`OPERATING_GUIDE.md`](OPERATING_GUIDE.md) and its executable
+[`docs/WORKFLOW.md`](docs/WORKFLOW.md). They define founder authority, truthful
+delivery states, provider/SDK evidence, budget stewardship, gate preservation,
+private-evidence exclusion and the only permitted meaning of `COMPLETE`.
+Historical V-series records remain evidence; they are not proof of current
+runtime integration, merge, deployment or live verification.
+
 ## Product contract
 
 - Canonical web origin: `https://soniccheck.io`
