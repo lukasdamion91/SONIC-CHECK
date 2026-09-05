@@ -1,8 +1,9 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { readFile } from "node:fs/promises";
+import { readdir, readFile } from "node:fs/promises";
 import test from "node:test";
 
+import { ANALYZER_IDENTITY } from "../src/constants/analyzerIdentity.mjs";
 import {
   getScanProgressView,
   INITIAL_SCAN_PROGRESS,
@@ -21,6 +22,16 @@ import {
 } from "../src/lib/scanProgressPolling.mjs";
 
 const source = async (path) => readFile(new URL(path, import.meta.url), "utf8");
+
+async function deployedSourceFiles(directory) {
+  const entries = await readdir(directory, { withFileTypes: true });
+  const files = await Promise.all(entries.map(async (entry) => {
+    const child = new URL(`${entry.name}${entry.isDirectory() ? "/" : ""}`, directory);
+    if (entry.isDirectory()) return deployedSourceFiles(child);
+    return entry.isFile() && /\.(?:css|js|jsx|mjs)$/u.test(entry.name) ? [child] : [];
+  }));
+  return files.flat();
+}
 
 function controlledTimers() {
   let nextId = 1;
@@ -318,6 +329,34 @@ test("scanner markup exposes progress and reduced-motion accessibility", async (
   assert.match(landing, /<ChromaticText>checked through evidence\.<\/ChromaticText>/);
   assert.match(styles, /@media \(prefers-reduced-motion: reduce\)/);
   assert.match(styles, /\.chromatic-text,/);
+});
+
+test("scanner exposes one source-owned accessible analyzer identity", async () => {
+  const [analyzer, styles, sourceFiles] = await Promise.all([
+    source("../src/components/ScannerAnalyzer.jsx"),
+    source("../src/index.css"),
+    deployedSourceFiles(new URL("../src/", import.meta.url)),
+  ]);
+
+  assert.equal(ANALYZER_IDENTITY, "HARRY_V36");
+  assert.match(analyzer, /import \{ ANALYZER_IDENTITY \} from "@\/constants\/analyzerIdentity\.mjs";/u);
+  assert.match(
+    analyzer,
+    /className="scanner-analyzer-mark font-mono-data"[\s\S]*data-testid=\{SCAN\.analyzerIdentity\}[\s\S]*<span className="sr-only">Analyzer identity: <\/span>[\s\S]*\{ANALYZER_IDENTITY\}/u,
+  );
+  assert.doesNotMatch(analyzer, /HARRY_V36/u);
+  assert.match(styles, /\.scanner-analyzer-mark \{[\s\S]*white-space: nowrap;/u);
+  assert.match(styles, /@media \(max-width: 420px\) \{[\s\S]*\.scanner-analyzer-mark/u);
+  assert.match(styles, /@media \(forced-colors: active\) \{[\s\S]*\.scanner-analyzer-mark/u);
+
+  const occurrences = [];
+  for (const file of sourceFiles) {
+    const contents = await readFile(file, "utf8");
+    const count = contents.split(ANALYZER_IDENTITY).length - 1;
+    for (let index = 0; index < count; index += 1) occurrences.push(file.pathname);
+  }
+  assert.equal(occurrences.length, 1);
+  assert.match(occurrences[0], /\/constants\/analyzerIdentity\.mjs$/u);
 });
 
 test("scanner bars use the exact uploaded SONIC rainbow texture", async () => {

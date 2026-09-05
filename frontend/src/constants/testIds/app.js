@@ -26,6 +26,7 @@ export const SCAN = {
   progressPercent: 'scan-progress-percent',
   progressStatus: 'scan-progress-status',
   progressDetail: 'scan-progress-detail',
+  analyzerIdentity: 'scan-analyzer-identity',
   uploadProgress: 'scan-upload-progress',
   serverProgress: 'scan-server-progress',
   resultCard: 'scan-result-card',

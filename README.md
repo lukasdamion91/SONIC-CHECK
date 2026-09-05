@@ -23,6 +23,9 @@ shareable evidence surface outside authentication.
   A$149.99/year, and A$499.99/year enterprise
 - Evidence boundary: results are candidate evidence for human review, not legal,
   plagiarism, infringement, or ownership determinations
+- Analyzer UI identity: the source-owned scanner mark is `HARRY_V36`; it names
+  the analyzer implementation and does not rename the SONIC CHECK product or
+  accept runtime relabelling from API metadata
 - Catalogue boundary: the governed catalogue contains symbolic profiles and
   MusicBrainz identity/metadata context; it is not a claim that SONIC CHECK hosts
   71,000 licensed audio recordings
