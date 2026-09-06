@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   AlertCircle,
@@ -14,6 +14,11 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import {
+  ANALYZER_CAPABILITY_MANIFEST_REVISION,
+  ANALYZER_IDENTITY,
+  ANALYZER_IDENTITY_REVISION,
+} from "@/constants/analyzerIdentity.mjs";
 import { SCAN } from "@/constants/testIds";
 import { useAuth } from "@/context/AuthContext";
 import { api, formatApiErrorDetail } from "@/lib/api";
@@ -26,6 +31,9 @@ import {
 import {
   buildChannelCoverageRows,
   compositionComparisonDisclosure,
+  currentAnalyzerDiagnosticViews,
+  multiviewConsistencyView,
+  storedAnalyzerLabel,
 } from "@/lib/scanResultPresentation.mjs";
 import { copyTextBestEffort, refreshAfterCreditAttempt } from "@/lib/userActions.mjs";
 
@@ -65,6 +73,16 @@ const coverageStateClasses = {
   comparison_coverage: "border-violet-300/20 bg-violet-300/5 text-violet-100/80",
 };
 
+const emptyComparisonState = (baselineScanId) => ({
+  baselineScanId,
+  records: [],
+  comparisonScanId: "",
+  transform: "",
+  result: null,
+  error: "",
+  pendingRequestId: null,
+});
+
 function ChannelCoverage({ rows }) {
   return (
     <section className="mt-6 rounded-2xl border border-white/10 bg-[#202027] p-6 sm:p-8">
@@ -101,6 +119,8 @@ export default function ScanResult() {
   const [badgeUrl, setBadgeUrl] = useState("");
   const [scanResultEnvelopeHash, setScanResultEnvelopeHash] = useState("");
   const [integrityError, setIntegrityError] = useState("");
+  const [comparisonState, setComparisonState] = useState(() => emptyComparisonState(id));
+  const multiviewRequestSequence = useRef(0);
   const accessPolicy = resolveAccessPolicy(user);
 
   useEffect(() => {
@@ -142,6 +162,38 @@ export default function ScanResult() {
     return () => { active = false; };
   }, [id]);
 
+  useEffect(() => {
+    // Changing route identity invalidates both the visible state and every
+    // in-flight comparison initiated for the previous baseline.
+    multiviewRequestSequence.current += 1;
+    setComparisonState(emptyComparisonState(id));
+    let active = true;
+    api.get("/scans")
+      .then(({ data }) => {
+        if (!active) return;
+        const records = Array.isArray(data)
+          ? data.filter((record) => record?.id && record.id !== id)
+          : [];
+        setComparisonState((current) => (
+          current.baselineScanId === id ? { ...current, records } : current
+        ));
+      })
+      .catch(() => {
+        if (active) {
+          setComparisonState((current) => (
+            current.baselineScanId === id ? { ...current, records: [] } : current
+          ));
+        }
+      });
+    return () => { active = false; };
+  }, [id]);
+
+  // Passive effects run after render. Bind every comparison value to its route
+  // so a route transition cannot flash the previous record's result or inputs.
+  const activeComparison = comparisonState.baselineScanId === id
+    ? comparisonState
+    : emptyComparisonState(id);
+
   const result = scan?.result || {};
   const status = statuses[result.screening_status] || {
     label: "Legacy evidence record — interpret under its original method version",
@@ -156,6 +208,36 @@ export default function ScanResult() {
   const limitations = result.evidence?.limitations || [];
   const channelCoverageRows = buildChannelCoverageRows(result);
   const comparisonDisclosure = compositionComparisonDisclosure(composition);
+  const { isCurrentCapabilityBoundHarry, v34, v36 } = currentAnalyzerDiagnosticViews(result);
+  const v35 = multiviewConsistencyView(activeComparison.result);
+  const analyzerLabel = storedAnalyzerLabel(result);
+  const analyzer = result.analyzer || {};
+  const hasCurrentHarryMarker = (
+    analyzer.identity_revision === ANALYZER_IDENTITY_REVISION
+    || analyzer.capability_manifest_revision === ANALYZER_CAPABILITY_MANIFEST_REVISION
+  );
+  const harryContractFailures = [];
+  if (hasCurrentHarryMarker && !isCurrentCapabilityBoundHarry) {
+    harryContractFailures.push("the stored HARRY identity or capability-manifest binding is incomplete or invalid");
+  }
+  if (isCurrentCapabilityBoundHarry && !v34?.available) {
+    harryContractFailures.push(`V34 structural-missingness output is ${v34?.reason ? `invalid (${v34.reason})` : "missing"}`);
+  }
+  if (isCurrentCapabilityBoundHarry && !v36?.available) {
+    harryContractFailures.push(`V36 channel-loss output is ${v36?.reason ? `invalid (${v36.reason})` : "missing"}`);
+  }
+  const harryContractWarning = harryContractFailures.length
+    ? `Fail-closed capability warning: ${harryContractFailures.join("; ")}. Do not interpret unavailable structural diagnostics as a successful ${ANALYZER_IDENTITY} result.`
+    : "";
+  const unavailableDiagnosticDetail = hasCurrentHarryMarker
+    ? `not shown because the stored ${ANALYZER_IDENTITY} identity or capability-manifest binding is incomplete or invalid`
+    : "not present in this legacy or historical record";
+  const v34UnavailableDetail = isCurrentCapabilityBoundHarry
+    ? (v34?.reason || `required output missing from the current ${ANALYZER_IDENTITY} capability contract`)
+    : unavailableDiagnosticDetail;
+  const v36UnavailableDetail = isCurrentCapabilityBoundHarry
+    ? (v36?.reason || `required output missing from the current ${ANALYZER_IDENTITY} capability contract`)
+    : unavailableDiagnosticDetail;
   const reportAvailable = accessPolicy.can_download_report && Boolean(scanResultEnvelopeHash) && !integrityError;
 
   const provenanceRows = useMemo(() => {
@@ -273,6 +355,70 @@ export default function ScanResult() {
     }
   };
 
+  const runMultiviewComparison = async () => {
+    const baselineScanId = id;
+    const comparisonScanId = activeComparison.comparisonScanId;
+    const comparisonTransform = activeComparison.transform.trim();
+    if (!comparisonScanId || !comparisonTransform) {
+      setComparisonState((current) => (
+        current.baselineScanId === baselineScanId
+          ? { ...current, error: "Choose a comparison record and describe its identity-preserving transform." }
+          : current
+      ));
+      return;
+    }
+    const requestId = multiviewRequestSequence.current + 1;
+    multiviewRequestSequence.current = requestId;
+    setComparisonState((current) => (
+      current.baselineScanId === baselineScanId
+        ? { ...current, result: null, error: "", pendingRequestId: requestId }
+        : current
+    ));
+    try {
+      const { data } = await api.post("/diagnostics/multiview-consistency", {
+        baseline_view_id: "baseline",
+        views: [
+          {
+            scan_id: baselineScanId,
+            view_id: "baseline",
+            transform_id: "submitted-baseline",
+            expectation: "IDENTITY_PRESERVING",
+          },
+          {
+            scan_id: comparisonScanId,
+            view_id: "comparison",
+            transform_id: comparisonTransform,
+            expectation: "IDENTITY_PRESERVING",
+          },
+        ],
+      });
+      if (multiviewRequestSequence.current !== requestId) return;
+      const responseError = multiviewConsistencyView(data)
+        ? ""
+        : "The V35 response failed its diagnostic-only contract and was not displayed.";
+      setComparisonState((current) => (
+        current.baselineScanId === baselineScanId && current.pendingRequestId === requestId
+          ? { ...current, result: responseError ? null : data, error: responseError }
+          : current
+      ));
+    } catch (requestError) {
+      if (multiviewRequestSequence.current !== requestId) return;
+      setComparisonState((current) => (
+        current.baselineScanId === baselineScanId && current.pendingRequestId === requestId
+          ? { ...current, error: formatApiErrorDetail(requestError?.response?.data?.detail) }
+          : current
+      ));
+    } finally {
+      if (multiviewRequestSequence.current === requestId) {
+        setComparisonState((current) => (
+          current.baselineScanId === baselineScanId && current.pendingRequestId === requestId
+            ? { ...current, pendingRequestId: null }
+            : current
+        ));
+      }
+    }
+  };
+
   if (error) return <div className="mx-auto max-w-2xl px-6 py-24 text-center text-red-200">{error}</div>;
   if (!scan) return <div className="grid min-h-[65vh] place-items-center"><Loader2 className="h-7 w-7 animate-spin text-[#F0E9D6]/45" /></div>;
 
@@ -319,6 +465,87 @@ export default function ScanResult() {
       )}
 
       <ChannelCoverage rows={channelCoverageRows} />
+
+      <section className="mt-6 rounded-2xl border border-white/10 bg-[#202027] p-6 sm:p-8">
+        <div className="eyebrow">{ANALYZER_IDENTITY} structural diagnostics</div>
+        <h2 className="mt-2 text-xl font-semibold text-[#F0E9D6]">Coverage bounds and sensitivity</h2>
+        <p className="mt-3 max-w-4xl text-xs leading-5 text-[#F0E9D6]/48">
+          These diagnostics describe the evidence returned by this run. They do not change screening status and are not a confidence interval, probability or accuracy estimate.
+        </p>
+
+        {harryContractWarning && (
+          <div role="alert" className="mt-5 rounded-xl border border-red-300/25 bg-red-300/[0.06] p-4 text-xs leading-5 text-red-100">
+            {harryContractWarning}
+          </div>
+        )}
+
+        <div className="mt-5 grid gap-4 lg:grid-cols-2">
+          <div className="rounded-xl border border-white/10 bg-[#17171C] p-5">
+            <div className="text-[10px] uppercase tracking-[0.15em] text-[#F0E9D6]/40 font-mono-data">V34 · structural missingness</div>
+            {v34?.available ? (
+              <>
+                <div className="mt-3 text-2xl font-semibold text-[#F0E9D6]">{v34.lower}–{v34.upper}/100</div>
+                <p className="mt-2 text-xs leading-5 text-[#F0E9D6]/48">Observed {v34.observed}/100 · {v34.unresolved}% of fixed channel weight unresolved. The selected entity and exact-linkage projection are held fixed.</p>
+              </>
+            ) : (
+              <p className="mt-3 text-xs leading-5 text-[#F0E9D6]/48">Envelope unavailable: {v34UnavailableDetail}.</p>
+            )}
+          </div>
+
+          <div className="rounded-xl border border-white/10 bg-[#17171C] p-5">
+            <div className="text-[10px] uppercase tracking-[0.15em] text-[#F0E9D6]/40 font-mono-data">V36 · single-channel loss</div>
+            {v36?.available ? (
+              <>
+                <div className="mt-3 text-lg font-semibold text-[#F0E9D6]">{String(v36.reviewStability || "evaluated").replaceAll("_", " ")}</div>
+                <p className="mt-2 text-xs leading-5 text-[#F0E9D6]/48">{v36.evaluated} of {v36.possible} observable channel-loss scenarios evaluated{v36.maximumChange != null ? ` · maximum entity-score movement ${v36.maximumChange} points` : ""}. Counterfactual shadow diagnostic only.</p>
+              </>
+            ) : (
+              <p className="mt-3 text-xs leading-5 text-[#F0E9D6]/48">Diagnostic unavailable: {v36UnavailableDetail}.</p>
+            )}
+          </div>
+        </div>
+
+        <div className="mt-4 rounded-xl border border-violet-300/15 bg-violet-300/[0.035] p-5">
+          <div className="text-[10px] uppercase tracking-[0.15em] text-violet-100/60 font-mono-data">V35 · multi-view consistency</div>
+          <p className="mt-2 text-xs leading-5 text-[#F0E9D6]/48">Compare this record with another owned scan only when both are views of the same underlying source and the named transform is identity-preserving. SONIC CHECK records this as your assertion; it does not infer or verify source identity.</p>
+          <div className="mt-4 grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
+            <select
+              value={activeComparison.comparisonScanId}
+              disabled={activeComparison.pendingRequestId != null}
+              onChange={(event) => {
+                const comparisonScanId = event.target.value;
+                setComparisonState((current) => (
+                  current.baselineScanId === id
+                    ? { ...current, comparisonScanId, result: null, error: "" }
+                    : current
+                ));
+              }}
+              className="h-10 rounded-md border border-white/15 bg-[#17171C] px-3 text-xs text-[#F0E9D6]"
+            >
+              <option value="">Choose owned comparison record</option>
+              {activeComparison.records.map((record) => <option key={record.id} value={record.id}>{record.title || "Untitled"} · {record.created_at ? new Date(record.created_at).toLocaleDateString("en-AU") : "stored scan"}</option>)}
+            </select>
+            <input
+              value={activeComparison.transform}
+              disabled={activeComparison.pendingRequestId != null}
+              onChange={(event) => {
+                const transform = event.target.value;
+                setComparisonState((current) => (
+                  current.baselineScanId === id
+                    ? { ...current, transform, result: null, error: "" }
+                    : current
+                ));
+              }}
+              maxLength={128}
+              placeholder="Transform, e.g. lossless-remux"
+              className="h-10 rounded-md border border-white/15 bg-[#17171C] px-3 text-xs text-[#F0E9D6] placeholder:text-[#F0E9D6]/30"
+            />
+            <Button onClick={runMultiviewComparison} disabled={activeComparison.pendingRequestId != null || !activeComparison.comparisonScanId || !activeComparison.transform.trim()} variant="outline" className="border-violet-200/20 bg-transparent text-violet-100 hover:bg-violet-200/10">{activeComparison.pendingRequestId != null ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}Compare views</Button>
+          </div>
+          {activeComparison.error && <p className="mt-3 text-xs leading-5 text-red-200">{activeComparison.error}</p>}
+          {v35 && <div className="mt-4 rounded-lg border border-white/10 bg-[#17171C] p-4 text-xs leading-5 text-[#F0E9D6]/58"><span className="font-mono-data text-[#F0E9D6]/82">{v35.status.replaceAll("_", " ")}</span> · {v35.identityPreservingViews} declared views · {v35.exactDivergenceCount} exact divergence{v35.exactDivergenceCount === 1 ? "" : "s"}{v35.minimumExactJaccard != null ? ` · minimum exact-set overlap ${Math.round(v35.minimumExactJaccard * 100)}%` : ""}. Diagnostic only; no provider call, ranking change, match decision or legal conclusion.</div>}
+        </div>
+      </section>
 
       {badgeUrl && (
         <div className="mt-5 flex flex-wrap items-center gap-3 rounded-xl border border-[#D4FF00]/20 bg-[#D4FF00]/5 p-4 text-sm text-[#F0E9D6]/70">
@@ -384,6 +611,7 @@ export default function ScanResult() {
             <div className="eyebrow">Method identity</div>
             <dl className="mt-5 space-y-4 text-sm">
               <div><dt className="text-[#F0E9D6]/38">Analysis version</dt><dd className="mt-1 break-all text-[#F0E9D6]/68 font-mono-data">{result.analysis_version || "legacy"}</dd></div>
+              <div><dt className="text-[#F0E9D6]/38">Analyzer</dt><dd className="mt-1 break-all text-[#F0E9D6]/68 font-mono-data">{analyzerLabel || "legacy or unverified"}</dd></div>
               <div><dt className="text-[#F0E9D6]/38">Result schema</dt><dd className="mt-1 break-all text-[#F0E9D6]/68 font-mono-data">{result.result_schema_version || "legacy"}</dd></div>
               <div><dt className="text-[#F0E9D6]/38">Composition manifest</dt><dd className="mt-1 break-all text-[#F0E9D6]/68 font-mono-data">{composition.reference_manifest_version || "not used"}</dd></div>
             </dl>

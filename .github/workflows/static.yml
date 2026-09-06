@@ -50,14 +50,39 @@ jobs:
           REACT_APP_CLERK_PUBLISHABLE_KEY: ${{ secrets.REACT_APP_CLERK_PUBLISHABLE_KEY || vars.REACT_APP_CLERK_PUBLISHABLE_KEY || 'pk_live_Y2xlcmsuc29uaWNjaGVjay5pbyQ' }}
           REACT_APP_CLERK_CONFIGURED: "true"
           REACT_APP_DEPLOYMENT_COMMIT: ${{ github.sha }}
+          GENERATE_SOURCEMAP: "false"
         run: npm run build
 
       - name: Verify routing artifact and deployment identity
+        id: routing_verification
+        continue-on-error: true
         run: >-
           node scripts/verify-pages-build.mjs
           --expected-commit "${GITHUB_SHA}"
           --require-auth "${{ github.event_name != 'pull_request' }}"
           --output build-verification.json
+
+      - name: Verify deployment artifact excludes private research, audio and secrets
+        id: privacy_verification
+        if: always()
+        continue-on-error: true
+        run: >-
+          node scripts/verify-deployment-privacy.mjs build
+          --output deployment-privacy.json
+
+      - name: Preserve build verification
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sonic-check-pages-verification
+          path: |
+            frontend/build-verification.json
+            frontend/deployment-privacy.json
+          retention-days: 30
+
+      - name: Enforce build and privacy verification
+        if: always() && (steps.routing_verification.outcome != 'success' || steps.privacy_verification.outcome != 'success')
+        run: exit 1
 
       - name: Preserve verified build
         uses: actions/upload-artifact@v4
@@ -66,15 +91,8 @@ jobs:
           path: frontend/build
           retention-days: 7
 
-      - name: Preserve build verification
-        uses: actions/upload-artifact@v4
-        with:
-          name: sonic-check-pages-verification
-          path: frontend/build-verification.json
-          retention-days: 30
-
   deploy:
-    if: github.event_name != 'pull_request'
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     needs: build
     runs-on: ubuntu-latest
     permissions:
@@ -86,11 +104,41 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      - name: Checkout deployment verifier
+        uses: actions/checkout@v4
+
       - name: Download verified build
         uses: actions/download-artifact@v4
         with:
           name: sonic-check-pages
           path: frontend/build
+
+      - name: Download build-stage verification receipt
+        uses: actions/download-artifact@v4
+        with:
+          name: sonic-check-pages-verification
+          path: frontend/build-stage-verification
+
+      - name: Reverify downloaded deployment bytes
+        id: deployment_privacy_reverification
+        if: always()
+        continue-on-error: true
+        run: >-
+          node frontend/scripts/verify-deployment-privacy.mjs frontend/build
+          --expected-receipt frontend/build-stage-verification/deployment-privacy.json
+          --output deployment-privacy-reverification.json
+
+      - name: Preserve deployment-byte reverification
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sonic-check-deployment-privacy-reverification
+          path: deployment-privacy-reverification.json
+          retention-days: 30
+
+      - name: Enforce deployment-byte reverification
+        if: always() && steps.deployment_privacy_reverification.outcome != 'success'
+        run: exit 1
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
@@ -102,12 +150,17 @@ jobs:
         with:
           path: frontend/build
 
+      - name: Refuse stale main deployment
+        run: |
+          git fetch --no-tags --force origin main:refs/remotes/origin/main
+          test "${GITHUB_SHA}" = "$(git rev-parse refs/remotes/origin/main)"
+
       - name: Deploy production site
         id: deployment
         uses: actions/deploy-pages@v5
 
   verify-production:
-    if: github.event_name != 'pull_request'
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     needs: deploy
     runs-on: ubuntu-latest
     permissions:
