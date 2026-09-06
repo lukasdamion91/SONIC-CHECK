@@ -154,7 +154,25 @@ const harryRuntimeSelfTest = JSON.stringify({
     .digest("hex"),
 });
 const closedProviderPaymentGates = JSON.stringify({
-  schema_version: "soniccheck-provider-payment-gates/1.0.0",
+  schema_version: "soniccheck-provider-payment-gates/1.1.0",
+  acoustid_identification: {
+    version: "soniccheck-acoustid-identity-screening/1.0.0",
+    provider: "AcoustID Web Service",
+    mode: "shadow",
+    access_basis: "commercial_approved",
+    api_key_configured: true,
+    paid_traffic_enabled: false,
+    timeout_seconds: 20,
+    min_interval_seconds: 0.34,
+    max_retries: 1,
+    documented_request_limit_per_second: 3,
+    ready: true,
+    status: "READY_SHADOW",
+    fingerprint_transmission_allowed: true,
+    raw_audio_transmission_allowed: false,
+    affects_composition_score: false,
+    secrets_included: false,
+  },
   acrcloud_identification: {
     provider: "ACRCloud Identification API",
     mode: "off",
@@ -163,6 +181,10 @@ const closedProviderPaymentGates = JSON.stringify({
     ready: false,
     status: "DISABLED_BY_POLICY",
     customer_audio_transmission_allowed: false,
+    secondary_credentials_present: true,
+    secondary_credentials_complete: true,
+    secondary_profile_status: "DORMANT_UNCLASSIFIED",
+    secondary_profile_runtime_enabled: false,
     research_only: true,
     affects_composition_score: false,
     secrets_included: false,
@@ -832,6 +854,7 @@ test("provider and payment gate snapshots reject every uncontracted key", async 
   const commit = "f".repeat(40);
   const cases = [
     ["top-level", (snapshot) => { snapshot.uncontracted = false; }],
+    ["AcoustID", (snapshot) => { snapshot.acoustid_identification.uncontracted = false; }],
     ["ACRCloud", (snapshot) => { snapshot.acrcloud_identification.uncontracted = false; }],
     ["MusicBrainz", (snapshot) => { snapshot.musicbrainz_metadata.uncontracted = false; }],
     ["payment", (snapshot) => { snapshot.payment.uncontracted = false; }],

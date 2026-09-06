@@ -190,7 +190,11 @@ test("channel coverage keeps not-submitted, searched, degraded and comparison st
   const rows = buildChannelCoverageRows({
     scan_modes: { audio: true, lyrics: true },
     audio_input: { status: "DECODED" },
-    fingerprint: { status_code: 1001, status_msg: "No result" },
+    fingerprint: {
+      engine: "AcoustID + MusicBrainz",
+      status_code: 1001,
+      status_msg: "No result",
+    },
     lyric_analysis: { source_usable: true, candidates_checked: 4 },
     matches: [],
     composition_analysis: {
@@ -210,12 +214,17 @@ test("channel coverage keeps not-submitted, searched, degraded and comparison st
     "searched_no_candidate",
     "comparison_coverage",
   ]);
+  assert.equal(rows[0].coverage, "AcoustID + MusicBrainz search completed");
   assert.match(rows[2].coverage, /2 of 3 selected references compared; 1 unavailable/u);
 
   const degraded = buildChannelCoverageRows({
     scan_modes: { audio: true, lyrics: true },
     audio_input: { status: "DECODED" },
-    fingerprint: { status_code: 3000, status_msg: "Provider unavailable" },
+    fingerprint: {
+      engine: "AcoustID + MusicBrainz",
+      status_code: 3000,
+      status_msg: "Provider unavailable",
+    },
     lyric_analysis: { source_usable: false, summary: "Discovery unavailable" },
     composition_analysis: { status: "RETRIEVAL_QUERY_FAILED", reason: "Index unavailable", comparisons: [] },
   });
@@ -224,6 +233,10 @@ test("channel coverage keeps not-submitted, searched, degraded and comparison st
     "unavailable_degraded",
     "unavailable_degraded",
   ]);
+  assert.equal(
+    degraded[0].coverage,
+    "AcoustID + MusicBrainz · Provider unavailable",
+  );
 });
 
 test("composition disclosure states comparison count, top-of-n scope and no adjustment", () => {

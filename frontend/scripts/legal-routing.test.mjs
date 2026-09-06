@@ -39,6 +39,16 @@ test("privacy copy describes Google basic identity without broader Google access
   assert.match(privacy, /not an input to audio matching, similarity scoring or evidence conclusions/);
 });
 
+test("privacy copy discloses provider-specific recording identity egress", async () => {
+  const privacy = await source("../src/pages/Privacy.jsx");
+
+  assert.match(privacy, /Chromaprint fingerprint/);
+  assert.match(privacy, /only that compact fingerprint and the whole-file duration/);
+  assert.match(privacy, /AcoustID does not receive the raw audio through this path/);
+  assert.match(privacy, /ACRCloud can receive a bounded audio sample/);
+  assert.match(privacy, /identifies which configured provider requests were attempted/);
+});
+
 test("policies disclose public badge fields and current deletion limits", async () => {
   const [privacy, terms, scanResult] = await Promise.all([
     source("../src/pages/Privacy.jsx"),
