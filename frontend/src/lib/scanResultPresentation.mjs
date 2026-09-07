@@ -719,6 +719,13 @@ const validProjectionCounts = (projection) => (
 
 const validEntityProjection = (projection) => {
   if (projection.entity_score_available === true) {
+    // V33 keeps a numeric zero available when an operational search completed
+    // but no eligible entity contributed. Retained unscored context may still
+    // have observations/groups, so their counts need not be zero.
+    if (projection.selected_entity_group_id === null) {
+      return projection.entity_bounded_score_points === 0
+        && projection.usable_operational_channel_count > 0;
+    }
     return oneDecimalPercent(projection.entity_bounded_score_points)
       && typeof projection.selected_entity_group_id === "string"
       && projection.selected_entity_group_id.length > 0;

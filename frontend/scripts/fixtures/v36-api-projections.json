@@ -1,0 +1,641 @@
+{
+  "provenance": {
+    "kind": "SYNTHETIC_OFFLINE_API_GENERATED",
+    "api_commit": "9fb80c915a9f5c7c172b382a37f4cfe942414430",
+    "source_sha256": {
+      "similarity_scoring.py": "bc9977b792c65ae1beeb88ffa87dd8f5207bfd8d46ce321b2e876285ae37feed",
+      "review_triage.py": "80e696ef7727db05c9da90bce846cff1e6c4e7f71197753cc4cf661c2a87feaf",
+      "channel_loss_sensitivity.py": "63a969726d36882731cc1d47d2ccdaf2abe032f67699884ce881bef917b56f8c"
+    },
+    "provider_requests_made": 0
+  },
+  "cases": [
+    {
+      "name": "recording_no_match_with_composition",
+      "similarity": {
+        "method_version": "soniccheck-entity-bounded-evidence/0.5.2-research",
+        "disposition_method_version": "soniccheck-evidence-disposition/1.1.2-research",
+        "review_triage": {
+          "version": "soniccheck-evidence-disposition/1.1.2-research"
+        },
+        "evidence_confidence": {
+          "score_method_version": "soniccheck-entity-bounded-evidence/0.5.2-research"
+        },
+        "channel_loss_sensitivity": {
+          "version": "soniccheck-channel-loss-sensitivity/1.0.0-research",
+          "status": "EVALUATED_SHADOW_ONLY",
+          "evaluated": true,
+          "mode": "SHADOW_ONLY",
+          "method": "NON_CAUSAL_DETERMINISTIC_LEAVE_ONE_OBSERVED_CHANNEL_OUT",
+          "source_disposition_version": "soniccheck-evidence-disposition/1.1.2-research",
+          "source_entity_score_method_version": "soniccheck-entity-bounded-evidence/0.5.2-research",
+          "baseline": {
+            "decision_projection": "NO_CANDIDATE_COMPLETE_OPERATIONAL_SCOPE",
+            "review_required": false,
+            "review_evidence_observation_count": 0,
+            "review_entity_group_count": 0,
+            "review_evidence_signature_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+            "entity_score_available": true,
+            "entity_bounded_score_points": 27.0,
+            "selected_entity_group_id": "entity-4c60a6877c4b38cf",
+            "evidence_observation_count": 1,
+            "candidate_group_count": 1,
+            "screening_scope": "COMPLETE",
+            "usable_operational_channel_count": 1,
+            "applicable_operational_channel_count": 1,
+            "possible_operational_channel_count": 2,
+            "channel_outcomes": {
+              "recording_identity": "CHECKED_NO_CANDIDATE",
+              "lyric_overlap": "ABSTAIN_METHOD_INAPPLICABLE",
+              "composition_similarity": "ABSTAIN_RESEARCH_ONLY"
+            }
+          },
+          "scenarios": [
+            {
+              "removed_modality": "recording_identity",
+              "evaluated": true,
+              "source_outcome": "CHECKED_NO_CANDIDATE",
+              "counterfactual_channel_outcome": "ABSTAIN_COUNTERFACTUAL_CHANNEL_LOSS",
+              "decision_projection": "ABSTAIN_NO_USABLE_OPERATIONAL_CHANNEL",
+              "decision_projection_changed": true,
+              "review_required": false,
+              "review_requirement_changed": false,
+              "review_evidence_observation_count": 0,
+              "review_entity_group_count": 0,
+              "review_evidence_signature_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+              "review_evidence_projection_changed": false,
+              "became_no_usable_operational_abstention": true,
+              "entity_score_available": true,
+              "entity_score_availability_changed": false,
+              "entity_bounded_score_points": 27.0,
+              "entity_score_change_points": 0.0,
+              "selected_entity_group_id": "entity-4c60a6877c4b38cf",
+              "selected_entity_changed": false,
+              "evidence_observation_count": 1,
+              "candidate_group_count": 1,
+              "screening_scope": "NO_USABLE_CHANNEL",
+              "usable_operational_channel_count": 0,
+              "applicable_operational_channel_count": 1,
+              "possible_operational_channel_count": 2
+            },
+            {
+              "removed_modality": "lyric_overlap",
+              "evaluated": false,
+              "reason": "CHANNEL_NOT_OBSERVED_AS_USABLE",
+              "source_outcome": "ABSTAIN_METHOD_INAPPLICABLE"
+            },
+            {
+              "removed_modality": "composition_similarity",
+              "evaluated": true,
+              "source_outcome": "ABSTAIN_RESEARCH_ONLY",
+              "counterfactual_channel_outcome": "ABSTAIN_COUNTERFACTUAL_CHANNEL_LOSS",
+              "decision_projection": "NO_CANDIDATE_COMPLETE_OPERATIONAL_SCOPE",
+              "decision_projection_changed": false,
+              "review_required": false,
+              "review_requirement_changed": false,
+              "review_evidence_observation_count": 0,
+              "review_entity_group_count": 0,
+              "review_evidence_signature_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+              "review_evidence_projection_changed": false,
+              "became_no_usable_operational_abstention": false,
+              "entity_score_available": true,
+              "entity_score_availability_changed": false,
+              "entity_bounded_score_points": 0.0,
+              "entity_score_change_points": -27.0,
+              "selected_entity_group_id": null,
+              "selected_entity_changed": true,
+              "evidence_observation_count": 0,
+              "candidate_group_count": 0,
+              "screening_scope": "COMPLETE",
+              "usable_operational_channel_count": 1,
+              "applicable_operational_channel_count": 1,
+              "possible_operational_channel_count": 2
+            }
+          ],
+          "summary": {
+            "evaluated_scenario_count": 2,
+            "evaluated_scenario_count_out_of": 3,
+            "review_requirement_stability": "STABLE_FOR_OBSERVED_SINGLE_CHANNEL_LOSS",
+            "review_evidence_projection_stability": "STABLE_FOR_OBSERVED_SINGLE_CHANNEL_LOSS",
+            "decision_projection_stability": "CHANGES_UNDER_SINGLE_CHANNEL_LOSS",
+            "review_critical_modalities": [],
+            "review_evidence_changing_modalities": [],
+            "decision_changing_modalities": [
+              "recording_identity"
+            ],
+            "abstention_critical_modalities": [
+              "recording_identity"
+            ],
+            "selected_entity_changing_modalities": [
+              "composition_similarity"
+            ],
+            "entity_score_availability_changing_modalities": [],
+            "maximum_entity_score_drop_points": 27.0,
+            "maximum_entity_score_increase_points": 0.0,
+            "maximum_absolute_entity_score_change_points": 27.0,
+            "baseline_and_counterfactual_entity_score_range_points": {
+              "minimum": 0.0,
+              "maximum": 27.0
+            }
+          },
+          "authoritative_status_changed": false,
+          "provider_requests_made": 0,
+          "legal_determination": false,
+          "causal_interpretation": false,
+          "calibrated_confidence": false,
+          "accuracy_estimate": false,
+          "clearance_determination": false,
+          "interpretation": "Structural sensitivity to losing one already-observed channel. Stability here does not imply correctness, calibration, originality, clearance, or resilience to missing catalogue coverage, correlated errors, or multiple simultaneous channel failures."
+        }
+      }
+    },
+    {
+      "name": "recording_no_match_only",
+      "similarity": {
+        "method_version": "soniccheck-entity-bounded-evidence/0.5.2-research",
+        "disposition_method_version": "soniccheck-evidence-disposition/1.1.2-research",
+        "review_triage": {
+          "version": "soniccheck-evidence-disposition/1.1.2-research"
+        },
+        "evidence_confidence": {
+          "score_method_version": "soniccheck-entity-bounded-evidence/0.5.2-research"
+        },
+        "channel_loss_sensitivity": {
+          "version": "soniccheck-channel-loss-sensitivity/1.0.0-research",
+          "status": "EVALUATED_SHADOW_ONLY",
+          "evaluated": true,
+          "mode": "SHADOW_ONLY",
+          "method": "NON_CAUSAL_DETERMINISTIC_LEAVE_ONE_OBSERVED_CHANNEL_OUT",
+          "source_disposition_version": "soniccheck-evidence-disposition/1.1.2-research",
+          "source_entity_score_method_version": "soniccheck-entity-bounded-evidence/0.5.2-research",
+          "baseline": {
+            "decision_projection": "NO_CANDIDATE_COMPLETE_OPERATIONAL_SCOPE",
+            "review_required": false,
+            "review_evidence_observation_count": 0,
+            "review_entity_group_count": 0,
+            "review_evidence_signature_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+            "entity_score_available": true,
+            "entity_bounded_score_points": 0.0,
+            "selected_entity_group_id": null,
+            "evidence_observation_count": 0,
+            "candidate_group_count": 0,
+            "screening_scope": "COMPLETE",
+            "usable_operational_channel_count": 1,
+            "applicable_operational_channel_count": 1,
+            "possible_operational_channel_count": 2,
+            "channel_outcomes": {
+              "recording_identity": "CHECKED_NO_CANDIDATE",
+              "lyric_overlap": "ABSTAIN_METHOD_INAPPLICABLE",
+              "composition_similarity": "ABSTAIN_METHOD_INAPPLICABLE"
+            }
+          },
+          "scenarios": [
+            {
+              "removed_modality": "recording_identity",
+              "evaluated": true,
+              "source_outcome": "CHECKED_NO_CANDIDATE",
+              "counterfactual_channel_outcome": "ABSTAIN_COUNTERFACTUAL_CHANNEL_LOSS",
+              "decision_projection": "ABSTAIN_NO_USABLE_OPERATIONAL_CHANNEL",
+              "decision_projection_changed": true,
+              "review_required": false,
+              "review_requirement_changed": false,
+              "review_evidence_observation_count": 0,
+              "review_entity_group_count": 0,
+              "review_evidence_signature_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+              "review_evidence_projection_changed": false,
+              "became_no_usable_operational_abstention": true,
+              "entity_score_available": false,
+              "entity_score_availability_changed": true,
+              "entity_bounded_score_points": null,
+              "entity_score_change_points": null,
+              "selected_entity_group_id": null,
+              "selected_entity_changed": false,
+              "evidence_observation_count": 0,
+              "candidate_group_count": 0,
+              "screening_scope": "NO_USABLE_CHANNEL",
+              "usable_operational_channel_count": 0,
+              "applicable_operational_channel_count": 1,
+              "possible_operational_channel_count": 2
+            },
+            {
+              "removed_modality": "lyric_overlap",
+              "evaluated": false,
+              "reason": "CHANNEL_NOT_OBSERVED_AS_USABLE",
+              "source_outcome": "ABSTAIN_METHOD_INAPPLICABLE"
+            },
+            {
+              "removed_modality": "composition_similarity",
+              "evaluated": false,
+              "reason": "CHANNEL_NOT_OBSERVED_AS_USABLE",
+              "source_outcome": "ABSTAIN_METHOD_INAPPLICABLE"
+            }
+          ],
+          "summary": {
+            "evaluated_scenario_count": 1,
+            "evaluated_scenario_count_out_of": 3,
+            "review_requirement_stability": "STABLE_FOR_OBSERVED_SINGLE_CHANNEL_LOSS",
+            "review_evidence_projection_stability": "STABLE_FOR_OBSERVED_SINGLE_CHANNEL_LOSS",
+            "decision_projection_stability": "CHANGES_UNDER_SINGLE_CHANNEL_LOSS",
+            "review_critical_modalities": [],
+            "review_evidence_changing_modalities": [],
+            "decision_changing_modalities": [
+              "recording_identity"
+            ],
+            "abstention_critical_modalities": [
+              "recording_identity"
+            ],
+            "selected_entity_changing_modalities": [],
+            "entity_score_availability_changing_modalities": [
+              "recording_identity"
+            ],
+            "maximum_entity_score_drop_points": null,
+            "maximum_entity_score_increase_points": null,
+            "maximum_absolute_entity_score_change_points": null,
+            "baseline_and_counterfactual_entity_score_range_points": {
+              "minimum": 0.0,
+              "maximum": 0.0
+            }
+          },
+          "authoritative_status_changed": false,
+          "provider_requests_made": 0,
+          "legal_determination": false,
+          "causal_interpretation": false,
+          "calibrated_confidence": false,
+          "accuracy_estimate": false,
+          "clearance_determination": false,
+          "interpretation": "Structural sensitivity to losing one already-observed channel. Stability here does not imply correctness, calibration, originality, clearance, or resilience to missing catalogue coverage, correlated errors, or multiple simultaneous channel failures."
+        }
+      }
+    },
+    {
+      "name": "both_operational_no_match",
+      "similarity": {
+        "method_version": "soniccheck-entity-bounded-evidence/0.5.2-research",
+        "disposition_method_version": "soniccheck-evidence-disposition/1.1.2-research",
+        "review_triage": {
+          "version": "soniccheck-evidence-disposition/1.1.2-research"
+        },
+        "evidence_confidence": {
+          "score_method_version": "soniccheck-entity-bounded-evidence/0.5.2-research"
+        },
+        "channel_loss_sensitivity": {
+          "version": "soniccheck-channel-loss-sensitivity/1.0.0-research",
+          "status": "EVALUATED_SHADOW_ONLY",
+          "evaluated": true,
+          "mode": "SHADOW_ONLY",
+          "method": "NON_CAUSAL_DETERMINISTIC_LEAVE_ONE_OBSERVED_CHANNEL_OUT",
+          "source_disposition_version": "soniccheck-evidence-disposition/1.1.2-research",
+          "source_entity_score_method_version": "soniccheck-entity-bounded-evidence/0.5.2-research",
+          "baseline": {
+            "decision_projection": "NO_CANDIDATE_COMPLETE_OPERATIONAL_SCOPE",
+            "review_required": false,
+            "review_evidence_observation_count": 0,
+            "review_entity_group_count": 0,
+            "review_evidence_signature_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+            "entity_score_available": true,
+            "entity_bounded_score_points": 0.0,
+            "selected_entity_group_id": null,
+            "evidence_observation_count": 0,
+            "candidate_group_count": 0,
+            "screening_scope": "COMPLETE",
+            "usable_operational_channel_count": 2,
+            "applicable_operational_channel_count": 2,
+            "possible_operational_channel_count": 2,
+            "channel_outcomes": {
+              "recording_identity": "CHECKED_NO_CANDIDATE",
+              "lyric_overlap": "CHECKED_NO_CANDIDATE",
+              "composition_similarity": "ABSTAIN_METHOD_INAPPLICABLE"
+            }
+          },
+          "scenarios": [
+            {
+              "removed_modality": "recording_identity",
+              "evaluated": true,
+              "source_outcome": "CHECKED_NO_CANDIDATE",
+              "counterfactual_channel_outcome": "ABSTAIN_COUNTERFACTUAL_CHANNEL_LOSS",
+              "decision_projection": "NO_CANDIDATE_PARTIAL_OPERATIONAL_SCOPE",
+              "decision_projection_changed": true,
+              "review_required": false,
+              "review_requirement_changed": false,
+              "review_evidence_observation_count": 0,
+              "review_entity_group_count": 0,
+              "review_evidence_signature_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+              "review_evidence_projection_changed": false,
+              "became_no_usable_operational_abstention": false,
+              "entity_score_available": true,
+              "entity_score_availability_changed": false,
+              "entity_bounded_score_points": 0.0,
+              "entity_score_change_points": 0.0,
+              "selected_entity_group_id": null,
+              "selected_entity_changed": false,
+              "evidence_observation_count": 0,
+              "candidate_group_count": 0,
+              "screening_scope": "PARTIAL",
+              "usable_operational_channel_count": 1,
+              "applicable_operational_channel_count": 2,
+              "possible_operational_channel_count": 2
+            },
+            {
+              "removed_modality": "lyric_overlap",
+              "evaluated": true,
+              "source_outcome": "CHECKED_NO_CANDIDATE",
+              "counterfactual_channel_outcome": "ABSTAIN_COUNTERFACTUAL_CHANNEL_LOSS",
+              "decision_projection": "NO_CANDIDATE_PARTIAL_OPERATIONAL_SCOPE",
+              "decision_projection_changed": true,
+              "review_required": false,
+              "review_requirement_changed": false,
+              "review_evidence_observation_count": 0,
+              "review_entity_group_count": 0,
+              "review_evidence_signature_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+              "review_evidence_projection_changed": false,
+              "became_no_usable_operational_abstention": false,
+              "entity_score_available": true,
+              "entity_score_availability_changed": false,
+              "entity_bounded_score_points": 0.0,
+              "entity_score_change_points": 0.0,
+              "selected_entity_group_id": null,
+              "selected_entity_changed": false,
+              "evidence_observation_count": 0,
+              "candidate_group_count": 0,
+              "screening_scope": "PARTIAL",
+              "usable_operational_channel_count": 1,
+              "applicable_operational_channel_count": 2,
+              "possible_operational_channel_count": 2
+            },
+            {
+              "removed_modality": "composition_similarity",
+              "evaluated": false,
+              "reason": "CHANNEL_NOT_OBSERVED_AS_USABLE",
+              "source_outcome": "ABSTAIN_METHOD_INAPPLICABLE"
+            }
+          ],
+          "summary": {
+            "evaluated_scenario_count": 2,
+            "evaluated_scenario_count_out_of": 3,
+            "review_requirement_stability": "STABLE_FOR_OBSERVED_SINGLE_CHANNEL_LOSS",
+            "review_evidence_projection_stability": "STABLE_FOR_OBSERVED_SINGLE_CHANNEL_LOSS",
+            "decision_projection_stability": "CHANGES_UNDER_SINGLE_CHANNEL_LOSS",
+            "review_critical_modalities": [],
+            "review_evidence_changing_modalities": [],
+            "decision_changing_modalities": [
+              "lyric_overlap",
+              "recording_identity"
+            ],
+            "abstention_critical_modalities": [],
+            "selected_entity_changing_modalities": [],
+            "entity_score_availability_changing_modalities": [],
+            "maximum_entity_score_drop_points": 0.0,
+            "maximum_entity_score_increase_points": 0.0,
+            "maximum_absolute_entity_score_change_points": 0.0,
+            "baseline_and_counterfactual_entity_score_range_points": {
+              "minimum": 0.0,
+              "maximum": 0.0
+            }
+          },
+          "authoritative_status_changed": false,
+          "provider_requests_made": 0,
+          "legal_determination": false,
+          "causal_interpretation": false,
+          "calibrated_confidence": false,
+          "accuracy_estimate": false,
+          "clearance_determination": false,
+          "interpretation": "Structural sensitivity to losing one already-observed channel. Stability here does not imply correctness, calibration, originality, clearance, or resilience to missing catalogue coverage, correlated errors, or multiple simultaneous channel failures."
+        }
+      }
+    },
+    {
+      "name": "recording_no_match_with_unscored_context",
+      "similarity": {
+        "method_version": "soniccheck-entity-bounded-evidence/0.5.2-research",
+        "disposition_method_version": "soniccheck-evidence-disposition/1.1.2-research",
+        "review_triage": {
+          "version": "soniccheck-evidence-disposition/1.1.2-research"
+        },
+        "evidence_confidence": {
+          "score_method_version": "soniccheck-entity-bounded-evidence/0.5.2-research"
+        },
+        "channel_loss_sensitivity": {
+          "version": "soniccheck-channel-loss-sensitivity/1.0.0-research",
+          "status": "EVALUATED_SHADOW_ONLY",
+          "evaluated": true,
+          "mode": "SHADOW_ONLY",
+          "method": "NON_CAUSAL_DETERMINISTIC_LEAVE_ONE_OBSERVED_CHANNEL_OUT",
+          "source_disposition_version": "soniccheck-evidence-disposition/1.1.2-research",
+          "source_entity_score_method_version": "soniccheck-entity-bounded-evidence/0.5.2-research",
+          "baseline": {
+            "decision_projection": "NO_CANDIDATE_COMPLETE_OPERATIONAL_SCOPE",
+            "review_required": false,
+            "review_evidence_observation_count": 0,
+            "review_entity_group_count": 0,
+            "review_evidence_signature_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+            "entity_score_available": true,
+            "entity_bounded_score_points": 0.0,
+            "selected_entity_group_id": null,
+            "evidence_observation_count": 1,
+            "candidate_group_count": 1,
+            "screening_scope": "COMPLETE",
+            "usable_operational_channel_count": 1,
+            "applicable_operational_channel_count": 1,
+            "possible_operational_channel_count": 2,
+            "channel_outcomes": {
+              "recording_identity": "CHECKED_NO_CANDIDATE",
+              "lyric_overlap": "ABSTAIN_METHOD_INAPPLICABLE",
+              "composition_similarity": "ABSTAIN_RESEARCH_ONLY"
+            }
+          },
+          "scenarios": [
+            {
+              "removed_modality": "recording_identity",
+              "evaluated": true,
+              "source_outcome": "CHECKED_NO_CANDIDATE",
+              "counterfactual_channel_outcome": "ABSTAIN_COUNTERFACTUAL_CHANNEL_LOSS",
+              "decision_projection": "ABSTAIN_NO_USABLE_OPERATIONAL_CHANNEL",
+              "decision_projection_changed": true,
+              "review_required": false,
+              "review_requirement_changed": false,
+              "review_evidence_observation_count": 0,
+              "review_entity_group_count": 0,
+              "review_evidence_signature_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+              "review_evidence_projection_changed": false,
+              "became_no_usable_operational_abstention": true,
+              "entity_score_available": false,
+              "entity_score_availability_changed": true,
+              "entity_bounded_score_points": null,
+              "entity_score_change_points": null,
+              "selected_entity_group_id": null,
+              "selected_entity_changed": false,
+              "evidence_observation_count": 1,
+              "candidate_group_count": 1,
+              "screening_scope": "NO_USABLE_CHANNEL",
+              "usable_operational_channel_count": 0,
+              "applicable_operational_channel_count": 1,
+              "possible_operational_channel_count": 2
+            },
+            {
+              "removed_modality": "lyric_overlap",
+              "evaluated": false,
+              "reason": "CHANNEL_NOT_OBSERVED_AS_USABLE",
+              "source_outcome": "ABSTAIN_METHOD_INAPPLICABLE"
+            },
+            {
+              "removed_modality": "composition_similarity",
+              "evaluated": false,
+              "reason": "CHANNEL_NOT_OBSERVED_AS_USABLE",
+              "source_outcome": "ABSTAIN_RESEARCH_ONLY"
+            }
+          ],
+          "summary": {
+            "evaluated_scenario_count": 1,
+            "evaluated_scenario_count_out_of": 3,
+            "review_requirement_stability": "STABLE_FOR_OBSERVED_SINGLE_CHANNEL_LOSS",
+            "review_evidence_projection_stability": "STABLE_FOR_OBSERVED_SINGLE_CHANNEL_LOSS",
+            "decision_projection_stability": "CHANGES_UNDER_SINGLE_CHANNEL_LOSS",
+            "review_critical_modalities": [],
+            "review_evidence_changing_modalities": [],
+            "decision_changing_modalities": [
+              "recording_identity"
+            ],
+            "abstention_critical_modalities": [
+              "recording_identity"
+            ],
+            "selected_entity_changing_modalities": [],
+            "entity_score_availability_changing_modalities": [
+              "recording_identity"
+            ],
+            "maximum_entity_score_drop_points": null,
+            "maximum_entity_score_increase_points": null,
+            "maximum_absolute_entity_score_change_points": null,
+            "baseline_and_counterfactual_entity_score_range_points": {
+              "minimum": 0.0,
+              "maximum": 0.0
+            }
+          },
+          "authoritative_status_changed": false,
+          "provider_requests_made": 0,
+          "legal_determination": false,
+          "causal_interpretation": false,
+          "calibrated_confidence": false,
+          "accuracy_estimate": false,
+          "clearance_determination": false,
+          "interpretation": "Structural sensitivity to losing one already-observed channel. Stability here does not imply correctness, calibration, originality, clearance, or resilience to missing catalogue coverage, correlated errors, or multiple simultaneous channel failures."
+        }
+      }
+    },
+    {
+      "name": "composition_only_without_operational_result",
+      "similarity": {
+        "method_version": "soniccheck-entity-bounded-evidence/0.5.2-research",
+        "disposition_method_version": "soniccheck-evidence-disposition/1.1.2-research",
+        "review_triage": {
+          "version": "soniccheck-evidence-disposition/1.1.2-research"
+        },
+        "evidence_confidence": {
+          "score_method_version": "soniccheck-entity-bounded-evidence/0.5.2-research"
+        },
+        "channel_loss_sensitivity": {
+          "version": "soniccheck-channel-loss-sensitivity/1.0.0-research",
+          "status": "EVALUATED_SHADOW_ONLY",
+          "evaluated": true,
+          "mode": "SHADOW_ONLY",
+          "method": "NON_CAUSAL_DETERMINISTIC_LEAVE_ONE_OBSERVED_CHANNEL_OUT",
+          "source_disposition_version": "soniccheck-evidence-disposition/1.1.2-research",
+          "source_entity_score_method_version": "soniccheck-entity-bounded-evidence/0.5.2-research",
+          "baseline": {
+            "decision_projection": "ABSTAIN_NO_USABLE_OPERATIONAL_CHANNEL",
+            "review_required": false,
+            "review_evidence_observation_count": 0,
+            "review_entity_group_count": 0,
+            "review_evidence_signature_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+            "entity_score_available": true,
+            "entity_bounded_score_points": 27.0,
+            "selected_entity_group_id": "entity-4c60a6877c4b38cf",
+            "evidence_observation_count": 1,
+            "candidate_group_count": 1,
+            "screening_scope": "NO_USABLE_CHANNEL",
+            "usable_operational_channel_count": 0,
+            "applicable_operational_channel_count": 0,
+            "possible_operational_channel_count": 2,
+            "channel_outcomes": {
+              "recording_identity": "ABSTAIN_METHOD_INAPPLICABLE",
+              "lyric_overlap": "ABSTAIN_METHOD_INAPPLICABLE",
+              "composition_similarity": "ABSTAIN_RESEARCH_ONLY"
+            }
+          },
+          "scenarios": [
+            {
+              "removed_modality": "recording_identity",
+              "evaluated": false,
+              "reason": "CHANNEL_NOT_OBSERVED_AS_USABLE",
+              "source_outcome": "ABSTAIN_METHOD_INAPPLICABLE"
+            },
+            {
+              "removed_modality": "lyric_overlap",
+              "evaluated": false,
+              "reason": "CHANNEL_NOT_OBSERVED_AS_USABLE",
+              "source_outcome": "ABSTAIN_METHOD_INAPPLICABLE"
+            },
+            {
+              "removed_modality": "composition_similarity",
+              "evaluated": true,
+              "source_outcome": "ABSTAIN_RESEARCH_ONLY",
+              "counterfactual_channel_outcome": "ABSTAIN_COUNTERFACTUAL_CHANNEL_LOSS",
+              "decision_projection": "ABSTAIN_NO_USABLE_OPERATIONAL_CHANNEL",
+              "decision_projection_changed": false,
+              "review_required": false,
+              "review_requirement_changed": false,
+              "review_evidence_observation_count": 0,
+              "review_entity_group_count": 0,
+              "review_evidence_signature_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+              "review_evidence_projection_changed": false,
+              "became_no_usable_operational_abstention": false,
+              "entity_score_available": false,
+              "entity_score_availability_changed": true,
+              "entity_bounded_score_points": null,
+              "entity_score_change_points": null,
+              "selected_entity_group_id": null,
+              "selected_entity_changed": true,
+              "evidence_observation_count": 0,
+              "candidate_group_count": 0,
+              "screening_scope": "NO_USABLE_CHANNEL",
+              "usable_operational_channel_count": 0,
+              "applicable_operational_channel_count": 0,
+              "possible_operational_channel_count": 2
+            }
+          ],
+          "summary": {
+            "evaluated_scenario_count": 1,
+            "evaluated_scenario_count_out_of": 3,
+            "review_requirement_stability": "STABLE_FOR_OBSERVED_SINGLE_CHANNEL_LOSS",
+            "review_evidence_projection_stability": "STABLE_FOR_OBSERVED_SINGLE_CHANNEL_LOSS",
+            "decision_projection_stability": "STABLE_FOR_OBSERVED_SINGLE_CHANNEL_LOSS",
+            "review_critical_modalities": [],
+            "review_evidence_changing_modalities": [],
+            "decision_changing_modalities": [],
+            "abstention_critical_modalities": [],
+            "selected_entity_changing_modalities": [
+              "composition_similarity"
+            ],
+            "entity_score_availability_changing_modalities": [
+              "composition_similarity"
+            ],
+            "maximum_entity_score_drop_points": null,
+            "maximum_entity_score_increase_points": null,
+            "maximum_absolute_entity_score_change_points": null,
+            "baseline_and_counterfactual_entity_score_range_points": {
+              "minimum": 27.0,
+              "maximum": 27.0
+            }
+          },
+          "authoritative_status_changed": false,
+          "provider_requests_made": 0,
+          "legal_determination": false,
+          "causal_interpretation": false,
+          "calibrated_confidence": false,
+          "accuracy_estimate": false,
+          "clearance_determination": false,
+          "interpretation": "Structural sensitivity to losing one already-observed channel. Stability here does not imply correctness, calibration, originality, clearance, or resilience to missing catalogue coverage, correlated errors, or multiple simultaneous channel failures."
+        }
+      }
+    }
+  ]
+}
