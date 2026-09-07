@@ -6,7 +6,7 @@ export default function Privacy() {
       eyebrow="Your information"
       title="Privacy Policy"
       summary="This policy explains what SONIC CHECK collects, why we use it, who helps us process it and the choices available to you. It applies to soniccheck.io and the protected SONIC CHECK application."
-      updated="26 August 2026"
+      updated="6 September 2026"
     >
       <LegalSection title="1. What we collect">
         <p>
@@ -46,6 +46,9 @@ export default function Privacy() {
           Raw audio and full lyric text are treated as private service inputs. The service is designed to restrict them to authenticated, account-owned routes and operational access controls. We do not intentionally add raw customer submissions to the public web application or a public reference catalogue.
         </p>
         <p>
+          For AcoustID recording-identity screening, SONIC CHECK generates a Chromaprint fingerprint in the protected application and sends AcoustID only that compact fingerprint and the whole-file duration; AcoustID does not receive the raw audio through this path. MusicBrainz can receive a returned recording identifier for metadata enrichment. If the separately authorised ACRCloud fallback is enabled, ACRCloud can receive a bounded audio sample for recognition. The evidence record identifies which configured provider requests were attempted.
+        </p>
+        <p>
           If you choose <strong>Share record</strong> and confirm publication, SONIC CHECK creates a public link that anyone with the link can view. It shows the submitted title and artist or creator name, regional context, whether audio or lyrics were submitted, screening status, analysis version, screening timestamp and public record or badge ID. It does not expose the raw audio, full lyric text or your account email. Avoid publishing a record whose displayed metadata you do not want to share.
         </p>
       </LegalSection>
@@ -61,7 +64,7 @@ export default function Privacy() {
 
       <LegalSection title="6. Service providers and overseas processing">
         <p>
-          Our main providers include Clerk for identity and sessions; Google or GitHub when you choose their sign-in method; Cloudflare and GitHub Pages for web delivery and security; Render and contracted database or object-storage services for the protected application; Stripe for hosted payments; and authorised audio or metadata evidence services when a screening method requires them. They process information only for the relevant function, security or legal requirement. Their own obligations supplement and do not replace SONIC CHECK's responsibilities under applicable law.
+          Our main providers include Clerk for identity and sessions; Google or GitHub when you choose their sign-in method; Cloudflare and GitHub Pages for web delivery and security; Render and contracted database or object-storage services for the protected application; Stripe for hosted payments; and AcoustID, MusicBrainz or separately authorised ACRCloud services when the corresponding screening method requires them. They process information only for the relevant function, security or legal requirement. Their own obligations supplement and do not replace SONIC CHECK's responsibilities under applicable law.
         </p>
         <p>
           Information is processed in Australia and the United States and can transit or be processed in other countries where Google, Cloudflare or another named provider operates its distributed infrastructure. Hosting regions and sub-processors can change during beta. You may contact us for the current provider and location information relevant to your account. We limit information shared to what is reasonably required for the relevant service.

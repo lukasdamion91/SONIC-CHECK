@@ -47,9 +47,29 @@ const EXPECTED_READINESS_CHECKS = [
 
 const EXPECTED_PROVIDER_GATE_KEYS = [
   "schema_version",
+  "acoustid_identification",
   "acrcloud_identification",
   "musicbrainz_metadata",
   "payment",
+  "secrets_included",
+];
+
+const EXPECTED_ACOUSTID_GATE_KEYS = [
+  "version",
+  "provider",
+  "mode",
+  "access_basis",
+  "api_key_configured",
+  "paid_traffic_enabled",
+  "timeout_seconds",
+  "min_interval_seconds",
+  "max_retries",
+  "documented_request_limit_per_second",
+  "ready",
+  "status",
+  "fingerprint_transmission_allowed",
+  "raw_audio_transmission_allowed",
+  "affects_composition_score",
   "secrets_included",
 ];
 
@@ -61,6 +81,10 @@ const EXPECTED_ACRCLOUD_GATE_KEYS = [
   "ready",
   "status",
   "customer_audio_transmission_allowed",
+  "secondary_credentials_present",
+  "secondary_credentials_complete",
+  "secondary_profile_status",
+  "secondary_profile_runtime_enabled",
   "research_only",
   "affects_composition_score",
   "secrets_included",
@@ -208,12 +232,30 @@ function runtimeSelfTestIsExact(selfTest, manifest) {
 }
 
 function closedProviderPaymentGates(value) {
+  const acoustid = value?.acoustid_identification;
   const acrcloud = value?.acrcloud_identification;
   const musicbrainz = value?.musicbrainz_metadata;
   const payment = value?.payment;
   return hasExactKeys(value, EXPECTED_PROVIDER_GATE_KEYS)
-    && value?.schema_version === "soniccheck-provider-payment-gates/1.0.0"
+    && value?.schema_version === "soniccheck-provider-payment-gates/1.1.0"
     && value?.secrets_included === false
+    && hasExactKeys(acoustid, EXPECTED_ACOUSTID_GATE_KEYS)
+    && acoustid?.version === "soniccheck-acoustid-identity-screening/1.0.0"
+    && acoustid?.provider === "AcoustID Web Service"
+    && acoustid?.mode === "shadow"
+    && acoustid?.access_basis === "commercial_approved"
+    && acoustid?.api_key_configured === true
+    && acoustid?.paid_traffic_enabled === false
+    && acoustid?.timeout_seconds === 20
+    && acoustid?.min_interval_seconds === 0.34
+    && acoustid?.max_retries === 1
+    && acoustid?.documented_request_limit_per_second === 3
+    && acoustid?.ready === true
+    && acoustid?.status === "READY_SHADOW"
+    && acoustid?.fingerprint_transmission_allowed === true
+    && acoustid?.raw_audio_transmission_allowed === false
+    && acoustid?.affects_composition_score === false
+    && acoustid?.secrets_included === false
     && hasExactKeys(acrcloud, EXPECTED_ACRCLOUD_GATE_KEYS)
     && acrcloud?.provider === "ACRCloud Identification API"
     && acrcloud?.mode === "off"
@@ -222,6 +264,10 @@ function closedProviderPaymentGates(value) {
     && acrcloud?.ready === false
     && acrcloud?.status === "DISABLED_BY_POLICY"
     && acrcloud?.customer_audio_transmission_allowed === false
+    && acrcloud?.secondary_credentials_present === true
+    && acrcloud?.secondary_credentials_complete === true
+    && acrcloud?.secondary_profile_status === "DORMANT_UNCLASSIFIED"
+    && acrcloud?.secondary_profile_runtime_enabled === false
     && acrcloud?.research_only === true
     && acrcloud?.affects_composition_score === false
     && acrcloud?.secrets_included === false

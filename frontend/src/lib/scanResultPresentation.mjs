@@ -34,11 +34,17 @@ const candidateCoverage = (candidateCount) => (
   `${candidateCount} candidate${candidateCount === 1 ? "" : "s"} returned`
 );
 
+const boundedProviderName = (...values) => {
+  const selected = values.find((value) => typeof value === "string" && value.trim());
+  return selected ? selected.trim().slice(0, 120) : "Recording-identity provider";
+};
+
 export function buildChannelCoverageRows(result = {}) {
   const audioSubmitted = submitted(result, "audio");
   const lyricsSubmitted = submitted(result, "lyrics");
   const recordingSource = sourceFor(result, "recording_identity");
   const recording = result.fingerprint || {};
+  const recordingProvider = boundedProviderName(recording.engine, recordingSource.provider);
   const recordingCandidateCount = Math.max(
     recordingMatches(result).length,
     count(recordingSource.candidate_count),
@@ -64,7 +70,7 @@ export function buildChannelCoverageRows(result = {}) {
       input: result.audio_input?.status === "DECODED" ? "Decoded audio" : "Audio submitted",
       state: "candidate_evidence",
       outcome: "Candidate evidence returned",
-      coverage: candidateCoverage(recordingCandidateCount),
+      coverage: `${recordingProvider} · ${candidateCoverage(recordingCandidateCount)}`,
     };
   } else if (recordingUsable) {
     recordingRow = {
@@ -73,7 +79,7 @@ export function buildChannelCoverageRows(result = {}) {
       input: result.audio_input?.status === "DECODED" ? "Decoded audio" : "Audio submitted",
       state: "searched_no_candidate",
       outcome: "Decoded and searched — no candidate",
-      coverage: "Configured provider search completed",
+      coverage: `${recordingProvider} search completed`,
     };
   } else {
     recordingRow = {
@@ -82,7 +88,7 @@ export function buildChannelCoverageRows(result = {}) {
       input: result.audio_input?.status === "DECODED" ? "Decoded audio" : "Audio submitted",
       state: "unavailable_degraded",
       outcome: "Unavailable or degraded",
-      coverage: recording.status_msg || recordingSource.status || "No usable provider result",
+      coverage: `${recordingProvider} · ${recording.status_msg || recordingSource.status || "No usable provider result"}`,
     };
   }
 
