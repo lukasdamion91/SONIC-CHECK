@@ -802,6 +802,32 @@ test("exact all-true readiness is distinct from maintenance readiness", async ()
   assert.equal(result.full_service_launch_readiness_claimed, false);
 });
 
+test("live-smoke readiness permits advisory lyric discovery to remain unavailable", async () => {
+  const commit = "7".repeat(40);
+  const ready = JSON.parse(controlledBetaReadiness);
+  ready.ok = true;
+  ready.status = "READY_FOR_LIVE_SMOKE_TEST";
+  ready.checks.recording_identity = true;
+
+  const result = await probeDeployment({
+    expectedCommit: commit,
+    fetcher: passingDeploymentFetcher({
+      commit,
+      readinessBody: JSON.stringify(ready),
+      readinessStatus: 200,
+    }),
+  });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.checks.api_readiness.ok, true);
+  assert.equal(result.checks.api_readiness.checks_body_consistent, true);
+  assert.equal(result.checks.api_readiness.service_fully_ready, false);
+  assert.equal(result.checks.api_readiness.nonblocking_provider_checks.recording_identity, true);
+  assert.equal(result.checks.api_readiness.nonblocking_provider_checks.lyric_candidate_discovery, false);
+  assert.equal(result.api_service_fully_ready_observed, false);
+  assert.equal(result.full_service_launch_readiness_claimed, false);
+});
+
 test("every production page probe requires its exact final URL", async (t) => {
   const commit = "1".repeat(40);
   const routes = [

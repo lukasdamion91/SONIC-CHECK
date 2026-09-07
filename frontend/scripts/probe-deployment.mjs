@@ -40,6 +40,11 @@ const NONBLOCKING_PROVIDER_READINESS_CHECKS = [
   "lyric_candidate_discovery",
 ];
 
+const REQUIRED_LIVE_SMOKE_CHECKS = [
+  ...REQUIRED_NONPROVIDER_CONTROL_CHECKS,
+  "recording_identity",
+];
+
 const EXPECTED_READINESS_CHECKS = [
   ...REQUIRED_NONPROVIDER_CONTROL_CHECKS,
   ...NONBLOCKING_PROVIDER_READINESS_CHECKS,
@@ -433,10 +438,12 @@ async function probeReadinessBoundary(url, fetcher) {
       (name) => checks?.[name] !== true,
     );
     const allowedStatus = response.status === 200 || response.status === 503;
+    const requiredChecksReady = booleanCheckValues
+      && REQUIRED_LIVE_SMOKE_CHECKS.every((name) => checks[name] === true);
     const allChecksReady = booleanCheckValues
       && EXPECTED_READINESS_CHECKS.every((name) => checks[name] === true);
     const statusBodyConsistent = (response.status === 200) === (payload?.ok === true);
-    const checksBodyConsistent = exactCheckSet && payload?.ok === allChecksReady;
+    const checksBodyConsistent = exactCheckSet && payload?.ok === requiredChecksReady;
     const maintenanceReady = allowedStatus
       && exactCheckSet
       && booleanCheckValues
