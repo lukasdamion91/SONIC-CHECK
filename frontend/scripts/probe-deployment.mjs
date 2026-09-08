@@ -10,6 +10,7 @@ import {
   ANALYZER_IDENTITY,
   ANALYZER_IDENTITY_REVISION,
 } from "../src/constants/analyzerIdentity.mjs";
+import { FEATURE_INVENTORY_SCHEMA, FEATURE_INVENTORY_INTERPRETATION, RUNTIME_FEATURES } from "../src/lib/featureInventoryPresentation.mjs";
 
 
 const DEFAULTS = {
@@ -564,6 +565,53 @@ async function probeHarryCapabilityContract(apiOrigin, fetcher) {
   }
 }
 
+export async function probeScanFeatures(apiOrigin, fetcher = fetch) {
+  try {
+    const url = `${apiOrigin}/api/capabilities/scan-features`;
+    const response = await fetcher(url, webRequestOptions("follow"));
+    const payload = await response.json();
+    const methods = {
+      recording_identity: "soniccheck-recording-identity-orchestration/1.0.0",
+      lyric_phrase_overlap: "soniccheck-exact-lyric-phrase-overlap/1.0.0",
+      composition_similarity: "soniccheck-composition/0.4.1-research",
+    };
+    const checks = {
+      endpoint: response.status === 200 && response.url === url,
+      schema: hasExactKeys(payload, [
+        "schema_version", "inventory_scope", "channel_count", "feature_count", "interpretation",
+        "execution_statuses", "features", "provider_requests_made", "scores_or_thresholds_changed",
+      ]) && payload.schema_version === FEATURE_INVENTORY_SCHEMA
+        && payload.inventory_scope === "CURRENT_RUNTIME_CAPABILITIES"
+        && payload.interpretation === FEATURE_INVENTORY_INTERPRETATION,
+      six_features_three_channels: payload?.feature_count === 6 && payload?.channel_count === 3
+        && Array.isArray(payload?.features) && payload.features.length === 6
+        && payload.features.every((row, index) => {
+          const definition = RUNTIME_FEATURES[index];
+          return hasExactKeys(row, ["feature_id", "label", "parent_channel", "method_version", "input_requirement", "limitation"])
+            && row.feature_id === definition.id && row.label === definition.label
+            && row.parent_channel === definition.parentChannel
+            && row.input_requirement === definition.inputRequirement
+            && row.limitation === definition.limitation;
+        }),
+      method_versions: Array.isArray(payload?.features) && payload.features.length === 6
+        && payload.features.every((row, index) => row?.method_version === methods[RUNTIME_FEATURES[index].parentChannel]),
+      execution_states: canonicalJson(payload?.execution_statuses) === canonicalJson([
+        "NOT_SUBMITTED", "UNAVAILABLE", "INSUFFICIENT_SIGNAL", "NO_ELIGIBLE_REFERENCES", "COMPLETED", "PARTIAL",
+      ]),
+      read_only: payload?.provider_requests_made === 0 && payload?.scores_or_thresholds_changed === false,
+    };
+    return {
+      ok: Object.values(checks).every(Boolean), checks,
+      scope: "PUBLIC_CAPABILITY_DEFINITIONS_ONLY",
+      authenticated_scan_acceptance_claimed: false,
+      real_world_accuracy_claimed: false,
+      secrets_included: false,
+    };
+  } catch {
+    return { ok: false, reason: "SCAN_FEATURE_CAPABILITY_UNAVAILABLE", secrets_included: false };
+  }
+}
+
 export async function probeCompositionScreening(apiOrigin, fetcher = fetch) {
   try {
     const response = await fetcher(`${apiOrigin}/api/capabilities/composition-screening`, webRequestOptions("follow"));
@@ -682,7 +730,7 @@ export async function probeDeployment({
   fetcher = fetch,
 } = {}) {
   if (!expectedCommit) throw new Error("expectedCommit is required");
-  const [landing, login, join, privacy, terms, appRoute, www, legacyApp, health, readiness, harryCapabilityContract, googleProviderConfig, compositionScreening] = await Promise.all([
+  const [landing, login, join, privacy, terms, appRoute, www, legacyApp, health, readiness, harryCapabilityContract, googleProviderConfig, compositionScreening, scanFeatures] = await Promise.all([
     probePage(origins.apex, "/", expectedCommit, fetcher),
     probePage(origins.apex, "/login", expectedCommit, fetcher, { requireAuth: true }),
     probePage(origins.apex, "/join", expectedCommit, fetcher, { requireAuth: true }),
@@ -700,6 +748,7 @@ export async function probeDeployment({
     probeHarryCapabilityContract(origins.api, fetcher),
     probeGoogleProviderConfiguration(`${origins.clerk}/v1/environment`, fetcher),
     probeCompositionScreening(origins.api, fetcher),
+    probeScanFeatures(origins.api, fetcher),
   ]);
   const checks = {
     landing,
@@ -715,6 +764,7 @@ export async function probeDeployment({
     harry_capability_contract: harryCapabilityContract,
     google_provider_config: googleProviderConfig,
     composition_screening: compositionScreening,
+    scan_features: scanFeatures,
   };
   const maintenanceVerificationPassed = Object.values(checks).every((check) => check.ok);
   return {

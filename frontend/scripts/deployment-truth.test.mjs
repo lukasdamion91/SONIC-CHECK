@@ -3,8 +3,9 @@ import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-import { probeCompositionScreening, probeDeployment, probeDeploymentWithRetry } from "./probe-deployment.mjs";
+import { probeCompositionScreening, probeDeployment, probeDeploymentWithRetry, probeScanFeatures } from "./probe-deployment.mjs";
 import { ANALYZER_API_RELEASE_COMMIT } from "../src/constants/analyzerIdentity.mjs";
+import { FEATURE_INVENTORY_SCHEMA, FEATURE_INVENTORY_INTERPRETATION, RUNTIME_FEATURES } from "../src/lib/featureInventoryPresentation.mjs";
 
 
 function response(status, { body = "", location = null, url = "" } = {}) {
@@ -263,7 +264,33 @@ const compositionCapability = {
   },
 };
 
+const scanFeatureCapability = {
+  schema_version: FEATURE_INVENTORY_SCHEMA,
+  inventory_scope: "CURRENT_RUNTIME_CAPABILITIES",
+  channel_count: 3,
+  feature_count: 6,
+  interpretation: FEATURE_INVENTORY_INTERPRETATION,
+  execution_statuses: ["NOT_SUBMITTED", "UNAVAILABLE", "INSUFFICIENT_SIGNAL", "NO_ELIGIBLE_REFERENCES", "COMPLETED", "PARTIAL"],
+  provider_requests_made: 0,
+  scores_or_thresholds_changed: false,
+  features: RUNTIME_FEATURES.map((feature) => ({
+    feature_id: feature.id,
+    label: feature.label,
+    parent_channel: feature.parentChannel,
+    input_requirement: feature.inputRequirement,
+    limitation: feature.limitation,
+    method_version: {
+      recording_identity: "soniccheck-recording-identity-orchestration/1.0.0",
+      lyric_phrase_overlap: "soniccheck-exact-lyric-phrase-overlap/1.0.0",
+      composition_similarity: "soniccheck-composition/0.4.1-research",
+    }[feature.parentChannel],
+  })),
+};
+
 function governedApiContractResponse(url) {
+  if (url.endsWith("/api/capabilities/scan-features")) {
+    return response(200, { body: JSON.stringify(scanFeatureCapability), url });
+  }
   if (url.endsWith("/api/capabilities/composition-screening")) {
     return response(200, { body: JSON.stringify(compositionCapability), url });
   }
@@ -364,6 +391,51 @@ function passingDeploymentFetcher({
   };
 }
 
+test("scan feature deployment verifies all definitions without claiming scan execution", async () => {
+  const result = await probeScanFeatures("https://api.soniccheck.io", async (url, options) => {
+    assert.equal(options.headers["User-Agent"], "sonic-check-production-verifier/1.0");
+    return governedApiContractResponse(url);
+  });
+  assert.equal(result.ok, true);
+  assert.equal(result.scope, "PUBLIC_CAPABILITY_DEFINITIONS_ONLY");
+  assert.equal(result.authenticated_scan_acceptance_claimed, false);
+  assert.equal(result.real_world_accuracy_claimed, false);
+});
+
+test("scan feature deployment rejects missing, duplicated, relabelled, unversioned or execution-claiming definitions", async () => {
+  const mutations = [
+    (value) => { value.features.pop(); },
+    (value) => { value.features[5] = value.features[4]; },
+    (value) => { value.channel_count = 6; },
+    (value) => { value.features[2].label = "Independent melody detector"; },
+    (value) => { value.features[1].method_version = null; },
+    (value) => { value.features[0].execution_status = "COMPLETED"; },
+    (value) => { value.provider_requests_made = 1; },
+    (value) => { value.provider_requests_made = false; },
+    (value) => { value.scores_or_thresholds_changed = true; },
+    (value) => { value.execution_statuses.push("CERTIFIED"); },
+  ];
+  for (const mutate of mutations) {
+    const payload = structuredClone(scanFeatureCapability);
+    mutate(payload);
+    const result = await probeScanFeatures("https://api.soniccheck.io", async (url) => response(200, { url, body: JSON.stringify(payload) }));
+    assert.equal(result.ok, false);
+  }
+  assert.equal((await probeScanFeatures("https://api.soniccheck.io", async () => { throw new Error("unavailable"); })).ok, false);
+});
+
+test("release verification fails if six-feature capability is absent even when earlier checks pass", async () => {
+  const passing = passingDeploymentFetcher({ commit: "a".repeat(40) });
+  const result = await probeDeployment({
+    expectedCommit: "a".repeat(40),
+    fetcher: async (url) => url.endsWith("/api/capabilities/scan-features")
+      ? response(404, { url, body: "{}" }) : passing(url),
+  });
+  assert.equal(result.ok, false);
+  assert.equal(result.checks.scan_features.ok, false);
+  assert.equal(result.checks.composition_screening.ok, true);
+});
+
 test("deployment truth requires exact artifact identity and routing", async () => {
   const commit = "a".repeat(40);
   const html = `<meta name="soniccheck-deployment-commit" content="${commit}" /><meta name="soniccheck-auth-configured" content="true" />`;
@@ -449,7 +521,7 @@ test("web probes identify the verifier while preserving truthful HTTP failures",
     assert.equal(options.headers["User-Agent"], "sonic-check-production-verifier/1.0");
   }
   for (const { url, options } of apiCalls) {
-    if (url.endsWith("/api/capabilities/composition-screening")) {
+    if (url.endsWith("/api/capabilities/composition-screening") || url.endsWith("/api/capabilities/scan-features")) {
       assert.equal(options.headers["User-Agent"], "sonic-check-production-verifier/1.0");
     } else {
       assert.equal(options.headers, undefined);
