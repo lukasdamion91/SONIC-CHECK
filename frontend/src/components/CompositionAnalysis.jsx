@@ -1,7 +1,9 @@
+import { useEffect, useMemo, useState } from "react";
 import { compositionAnalysisView } from "@/lib/compositionPresentation.mjs";
 
 const percent = (value) => value === null ? "Unavailable" : `${value}%`;
 const count = (value) => value === null ? "Not recorded" : value;
+const COMPARISONS_PER_PAGE = 20;
 
 function InputStatus({ input, label }) {
   if (!input) return null;
@@ -13,7 +15,15 @@ function InputStatus({ input, label }) {
 }
 
 export default function CompositionAnalysis({ analysis }) {
-  const view = compositionAnalysisView(analysis);
+  const view = useMemo(() => compositionAnalysisView(analysis), [analysis]);
+  const [pagination, setPagination] = useState({ analysis, limit: COMPARISONS_PER_PAGE });
+  useEffect(() => {
+    setPagination({ analysis, limit: COMPARISONS_PER_PAGE });
+  }, [analysis]);
+  // Bind the limit before effects run so a new record opens at its first page.
+  const displayLimit = pagination.analysis === analysis ? pagination.limit : COMPARISONS_PER_PAGE;
+  const visibleComparisons = view.comparisons.slice(0, displayLimit);
+  const remainingComparisons = view.comparisons.length - visibleComparisons.length;
   return (
     <section aria-labelledby="composition-analysis-heading" data-testid="composition-analysis" className="mt-6 rounded-2xl border border-violet-300/20 bg-[#202027] p-6 sm:p-8">
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -49,7 +59,11 @@ export default function CompositionAnalysis({ analysis }) {
 
       {view.comparisons.length > 0 && (
         <div className="mt-6 space-y-4">
-          {view.comparisons.map((comparison) => (
+          <p aria-live="polite" aria-atomic="true" className="text-xs leading-5 text-[#F0E9D6]/70">
+            Showing {visibleComparisons.length} of {view.comparisons.length} comparison records. Coverage totals above include all comparisons.
+          </p>
+          <div id="composition-comparison-list" className="space-y-4">
+          {visibleComparisons.map((comparison) => (
             <article key={comparison.key} className="rounded-xl border border-white/10 bg-[#17171C] p-5">
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div className="min-w-0">
@@ -81,6 +95,17 @@ export default function CompositionAnalysis({ analysis }) {
               </div>
             </article>
           ))}
+          </div>
+          {remainingComparisons > 0 && (
+            <button
+              type="button"
+              aria-controls="composition-comparison-list"
+              onClick={() => setPagination({ analysis, limit: displayLimit + COMPARISONS_PER_PAGE })}
+              className="rounded-lg border border-violet-200/30 px-4 py-3 text-sm text-violet-100 hover:bg-violet-200/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-violet-200"
+            >
+              Show more comparisons ({Math.min(COMPARISONS_PER_PAGE, remainingComparisons)})
+            </button>
+          )}
         </div>
       )}
       {view.disclosure && <p className="mt-4 text-xs leading-5 text-[#F0E9D6]/70">{view.disclosure}</p>}
