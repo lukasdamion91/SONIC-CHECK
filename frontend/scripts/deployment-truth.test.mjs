@@ -231,15 +231,31 @@ const deployedApplicationPrivacy = JSON.stringify({
 
 const compositionCapability = {
   schema_version: "soniccheck-composition-screening-capability/1.0.0",
-  method_version: "soniccheck-composition/0.4.0-research",
+  method_version: "soniccheck-composition/0.4.1-research",
   feature_profile_version: "soniccheck-composition-feature-profile/1.0.0",
   validation_status: "RESEARCH_ONLY_UNCALIBRATED",
   operational_match_threshold: null,
   recording_identity_is_composition_evidence: false,
   independent_red_flag_enabled: false,
   signal_sufficiency_policy: "ABSTAIN_WITH_NULL_SCORES",
-  availability: "REFERENCES_CONFIGURED_NOT_EXERCISED",
+  availability: "BOUNDED_REFERENCE_CHECK_PASSED",
+  configured_reference_comparison_exercised: true,
+  provider_requests_made: 0,
   secrets_included: false,
+  configured_reference_check: {
+    status: "PASS",
+    reference_limit: 3,
+    selected: 3,
+    profiles_decoded: 3,
+    profile_failures: 0,
+    comparisons_completed: 3,
+    insufficient_profiles: 0,
+    scope: "BOUNDED_CONFIGURED_PROFILE_COMPATIBILITY_ONLY",
+    research_validation_claimed: false,
+    customer_audio_used: false,
+    raw_reference_audio_used: false,
+    provider_requests_made: 0,
+  },
   self_test: {
     executed: true, status: "PASS", fixture_scope: "SANITIZED_SOFTWARE_SELF_TEST_ONLY",
     research_validation_claimed: false, production_audio_used: false,
@@ -968,10 +984,14 @@ test("composition deployment requires live abstention behavior and governed cove
   for (const mutate of [
     (p) => { p.self_test.cases.silence_abstains = false; },
     (p) => { p.method_version = "soniccheck-composition/0.3.1-research"; },
+    (p) => { p.method_version = "soniccheck-composition/0.4.0-research"; },
     (p) => { p.operational_match_threshold = 80; },
     (p) => { p.availability = "NO_ELIGIBLE_REFERENCES"; },
     (p) => { p.self_test.executed = "true"; },
     (p) => { p.self_test.research_validation_claimed = true; },
+    (p) => { p.availability = "REFERENCES_CONFIGURED_NOT_EXERCISED"; },
+    (p) => { p.configured_reference_comparison_exercised = false; },
+    (p) => { p.provider_requests_made = 1; },
   ]) {
     const payload = structuredClone(compositionCapability);
     mutate(payload);
@@ -979,4 +999,77 @@ test("composition deployment requires live abstention behavior and governed cove
     assert.equal(failed.ok, false);
   }
   assert.equal((await probeCompositionScreening("https://api.soniccheck.io", async () => { throw new Error("offline"); })).ok, false);
+});
+
+test("synthetic composition PASS cannot hide failed actual configured reference profiles", async () => {
+  const payload = structuredClone(compositionCapability);
+  payload.availability = "REFERENCE_PROFILE_CHECK_FAILED";
+  payload.configured_reference_comparison_exercised = false;
+  payload.configured_reference_check = {
+    ...payload.configured_reference_check,
+    status: "FAIL",
+    profiles_decoded: 0,
+    profile_failures: 3,
+    comparisons_completed: 0,
+  };
+  const failed = await probeCompositionScreening("https://api.soniccheck.io", async (url) => response(200, { body: JSON.stringify(payload), url }));
+  assert.equal(failed.checks.runtime_behavior, true);
+  assert.equal(failed.checks.configured_reference_behavior, false);
+  assert.equal(failed.checks.references, false);
+  assert.equal(failed.ok, false);
+  assert.equal(failed.authenticated_scan_acceptance_claimed, false);
+  assert.equal(failed.real_world_accuracy_claimed, false);
+});
+
+test("configured composition reference check reconciles a bounded one-to-three profile sample", async () => {
+  for (const selected of [1, 2, 3]) {
+    const payload = structuredClone(compositionCapability);
+    Object.assign(payload.configured_reference_check, {
+      selected, profiles_decoded: selected, comparisons_completed: 1, insufficient_profiles: selected - 1,
+    });
+    const checked = await probeCompositionScreening("https://api.soniccheck.io", async (url) => response(200, { body: JSON.stringify(payload), url }));
+    assert.equal(checked.ok, true);
+    assert.equal(checked.real_world_accuracy_claimed, false);
+  }
+});
+
+test("configured composition reference check rejects unverified, malformed and contradictory canaries", async () => {
+  const invalidPatches = [
+    { status: "PARTIAL" },
+    { status: "INSUFFICIENT_SIGNAL", comparisons_completed: 0, insufficient_profiles: 3 },
+    { reference_limit: 4 },
+    { reference_limit: "3" },
+    { selected: 0, profiles_decoded: 0, comparisons_completed: 0 },
+    { selected: 4, profiles_decoded: 4, comparisons_completed: 4 },
+    { profiles_decoded: 2 },
+    { profile_failures: 1 },
+    { comparisons_completed: 0 },
+    { insufficient_profiles: 1 },
+    { scope: "FULL_CATALOGUE_VALIDATED" },
+    { research_validation_claimed: true },
+    { customer_audio_used: true },
+    { raw_reference_audio_used: true },
+    { provider_requests_made: 1 },
+    { provider_requests_made: "0" },
+    { provider_requests_made: false },
+    { private_asset_path: "unexpected-field" },
+  ];
+  for (const key of ["selected", "profiles_decoded", "profile_failures", "comparisons_completed", "insufficient_profiles"]) {
+    for (const value of [null, false, "0", "3", -1, 0.5, Number.MAX_SAFE_INTEGER + 1]) {
+      invalidPatches.push({ [key]: value });
+    }
+  }
+  for (const patch of invalidPatches) {
+    const payload = structuredClone(compositionCapability);
+    Object.assign(payload.configured_reference_check, patch);
+    const failed = await probeCompositionScreening("https://api.soniccheck.io", async (url) => response(200, { body: JSON.stringify(payload), url }));
+    assert.equal(failed.checks.runtime_behavior, true);
+    assert.equal(failed.checks.configured_reference_behavior, false, JSON.stringify(patch));
+    assert.equal(failed.ok, false);
+  }
+  for (const malformed of [undefined, null, [], "PASS"]) {
+    const payload = { ...compositionCapability, configured_reference_check: malformed };
+    const failed = await probeCompositionScreening("https://api.soniccheck.io", async (url) => response(200, { body: JSON.stringify(payload), url }));
+    assert.equal(failed.ok, false);
+  }
 });
