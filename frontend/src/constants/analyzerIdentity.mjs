@@ -5,4 +5,5 @@ export const ANALYZER_IDENTITY_REVISION = "soniccheck-harry-identity/1.2.0";
 export const ANALYZER_CAPABILITY_MANIFEST_REVISION = "soniccheck-harry-v36-capabilities/1.0.0";
 export const ANALYZER_CAPABILITY_MANIFEST_SHA256 = "e594f8b3282de37e89ce7da853efde590e779b4db75dc59c6547944cf2fe8b6b";
 // Updated only after the reviewed API head is merged, deployed and verified.
-export const ANALYZER_API_RELEASE_COMMIT = "5f4053c8de751c873fc28346eb52aec8ce6c3115";
+export const ANALYZER_API_RELEASE_COMMIT = "134016162e2916dfcc86edaa0f174b2374b91d65";
+
