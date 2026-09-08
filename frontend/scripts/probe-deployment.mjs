@@ -569,24 +569,51 @@ export async function probeCompositionScreening(apiOrigin, fetcher = fetch) {
     const response = await fetcher(`${apiOrigin}/api/capabilities/composition-screening`, webRequestOptions("follow"));
     const payload = await response.json();
     const selfTest = payload?.self_test;
+    const referenceCheck = payload?.configured_reference_check;
+    const referenceCounts = [
+      referenceCheck?.selected,
+      referenceCheck?.profiles_decoded,
+      referenceCheck?.profile_failures,
+      referenceCheck?.comparisons_completed,
+      referenceCheck?.insufficient_profiles,
+    ];
     const checks = {
       endpoint: response.status === 200,
       method: payload?.schema_version === "soniccheck-composition-screening-capability/1.0.0"
-        && payload?.method_version === "soniccheck-composition/0.4.0-research"
+        && payload?.method_version === "soniccheck-composition/0.4.1-research"
         && payload?.feature_profile_version === "soniccheck-composition-feature-profile/1.0.0",
       research_boundary: payload?.validation_status === "RESEARCH_ONLY_UNCALIBRATED"
         && payload?.operational_match_threshold === null
         && payload?.recording_identity_is_composition_evidence === false
         && payload?.independent_red_flag_enabled === false,
       abstention: payload?.signal_sufficiency_policy === "ABSTAIN_WITH_NULL_SCORES",
-      references: payload?.availability === "REFERENCES_CONFIGURED_NOT_EXERCISED",
+      references: payload?.availability === "BOUNDED_REFERENCE_CHECK_PASSED"
+        && payload?.configured_reference_comparison_exercised === true,
+      configured_reference_behavior: hasExactKeys(referenceCheck, [
+        "status", "reference_limit", "selected", "profiles_decoded", "profile_failures",
+        "comparisons_completed", "insufficient_profiles", "scope", "research_validation_claimed",
+        "customer_audio_used", "raw_reference_audio_used", "provider_requests_made",
+      ])
+        && referenceCheck.status === "PASS"
+        && referenceCheck.reference_limit === 3
+        && referenceCounts.every((value) => Number.isSafeInteger(value) && value >= 0 && value <= 3)
+        && referenceCheck.selected >= 1
+        && referenceCheck.profiles_decoded === referenceCheck.selected
+        && referenceCheck.profile_failures === 0
+        && referenceCheck.comparisons_completed >= 1
+        && referenceCheck.comparisons_completed + referenceCheck.insufficient_profiles === referenceCheck.profiles_decoded
+        && referenceCheck.scope === "BOUNDED_CONFIGURED_PROFILE_COMPATIBILITY_ONLY"
+        && referenceCheck.research_validation_claimed === false
+        && referenceCheck.customer_audio_used === false
+        && referenceCheck.raw_reference_audio_used === false
+        && referenceCheck.provider_requests_made === 0,
       runtime_behavior: selfTest?.executed === true && selfTest?.status === "PASS"
         && selfTest?.fixture_scope === "SANITIZED_SOFTWARE_SELF_TEST_ONLY"
         && selfTest?.research_validation_claimed === false
         && selfTest?.production_audio_used === false
         && selfTest?.cases?.silence_abstains === true
         && selfTest?.cases?.variable_melody_self_comparison === true,
-      private: payload?.secrets_included === false,
+      private: payload?.secrets_included === false && payload?.provider_requests_made === 0,
     };
     return {
       ok: Object.values(checks).every(Boolean), checks,
