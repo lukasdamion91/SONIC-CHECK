@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import CompositionAnalysis from "@/components/CompositionAnalysis";
 import {
   ANALYZER_CAPABILITY_MANIFEST_REVISION,
   ANALYZER_IDENTITY,
@@ -30,7 +31,6 @@ import {
 } from "@/lib/scanResultIntegrity.mjs";
 import {
   buildChannelCoverageRows,
-  compositionComparisonDisclosure,
   currentAnalyzerDiagnosticViews,
   multiviewConsistencyView,
   storedAnalyzerLabel,
@@ -204,10 +204,8 @@ export default function ScanResult() {
   const similarity = result.similarity_analysis || {};
   const composition = result.composition_analysis || {};
   const matches = result.matches || [];
-  const compositionComparisons = composition.comparisons || [];
   const limitations = result.evidence?.limitations || [];
   const channelCoverageRows = buildChannelCoverageRows(result);
-  const comparisonDisclosure = compositionComparisonDisclosure(composition);
   const { isCurrentCapabilityBoundHarry, v34, v36 } = currentAnalyzerDiagnosticViews(result);
   const v35 = multiviewConsistencyView(activeComparison.result);
   const analyzerLabel = storedAnalyzerLabel(result);
@@ -547,6 +545,8 @@ export default function ScanResult() {
         </div>
       </section>
 
+      <CompositionAnalysis analysis={result.composition_analysis} />
+
       {badgeUrl && (
         <div className="mt-5 flex flex-wrap items-center gap-3 rounded-xl border border-[#D4FF00]/20 bg-[#D4FF00]/5 p-4 text-sm text-[#F0E9D6]/70">
           <ExternalLink className="h-4 w-4 text-[#D4FF00]" /><a href={badgeUrl} target="_blank" rel="noreferrer" className="min-w-0 flex-1 truncate hover:underline">{badgeUrl}</a>
@@ -583,27 +583,6 @@ export default function ScanResult() {
             </div>
           )}
 
-          {compositionComparisons.length > 0 && (
-            <div className="mt-10">
-              <div className="eyebrow">Composition refinement</div>
-              <div className="mt-5 space-y-3">
-                {compositionComparisons.map((comparison) => (
-                  <div key={comparison.reference_id} className="rounded-xl border border-white/10 bg-[#17171C] p-5">
-                    <div className="flex flex-wrap justify-between gap-3">
-                      <div><div className="font-medium text-[#F0E9D6]">{comparison.title}</div><div className="mt-1 text-xs text-[#F0E9D6]/42">{comparison.creator} · {comparison.rights_basis}</div></div>
-                      <div className="text-right font-mono-data">
-                        <div className="text-2xl text-[#F0E9D6]">{comparison.composition_signal_percent != null ? `${comparison.composition_signal_percent}%` : "Unavailable"}</div>
-                        <div className="text-[9px] uppercase tracking-widest text-[#F0E9D6]/38">{comparison.composition_signal_percent != null ? "feature agreement" : "comparison status"}</div>
-                        {comparison.measurement_confidence_percent != null && <div className="mt-2 text-[10px] text-[#F0E9D6]/48">{comparison.measurement_confidence_percent}% measurement quality</div>}
-                      </div>
-                    </div>
-                    {comparison.composition_signal_percent == null && comparison.reason && <p className="mt-3 text-xs leading-5 text-[#F0E9D6]/45">{comparison.reason}</p>}
-                  </div>
-                ))}
-              </div>
-              {comparisonDisclosure && <p className="mt-4 text-xs leading-5 text-[#F0E9D6]/48">{comparisonDisclosure.text}</p>}
-            </div>
-          )}
         </section>
 
         <aside className="space-y-6">

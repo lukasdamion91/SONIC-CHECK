@@ -3,7 +3,7 @@ import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-import { probeDeployment, probeDeploymentWithRetry } from "./probe-deployment.mjs";
+import { probeCompositionScreening, probeDeployment, probeDeploymentWithRetry } from "./probe-deployment.mjs";
 import { ANALYZER_API_RELEASE_COMMIT } from "../src/constants/analyzerIdentity.mjs";
 
 
@@ -229,7 +229,28 @@ const deployedApplicationPrivacy = JSON.stringify({
   semantic_content_classification_claimed: false,
 });
 
+const compositionCapability = {
+  schema_version: "soniccheck-composition-screening-capability/1.0.0",
+  method_version: "soniccheck-composition/0.4.0-research",
+  feature_profile_version: "soniccheck-composition-feature-profile/1.0.0",
+  validation_status: "RESEARCH_ONLY_UNCALIBRATED",
+  operational_match_threshold: null,
+  recording_identity_is_composition_evidence: false,
+  independent_red_flag_enabled: false,
+  signal_sufficiency_policy: "ABSTAIN_WITH_NULL_SCORES",
+  availability: "REFERENCES_CONFIGURED_NOT_EXERCISED",
+  secrets_included: false,
+  self_test: {
+    executed: true, status: "PASS", fixture_scope: "SANITIZED_SOFTWARE_SELF_TEST_ONLY",
+    research_validation_claimed: false, production_audio_used: false,
+    cases: { silence_abstains: true, variable_melody_self_comparison: true },
+  },
+};
+
 function governedApiContractResponse(url) {
+  if (url.endsWith("/api/capabilities/composition-screening")) {
+    return response(200, { body: JSON.stringify(compositionCapability), url });
+  }
   if (url.endsWith("/api/version")) return response(200, { body: harryVersion, url });
   if (url.endsWith("/api/product-contract")) {
     return response(200, { body: closedProductContract, url });
@@ -411,8 +432,12 @@ test("web probes identify the verifier while preserving truthful HTTP failures",
   for (const { options } of webCalls) {
     assert.equal(options.headers["User-Agent"], "sonic-check-production-verifier/1.0");
   }
-  for (const { options } of apiCalls) {
-    assert.equal(options.headers, undefined);
+  for (const { url, options } of apiCalls) {
+    if (url.endsWith("/api/capabilities/composition-screening")) {
+      assert.equal(options.headers["User-Agent"], "sonic-check-production-verifier/1.0");
+    } else {
+      assert.equal(options.headers, undefined);
+    }
   }
   assert.equal(result.ok, false);
   assert.equal(result.checks.login.ok, false);
@@ -934,4 +959,24 @@ test("deployment truth retry arguments reject unsafe values", async () => {
     probeDeploymentWithRetry({ expectedCommit: "f".repeat(40), intervalMs: -1 }),
     /intervalMs must be a non-negative integer/,
   );
+});
+
+test("composition deployment requires live abstention behavior and governed coverage", async () => {
+  const passing = await probeCompositionScreening("https://api.soniccheck.io", async (url) => response(200, { body: JSON.stringify(compositionCapability), url }));
+  assert.equal(passing.ok, true);
+  assert.equal(passing.authenticated_scan_acceptance_claimed, false);
+  for (const mutate of [
+    (p) => { p.self_test.cases.silence_abstains = false; },
+    (p) => { p.method_version = "soniccheck-composition/0.3.1-research"; },
+    (p) => { p.operational_match_threshold = 80; },
+    (p) => { p.availability = "NO_ELIGIBLE_REFERENCES"; },
+    (p) => { p.self_test.executed = "true"; },
+    (p) => { p.self_test.research_validation_claimed = true; },
+  ]) {
+    const payload = structuredClone(compositionCapability);
+    mutate(payload);
+    const failed = await probeCompositionScreening("https://api.soniccheck.io", async (url) => response(200, { body: JSON.stringify(payload), url }));
+    assert.equal(failed.ok, false);
+  }
+  assert.equal((await probeCompositionScreening("https://api.soniccheck.io", async () => { throw new Error("offline"); })).ok, false);
 });

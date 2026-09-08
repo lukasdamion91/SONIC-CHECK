@@ -276,7 +276,7 @@ test("result source gates actions by API capabilities and preserves interpretati
   assert.doesNotMatch(resultSource, /icon: CheckCircle2/u);
   assert.match(resultSource, /Aggregate evidence score/u);
   assert.doesNotMatch(resultSource, /label="Evidence confidence"/u);
-  assert.match(resultSource, /measurement quality/u);
+  assert.match(await source("../src/components/CompositionAnalysis.jsx"), /measurement quality proxy/u);
   assert.match(resultSource, /No result establishes authorship, ownership or legal clearance/u);
   assert.match(resultSource, /Unpublish this public evidence-record link/u);
 });

@@ -564,6 +564,43 @@ async function probeHarryCapabilityContract(apiOrigin, fetcher) {
   }
 }
 
+export async function probeCompositionScreening(apiOrigin, fetcher = fetch) {
+  try {
+    const response = await fetcher(`${apiOrigin}/api/capabilities/composition-screening`, webRequestOptions("follow"));
+    const payload = await response.json();
+    const selfTest = payload?.self_test;
+    const checks = {
+      endpoint: response.status === 200,
+      method: payload?.schema_version === "soniccheck-composition-screening-capability/1.0.0"
+        && payload?.method_version === "soniccheck-composition/0.4.0-research"
+        && payload?.feature_profile_version === "soniccheck-composition-feature-profile/1.0.0",
+      research_boundary: payload?.validation_status === "RESEARCH_ONLY_UNCALIBRATED"
+        && payload?.operational_match_threshold === null
+        && payload?.recording_identity_is_composition_evidence === false
+        && payload?.independent_red_flag_enabled === false,
+      abstention: payload?.signal_sufficiency_policy === "ABSTAIN_WITH_NULL_SCORES",
+      references: payload?.availability === "REFERENCES_CONFIGURED_NOT_EXERCISED",
+      runtime_behavior: selfTest?.executed === true && selfTest?.status === "PASS"
+        && selfTest?.fixture_scope === "SANITIZED_SOFTWARE_SELF_TEST_ONLY"
+        && selfTest?.research_validation_claimed === false
+        && selfTest?.production_audio_used === false
+        && selfTest?.cases?.silence_abstains === true
+        && selfTest?.cases?.variable_melody_self_comparison === true,
+      private: payload?.secrets_included === false,
+    };
+    return {
+      ok: Object.values(checks).every(Boolean), checks,
+      method_version: payload?.method_version || null,
+      availability: payload?.availability || null,
+      authenticated_scan_acceptance_claimed: false,
+      real_world_accuracy_claimed: false,
+      secrets_included: false,
+    };
+  } catch {
+    return { ok: false, reason: "COMPOSITION_CAPABILITY_UNAVAILABLE", secrets_included: false };
+  }
+}
+
 export async function probeGoogleProviderConfiguration(url, fetcher = fetch) {
   try {
     const response = await fetcher(url, webRequestOptions("follow"));
@@ -618,7 +655,7 @@ export async function probeDeployment({
   fetcher = fetch,
 } = {}) {
   if (!expectedCommit) throw new Error("expectedCommit is required");
-  const [landing, login, join, privacy, terms, appRoute, www, legacyApp, health, readiness, harryCapabilityContract, googleProviderConfig] = await Promise.all([
+  const [landing, login, join, privacy, terms, appRoute, www, legacyApp, health, readiness, harryCapabilityContract, googleProviderConfig, compositionScreening] = await Promise.all([
     probePage(origins.apex, "/", expectedCommit, fetcher),
     probePage(origins.apex, "/login", expectedCommit, fetcher, { requireAuth: true }),
     probePage(origins.apex, "/join", expectedCommit, fetcher, { requireAuth: true }),
@@ -635,6 +672,7 @@ export async function probeDeployment({
     probeReadinessBoundary(`${origins.api}/api/readyz`, fetcher),
     probeHarryCapabilityContract(origins.api, fetcher),
     probeGoogleProviderConfiguration(`${origins.clerk}/v1/environment`, fetcher),
+    probeCompositionScreening(origins.api, fetcher),
   ]);
   const checks = {
     landing,
@@ -649,6 +687,7 @@ export async function probeDeployment({
     api_readiness: readiness,
     harry_capability_contract: harryCapabilityContract,
     google_provider_config: googleProviderConfig,
+    composition_screening: compositionScreening,
   };
   const maintenanceVerificationPassed = Object.values(checks).every((check) => check.ok);
   return {
