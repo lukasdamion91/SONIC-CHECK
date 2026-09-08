@@ -3,6 +3,7 @@ import {
   ANALYZER_IDENTITY,
   ANALYZER_IDENTITY_REVISION,
 } from "../constants/analyzerIdentity.mjs";
+import { compositionAnalysisView } from "./compositionPresentation.mjs";
 
 const count = (value) => {
   const numeric = Number(value);
@@ -138,24 +139,13 @@ export function buildChannelCoverageRows(result = {}) {
     };
   }
 
-  const composition = result.composition_analysis || {};
-  const comparisons = Array.isArray(composition.comparisons) ? composition.comparisons : [];
-  const completed = comparisons.filter((comparison) => comparison?.composition_signal_percent != null).length;
-  const completedCount = Math.max(count(composition.successful_comparison_count), completed);
-  const consideredCount = Math.max(
-    count(composition.catalogue_entries_considered),
-    comparisons.length,
-    completedCount,
-  );
-  const unavailableCount = Math.max(count(composition.references_unavailable), consideredCount - completedCount);
-  const noComparableReference = new Set([
-    "NO_COMPARABLE_REFERENCE",
-    "REFERENCE_NOT_REGISTERED",
-    "NO_CANDIDATES",
-  ]).has(composition.status);
+  const composition = compositionAnalysisView(result.composition_analysis);
+  const completedCount = composition.successful;
+  const consideredCount = composition.considered;
+  const unavailableCount = composition.unavailable;
 
   let compositionRow;
-  if (!audioSubmitted || composition.status === "AUDIO_NOT_SUBMITTED") {
+  if (!audioSubmitted || composition.state === "not_submitted") {
     compositionRow = {
       key: "composition_similarity",
       channel: "Composition comparison",
@@ -164,7 +154,7 @@ export function buildChannelCoverageRows(result = {}) {
       outcome: "Not submitted",
       coverage: "Audio is required for comparison",
     };
-  } else if (completedCount > 0) {
+  } else if (composition.state === "compared" && completedCount > 0) {
     compositionRow = {
       key: "composition_similarity",
       channel: "Composition comparison",
@@ -173,14 +163,14 @@ export function buildChannelCoverageRows(result = {}) {
       outcome: "Named-reference comparisons completed",
       coverage: `${completedCount} of ${consideredCount} selected reference${consideredCount === 1 ? "" : "s"} compared${unavailableCount ? `; ${unavailableCount} unavailable` : ""}`,
     };
-  } else if (noComparableReference) {
+  } else if (composition.state === "no_reference") {
     compositionRow = {
       key: "composition_similarity",
       channel: "Composition comparison",
       input: result.audio_input?.status === "DECODED" ? "Decoded audio" : "Audio submitted",
       state: "searched_no_candidate",
       outcome: "Searched — no comparable named reference",
-      coverage: `${consideredCount} selected references compared`,
+      coverage: consideredCount === null ? "Reference selection count not recorded" : `${consideredCount} selected references; no successful comparison`,
     };
   } else {
     compositionRow = {
@@ -188,8 +178,8 @@ export function buildChannelCoverageRows(result = {}) {
       channel: "Composition comparison",
       input: result.audio_input?.status === "DECODED" ? "Decoded audio" : "Audio submitted",
       state: "unavailable_degraded",
-      outcome: "Unavailable or degraded",
-      coverage: composition.reason || "No successful named-reference comparison",
+      outcome: composition.state === "insufficient" ? composition.status : "Unavailable or degraded",
+      coverage: composition.reason,
     };
   }
 
@@ -197,23 +187,12 @@ export function buildChannelCoverageRows(result = {}) {
 }
 
 export function compositionComparisonDisclosure(composition = {}) {
-  const comparisons = Array.isArray(composition.comparisons) ? composition.comparisons : [];
-  const completed = comparisons.filter((comparison) => comparison?.composition_signal_percent != null).length;
-  const completedCount = Math.max(count(composition.successful_comparison_count), completed);
-  if (completedCount === 0) return null;
-  const consideredCount = Math.max(
-    count(composition.catalogue_entries_considered),
-    comparisons.length,
-    completedCount,
-  );
+  const view = compositionAnalysisView(composition);
+  if (!view.disclosure) return null;
   return {
-    completedCount,
-    consideredCount,
-    text: (
-      `The highest displayed composition signal is the top of ${completedCount} successful `
-      + `comparison${completedCount === 1 ? "" : "s"} among ${consideredCount} selected `
-      + `reference${consideredCount === 1 ? "" : "s"}. No multiple-comparison adjustment was applied.`
-    ),
+    completedCount: view.successful,
+    consideredCount: view.considered,
+    text: view.disclosure,
   };
 }
 
