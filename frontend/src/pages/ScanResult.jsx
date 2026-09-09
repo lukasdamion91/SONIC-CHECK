@@ -15,6 +15,7 @@ import {
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import CompositionAnalysis from "@/components/CompositionAnalysis";
+import FeatureInventory from "@/components/FeatureInventory";
 import {
   ANALYZER_CAPABILITY_MANIFEST_REVISION,
   ANALYZER_IDENTITY,
@@ -463,6 +464,7 @@ export default function ScanResult() {
       )}
 
       <ChannelCoverage rows={channelCoverageRows} />
+      <FeatureInventory result={result} />
 
       <section className="mt-6 rounded-2xl border border-white/10 bg-[#202027] p-6 sm:p-8">
         <div className="eyebrow">{ANALYZER_IDENTITY} structural diagnostics</div>

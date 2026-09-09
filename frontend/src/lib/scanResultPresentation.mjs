@@ -97,8 +97,16 @@ export function buildChannelCoverageRows(result = {}) {
   const lyricSource = sourceFor(result, "lyric_phrase_overlap");
   const lyricCandidateCount = Math.max(lyricMatches(result).length, count(lyricSource.candidate_count));
   const candidatesChecked = Math.max(count(lyric.candidates_checked), count(lyricSource.candidates_with_text));
-  const lyricUsable = lyric.source_usable === true
-    || (lyric.source_usable == null && count(lyricSource.queries_succeeded) > 0);
+  const lyricSourceStatus = lyric.status || lyric.source_status || lyricSource.status;
+  const lyricTextUnavailable = lyricSourceStatus === "SOURCE_TEXT_UNAVAILABLE";
+  const lyricPartial = lyricSourceStatus === "PARTIAL_CANDIDATE_COVERAGE"
+    || lyric.comparison_coverage === "PARTIAL" || count(lyric.candidate_texts_unavailable) > 0;
+  // Successful metadata discovery does not demonstrate a lyric-text comparison.
+  const lyricUsable = candidatesChecked > 0 && !lyricTextUnavailable
+    && (lyric.source_usable === true
+      || (lyric.source_usable == null && count(lyricSource.queries_succeeded) > 0));
+  const lyricNoEligibleText = candidatesChecked === 0 && lyric.candidates_retrieved === 0
+    && lyric.discovery_usable === true && lyric.source_usable === true && !lyricPartial;
 
   let lyricRow;
   if (!lyricsSubmitted) {
@@ -116,8 +124,26 @@ export function buildChannelCoverageRows(result = {}) {
       channel: "Lyric overlap",
       input: "Lyrics submitted",
       state: "candidate_evidence",
-      outcome: "Candidate evidence returned",
-      coverage: `${candidateCoverage(lyricCandidateCount)}; ${candidatesChecked} candidate text${candidatesChecked === 1 ? "" : "s"} checked`,
+      outcome: lyricPartial ? "Candidate evidence — partial coverage" : "Candidate evidence returned",
+      coverage: `${candidateCoverage(lyricCandidateCount)}; ${candidatesChecked} candidate text${candidatesChecked === 1 ? "" : "s"} checked${lyricPartial ? "; source coverage incomplete" : ""}`,
+    };
+  } else if (lyricNoEligibleText) {
+    lyricRow = {
+      key: "lyric_overlap",
+      channel: "Lyric overlap",
+      input: "Lyrics submitted",
+      state: "searched_no_candidate",
+      outcome: "Discovery completed — no candidate texts",
+      coverage: "0 candidate texts compared; no eligible references returned",
+    };
+  } else if (lyricUsable && lyricPartial) {
+    lyricRow = {
+      key: "lyric_overlap",
+      channel: "Lyric overlap",
+      input: "Lyrics submitted",
+      state: "unavailable_degraded",
+      outcome: "Partial lyric-text coverage",
+      coverage: `${candidatesChecked} candidate text${candidatesChecked === 1 ? "" : "s"} checked; source coverage incomplete`,
     };
   } else if (lyricUsable) {
     lyricRow = {
@@ -135,7 +161,9 @@ export function buildChannelCoverageRows(result = {}) {
       input: "Lyrics submitted",
       state: "unavailable_degraded",
       outcome: "Unavailable or degraded",
-      coverage: lyric.summary || lyricSource.status || "No usable lyric-source result",
+      coverage: candidatesChecked === 0
+        ? "No candidate lyric texts were available for comparison"
+        : lyric.summary || lyricSource.status || "No usable lyric-source result",
     };
   }
 
