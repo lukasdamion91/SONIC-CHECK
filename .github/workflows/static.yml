@@ -91,6 +91,49 @@ jobs:
           path: frontend/build
           retention-days: 7
 
+  verify-api:
+    # This check belongs to the web PR, never to the API commit whose Render
+    # deployment waits for all API checks. The full web probe remains post-deploy.
+    if: github.event_name == 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout reviewed web release binding
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Setup Node for dependency-free API verification
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Verify exact API release before web merge
+        id: api_release
+        continue-on-error: true
+        run: >-
+          node frontend/scripts/probe-deployment.mjs
+          --api-only
+          --attempts 30
+          --interval-ms 10000
+          --output api-release-verification.json
+
+      - name: Preserve API release gate result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sonic-check-api-release-gate
+          path: api-release-verification.json
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Enforce API release gate
+        if: always() && steps.api_release.outcome != 'success'
+        run: exit 1
+
   deploy:
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     needs: build

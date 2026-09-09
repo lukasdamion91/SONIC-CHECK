@@ -7,6 +7,7 @@ import {
   ANALYZER_CAPABILITY_MANIFEST_REVISION,
   ANALYZER_CAPABILITY_MANIFEST_SHA256,
   ANALYZER_API_RELEASE_COMMIT,
+  ANALYZER_API_RUNTIME_PROJECTION,
   ANALYZER_IDENTITY,
   ANALYZER_IDENTITY_REVISION,
 } from "../src/constants/analyzerIdentity.mjs";
@@ -485,7 +486,7 @@ async function probeReadinessBoundary(url, fetcher) {
   }
 }
 
-async function probeHarryCapabilityContract(apiOrigin, fetcher) {
+async function probeHarryCapabilityContract(apiOrigin, fetcher, { includeRuntimeProjection = false } = {}) {
   try {
     const [
       versionResponse,
@@ -553,6 +554,9 @@ async function probeHarryCapabilityContract(apiOrigin, fetcher) {
       capability_manifest_sha256: manifest?.sha256 || null,
       runtime_self_test_sha256: selfTest?.self_test_sha256 || null,
       runtime_application_manifest_sha256: runtimePrivacy?.application_manifest_sha256 || null,
+      ...(includeRuntimeProjection ? {
+        runtime_application_projection: sanitizedRuntimeProjection(runtimePrivacy),
+      } : {}),
       paid_public_scanning: contract?.paid_public_scanning || null,
       secrets_included: false,
     };
@@ -779,10 +783,124 @@ export async function probeDeployment({
   };
 }
 
-export async function probeDeploymentWithRetry({
-  expectedCommit,
-  origins = DEFAULTS,
+// API release checks run in the web repository before its PR can be merged.
+// They must not create a pending check on an API commit awaiting Render deploy.
+function sanitizedRuntimeProjection(value) {
+  return {
+    application_manifest_sha256: typeof value?.application_manifest_sha256 === "string"
+      && /^[0-9a-f]{64}$/.test(value.application_manifest_sha256)
+      ? value.application_manifest_sha256 : null,
+    application_files_checked: Number.isSafeInteger(value?.application_files_checked)
+      && value.application_files_checked > 0 ? value.application_files_checked : null,
+    application_bytes_scanned: Number.isSafeInteger(value?.application_bytes_scanned)
+      && value.application_bytes_scanned > 0 ? value.application_bytes_scanned : null,
+  };
+}
+
+export function apiRuntimeProjectionIsValid(value) {
+  return hasExactKeys(value, [
+    "application_manifest_sha256", "application_files_checked", "application_bytes_scanned",
+  ]) && Object.values(sanitizedRuntimeProjection(value)).every((field) => field !== null);
+}
+
+async function probeApiRoutes(apiOrigin, fetcher) {
+  try {
+    const url = `${apiOrigin}/openapi.json`;
+    const response = await fetcher(url, webRequestOptions("follow"));
+    const payload = await response.json();
+    const routes = [
+      ["v35_diagnostic_post", "/api/diagnostics/multiview-consistency", "post"],
+      ["harry_self_test_get", "/api/capabilities/harry-v36/self-test", "get"],
+      ["runtime_privacy_get", "/api/capabilities/runtime-privacy", "get"],
+      ["provider_payment_gates_get", "/api/capabilities/provider-payment-gates", "get"],
+    ];
+    const object = (value) => Boolean(value && typeof value === "object" && !Array.isArray(value));
+    const checks = {
+      endpoint: response.status === 200 && response.url === url,
+      paths: object(payload?.paths),
+      ...Object.fromEntries(routes.map(([name, path, method]) => [
+        name, object(payload?.paths?.[path]) && Object.hasOwn(payload.paths[path], method)
+          && object(payload.paths[path][method]),
+      ])),
+    };
+    return { ok: Object.values(checks).every(Boolean), checks };
+  } catch {
+    return { ok: false, checks: { endpoint: false } };
+  }
+}
+
+export async function probeApiRelease({
+  apiOrigin = DEFAULTS.api,
   fetcher = fetch,
+} = {}) {
+  if (!/^[0-9a-f]{40}$/.test(ANALYZER_API_RELEASE_COMMIT)) {
+    throw new Error("The reviewed API release binding must be a full commit SHA");
+  }
+  if (!apiRuntimeProjectionIsValid(ANALYZER_API_RUNTIME_PROJECTION)) {
+    throw new Error("The reviewed API application-root projection is invalid");
+  }
+  const request = (url, options) => fetcher(url, {
+    ...options,
+    signal: AbortSignal.timeout(10_000),
+  });
+  const [health, readiness, harry, composition, features, routes] = await Promise.all([
+    probeHealth(`${apiOrigin}/api/healthz`, request),
+    probeReadinessBoundary(`${apiOrigin}/api/readyz`, request),
+    probeHarryCapabilityContract(apiOrigin, request, { includeRuntimeProjection: true }),
+    probeCompositionScreening(apiOrigin, request),
+    probeScanFeatures(apiOrigin, request),
+    probeApiRoutes(apiOrigin, request),
+  ]);
+  // Persist validator outcomes, not response bodies or arbitrary error text.
+  const summary = (check) => ({
+    ok: check.ok === true,
+    ...(Number.isInteger(check.status) ? { status: check.status } : {}),
+    ...(check.checks ? { checks: check.checks } : {}),
+  });
+  const checks = {
+    api_health: { ...summary(health), body_ok: health.body_ok === true },
+    api_readiness: {
+      ...summary(readiness),
+      ok: readiness.ok === true && readiness.nonblocking_provider_checks?.recording_identity === true,
+      exact_check_set: readiness.exact_check_set === true,
+      boolean_check_values: readiness.boolean_check_values === true,
+      status_body_consistent: readiness.status_body_consistent === true,
+      checks_body_consistent: readiness.checks_body_consistent === true,
+      required_nonprovider_controls_ready: readiness.required_nonprovider_controls_ready === true,
+      blocking_checks: REQUIRED_NONPROVIDER_CONTROL_CHECKS.filter(
+        (name) => readiness.blocking_checks?.includes(name),
+      ),
+      recording_identity_ready: readiness.nonblocking_provider_checks?.recording_identity === true,
+      lyric_candidate_discovery_ready: readiness.nonblocking_provider_checks?.lyric_candidate_discovery === true,
+    },
+    harry_capability_contract: summary(harry),
+    runtime_application_projection: {
+      ok: canonicalJson(harry.runtime_application_projection) === canonicalJson(ANALYZER_API_RUNTIME_PROJECTION),
+      expected: ANALYZER_API_RUNTIME_PROJECTION,
+      observed: harry.runtime_application_projection || null,
+    },
+    composition_screening: summary(composition),
+    scan_features: summary(features),
+    api_routes: summary(routes),
+  };
+  return {
+    schema_version: "soniccheck-api-release-gate/1.0.0",
+    verification_scope: "API_RELEASE_BEFORE_WEB_MERGE",
+    captured_at: new Date().toISOString(),
+    expected_api_commit: ANALYZER_API_RELEASE_COMMIT,
+    observed_api_commit: harry.api_commit || null,
+    ok: Object.values(checks).every((check) => check.ok),
+    api_service_fully_ready_observed: readiness.service_fully_ready === true,
+    web_deployment_verified: false,
+    authenticated_scan_acceptance_claimed: false,
+    full_service_launch_readiness_claimed: false,
+    secrets_included: false,
+    checks,
+  };
+}
+
+async function probeWithRetry({
+  probe,
   attempts = 1,
   intervalMs = 0,
   sleeper = (delay) => new Promise((resolveSleep) => setTimeout(resolveSleep, delay)),
@@ -796,7 +914,7 @@ export async function probeDeploymentWithRetry({
 
   let result;
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
-    result = await probeDeployment({ expectedCommit, origins, fetcher });
+    result = await probe();
     result.attempt = attempt;
     result.max_attempts = attempts;
     if (result.ok || attempt === attempts) return result;
@@ -804,6 +922,23 @@ export async function probeDeploymentWithRetry({
   }
 
   return result;
+}
+
+export async function probeDeploymentWithRetry({
+  expectedCommit,
+  origins = DEFAULTS,
+  fetcher = fetch,
+  ...retryOptions
+} = {}) {
+  return probeWithRetry({ ...retryOptions, probe: () => probeDeployment({ expectedCommit, origins, fetcher }) });
+}
+
+export async function probeApiReleaseWithRetry({
+  apiOrigin = DEFAULTS.api,
+  fetcher = fetch,
+  ...retryOptions
+} = {}) {
+  return probeWithRetry({ ...retryOptions, probe: () => probeApiRelease({ apiOrigin, fetcher }) });
 }
 
 function argument(name) {
@@ -821,11 +956,16 @@ function integerArgument(name, fallback) {
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const output = argument("--output");
-  const result = await probeDeploymentWithRetry({
-    expectedCommit: argument("--expected-commit"),
+  const retryOptions = {
     attempts: integerArgument("--attempts", 1),
     intervalMs: integerArgument("--interval-ms", 0),
-  });
+  };
+  const result = process.argv.includes("--api-only")
+    ? await probeApiReleaseWithRetry(retryOptions)
+    : await probeDeploymentWithRetry({
+      ...retryOptions,
+      expectedCommit: argument("--expected-commit"),
+    });
   if (output) writeFileSync(resolve(output), `${JSON.stringify(result, null, 2)}\n`);
   process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
   if (!result.ok) process.exitCode = 1;

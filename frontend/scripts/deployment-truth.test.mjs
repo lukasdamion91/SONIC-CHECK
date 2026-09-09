@@ -3,8 +3,8 @@ import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-import { probeCompositionScreening, probeDeployment, probeDeploymentWithRetry, probeScanFeatures } from "./probe-deployment.mjs";
-import { ANALYZER_API_RELEASE_COMMIT } from "../src/constants/analyzerIdentity.mjs";
+import { apiRuntimeProjectionIsValid, probeApiRelease, probeApiReleaseWithRetry, probeCompositionScreening, probeDeployment, probeDeploymentWithRetry, probeScanFeatures } from "./probe-deployment.mjs";
+import { ANALYZER_API_RELEASE_COMMIT, ANALYZER_API_RUNTIME_PROJECTION } from "../src/constants/analyzerIdentity.mjs";
 import { FEATURE_INVENTORY_SCHEMA, FEATURE_INVENTORY_INTERPRETATION, RUNTIME_FEATURES } from "../src/lib/featureInventoryPresentation.mjs";
 
 
@@ -1144,4 +1144,230 @@ test("configured composition reference check rejects unverified, malformed and c
     const failed = await probeCompositionScreening("https://api.soniccheck.io", async (url) => response(200, { body: JSON.stringify(payload), url }));
     assert.equal(failed.ok, false);
   }
+});
+
+
+const apiGateReadiness = JSON.parse(controlledBetaReadiness);
+apiGateReadiness.ok = true;
+apiGateReadiness.status = "READY_FOR_LIVE_SMOKE_TEST";
+apiGateReadiness.checks.recording_identity = true;
+const apiGateRoutes = {
+  paths: {
+    "/api/diagnostics/multiview-consistency": { post: {} },
+    "/api/capabilities/harry-v36/self-test": { get: {} },
+    "/api/capabilities/runtime-privacy": { get: {} },
+    "/api/capabilities/provider-payment-gates": { get: {} },
+  },
+};
+
+function apiGateFetcher({ mutate, calls = [], readinessBody = apiGateReadiness, readinessStatus = 200 } = {}) {
+  return async (url, options) => {
+    calls.push({ url, options });
+    assert.equal(new URL(url).origin, "https://api.soniccheck.io");
+    assert.equal(options.method, undefined);
+    assert.equal(options.body, undefined);
+    assert.ok(options.signal instanceof AbortSignal);
+    const baseline = url.endsWith("/api/healthz")
+      ? response(200, { body: '{"ok":true}', url })
+      : url.endsWith("/api/readyz")
+        ? response(readinessStatus, { body: JSON.stringify(readinessBody), url })
+        : url.endsWith("/openapi.json")
+          ? response(200, { body: JSON.stringify(apiGateRoutes), url })
+          : governedApiContractResponse(url);
+    assert.ok(baseline, `unexpected API request: ${url}`);
+    const body = await baseline.json();
+    if (url.endsWith("/api/capabilities/runtime-privacy")) Object.assign(body, ANALYZER_API_RUNTIME_PROJECTION);
+    mutate?.(url, body);
+    return response(baseline.status, { body: JSON.stringify(body), url });
+  };
+}
+
+test("API premerge gate verifies all API contracts without web or Clerk requests", async () => {
+  const calls = [];
+  const result = await probeApiRelease({ fetcher: apiGateFetcher({ calls }) });
+  assert.equal(result.ok, true);
+  assert.equal(result.expected_api_commit, ANALYZER_API_RELEASE_COMMIT);
+  assert.equal(result.observed_api_commit, ANALYZER_API_RELEASE_COMMIT);
+  assert.match(result.captured_at, /^\d{4}-\d{2}-\d{2}T/u);
+  assert.equal(result.verification_scope, "API_RELEASE_BEFORE_WEB_MERGE");
+  assert.equal(result.web_deployment_verified, false);
+  assert.equal(result.authenticated_scan_acceptance_claimed, false);
+  assert.equal(result.full_service_launch_readiness_claimed, false);
+  assert.equal(result.api_service_fully_ready_observed, false);
+  assert.equal(result.secrets_included, false);
+  assert.equal(result.checks.api_readiness.recording_identity_ready, true);
+  assert.equal(result.checks.api_readiness.lyric_candidate_discovery_ready, false);
+  assert.deepEqual(result.checks.runtime_application_projection, {
+    ok: true, expected: ANALYZER_API_RUNTIME_PROJECTION, observed: ANALYZER_API_RUNTIME_PROJECTION,
+  });
+  assert.deepEqual(calls.map(({ url }) => new URL(url).pathname).sort(), [
+    "/api/capabilities/composition-screening",
+    "/api/capabilities/harry-v36/self-test",
+    "/api/capabilities/provider-payment-gates",
+    "/api/capabilities/runtime-privacy",
+    "/api/capabilities/scan-features",
+    "/api/healthz",
+    "/api/product-contract",
+    "/api/readyz",
+    "/api/version",
+    "/openapi.json",
+  ]);
+  assert.deepEqual(Object.keys(result.checks).sort(), [
+    "api_health", "api_readiness", "api_routes", "composition_screening", "harry_capability_contract", "runtime_application_projection", "scan_features",
+  ]);
+});
+
+test("API premerge gate preserves each existing fail-closed validator", async (t) => {
+  const cases = [
+    ["stale API commit", "/api/version", (body) => { body.commit_sha = "0".repeat(40); }, "harry_capability_contract"],
+    ["unsealed capability", "/api/version", (body) => { body.analyzer.capability_manifest.sha256 = "0".repeat(64); }, "harry_capability_contract"],
+    ["unexecuted self-test", "/api/capabilities/harry-v36/self-test", (body) => { body.status = "NOT_RUN"; }, "harry_capability_contract"],
+    ["open provider payment gate", "/api/capabilities/provider-payment-gates", (body) => { body.payment.approved = true; }, "harry_capability_contract"],
+    ["open product checkout", "/api/product-contract", (body) => { body.pricing.plans[0].checkout_enabled = true; }, "harry_capability_contract"],
+    ["private audio in application", "/api/capabilities/runtime-privacy", (body) => { body.raw_audio_present = true; }, "harry_capability_contract"],
+    ["wrong application manifest", "/api/capabilities/runtime-privacy", (body) => { body.application_manifest_sha256 = "0".repeat(64); }, "runtime_application_projection"],
+    ["wrong application file count", "/api/capabilities/runtime-privacy", (body) => { body.application_files_checked += 1; }, "runtime_application_projection"],
+    ["wrong application byte count", "/api/capabilities/runtime-privacy", (body) => { body.application_bytes_scanned += 1; }, "runtime_application_projection"],
+    ["missing database readiness", "/api/readyz", (body) => { body.checks.database = false; }, "api_readiness"],
+    ["failed health body", "/api/healthz", (body) => { body.ok = false; }, "api_health"],
+    ["unperformed reference comparison", "/api/capabilities/composition-screening", (body) => { body.configured_reference_check.comparisons_completed = 0; }, "composition_screening"],
+    ["wrong feature method", "/api/capabilities/scan-features", (body) => { body.features[0].method_version = "not-reviewed"; }, "scan_features"],
+  ];
+  for (const [name, path, mutate, failedCheck] of cases) {
+    await t.test(name, async () => {
+      const result = await probeApiRelease({
+        fetcher: apiGateFetcher({ mutate: (url, body) => { if (url.endsWith(path)) mutate(body); } }),
+      });
+      assert.equal(result.ok, false);
+      assert.equal(result.checks[failedCheck].ok, false);
+      assert.equal(result.web_deployment_verified, false);
+      if (name === "stale API commit") assert.equal(result.observed_api_commit, null);
+    });
+  }
+});
+
+test("API gate requires recording readiness while lyric discovery remains advisory", async () => {
+  const result = await probeApiRelease({
+    fetcher: apiGateFetcher({ readinessBody: JSON.parse(controlledBetaReadiness), readinessStatus: 503 }),
+  });
+  assert.equal(result.ok, false);
+  assert.equal(result.checks.api_readiness.ok, false);
+  assert.equal(result.checks.api_readiness.recording_identity_ready, false);
+  assert.equal(result.checks.api_readiness.status_body_consistent, true);
+  assert.equal(result.checks.api_readiness.checks_body_consistent, true);
+  assert.equal(result.checks.api_readiness.required_nonprovider_controls_ready, true);
+});
+
+test("API gate rejects missing or wrong OpenAPI methods for every required route", async (t) => {
+  for (const [path, methods] of Object.entries(apiGateRoutes.paths)) {
+    await t.test(path, async () => {
+      const method = Object.keys(methods)[0];
+      for (const replacement of [undefined, { [method === "get" ? "post" : "get"]: {} }, { [method]: null }]) {
+        const result = await probeApiRelease({ fetcher: apiGateFetcher({ mutate: (url, body) => {
+          if (url.endsWith("/openapi.json")) body.paths[path] = replacement;
+        } }) });
+        assert.equal(result.ok, false);
+        assert.equal(result.checks.api_routes.ok, false);
+        assert.equal(result.checks.harry_capability_contract.ok, true);
+      }
+    });
+  }
+});
+
+test("API source projection pin requires an exact well-formed digest and positive safe counts", () => {
+  assert.equal(apiRuntimeProjectionIsValid(ANALYZER_API_RUNTIME_PROJECTION), true);
+  const invalid = [undefined, null, [], {}, { ...ANALYZER_API_RUNTIME_PROJECTION, extra: true }];
+  for (const value of [undefined, null, false, "0".repeat(63), "G".repeat(64)]) {
+    invalid.push({ ...ANALYZER_API_RUNTIME_PROJECTION, application_manifest_sha256: value });
+  }
+  for (const field of ["application_files_checked", "application_bytes_scanned"]) {
+    for (const value of [undefined, null, false, "52", 0, -1, 1.5, Number.MAX_SAFE_INTEGER + 1]) {
+      invalid.push({ ...ANALYZER_API_RUNTIME_PROJECTION, [field]: value });
+    }
+  }
+  for (const value of invalid) assert.equal(apiRuntimeProjectionIsValid(value), false);
+});
+
+test("API gate receipts omit response payloads and arbitrary exception messages", async () => {
+  const marker = "private-response-marker";
+  const result = await probeApiRelease({
+    fetcher: apiGateFetcher({ mutate: (url, body) => {
+      if (url.endsWith("/api/healthz") || url.endsWith("/api/readyz")) body.unexpected_debug = marker;
+    } }),
+  });
+  assert.equal(result.ok, true);
+  assert.equal(JSON.stringify(result).includes(marker), false);
+  assert.equal("payload" in result.checks.api_health, false);
+  assert.equal("payload" in result.checks.api_readiness, false);
+  const failed = await probeApiRelease({ fetcher: async () => { throw new Error(marker); } });
+  assert.equal(failed.ok, false);
+  assert.equal(JSON.stringify(failed).includes(marker), false);
+  assert.equal(failed.observed_api_commit, null);
+  const malformedProjection = await probeApiRelease({ fetcher: apiGateFetcher({ mutate: (url, body) => {
+    if (url.endsWith("/api/capabilities/runtime-privacy")) {
+      body.application_manifest_sha256 = marker;
+      body.application_files_checked = marker;
+      body.application_bytes_scanned = marker;
+      body.unexpected_debug = marker;
+    }
+  } }) });
+  assert.equal(malformedProjection.ok, false);
+  assert.equal(JSON.stringify(malformedProjection).includes(marker), false);
+  assert.deepEqual(malformedProjection.checks.runtime_application_projection.observed, {
+    application_manifest_sha256: null, application_files_checked: null, application_bytes_scanned: null,
+  });
+});
+
+test("API gate retries a stale deployment and stops after the exact API release appears", async () => {
+  let versionRequests = 0;
+  const waits = [];
+  const result = await probeApiReleaseWithRetry({
+    fetcher: apiGateFetcher({ mutate: (url, body) => {
+      if (url.endsWith("/api/version") && ++versionRequests === 1) body.commit_sha = "0".repeat(40);
+    } }),
+    attempts: 3,
+    intervalMs: 10_000,
+    sleeper: async (delay) => { waits.push(delay); },
+  });
+  assert.equal(result.ok, true);
+  assert.equal(result.attempt, 2);
+  assert.equal(result.max_attempts, 3);
+  assert.equal(versionRequests, 2);
+  assert.deepEqual(waits, [10_000]);
+});
+
+test("API gate exhausts its retry budget without claiming a verified release", async () => {
+  let waits = 0;
+  const result = await probeApiReleaseWithRetry({
+    fetcher: apiGateFetcher({ mutate: (url, body) => {
+      if (url.endsWith("/api/version")) body.commit_sha = "0".repeat(40);
+    } }),
+    attempts: 2,
+    sleeper: async () => { waits += 1; },
+  });
+  assert.equal(result.ok, false);
+  assert.equal(result.attempt, 2);
+  assert.equal(result.max_attempts, 2);
+  assert.equal(result.observed_api_commit, null);
+  assert.equal(waits, 1);
+  await assert.rejects(probeApiReleaseWithRetry({ attempts: 0 }), /positive integer/u);
+  await assert.rejects(probeApiReleaseWithRetry({ intervalMs: -1 }), /non-negative integer/u);
+});
+
+test("API release gate is a read-only web PR job and full verification remains post-deploy", async () => {
+  const workflow = await readFile(new URL("../../.github/workflows/static.yml", import.meta.url), "utf8");
+  const gate = workflow.split("  verify-api:\n")[1].split("\n  deploy:\n")[0];
+  assert.match(gate, /if: github\.event_name == 'pull_request'/u);
+  assert.match(gate, /needs: build/u);
+  assert.match(gate, /contents: read/u);
+  assert.match(gate, /persist-credentials: false/u);
+  assert.doesNotMatch(gate, /secrets\.|: write|npm ci|workflow_run|pull_request_target/u);
+  assert.match(gate, /--api-only\s+--attempts 30\s+--interval-ms 10000/u);
+  assert.match(gate, /name: sonic-check-api-release-gate/u);
+  assert.match(gate, /if-no-files-found: error/u);
+  assert.match(gate, /if: always\(\) && steps\.api_release\.outcome != 'success'\s+run: exit 1/u);
+  const production = workflow.split("  verify-production:\n")[1];
+  assert.match(production, /needs: deploy/u);
+  assert.match(production, /--expected-commit "\$\{GITHUB_SHA\}"/u);
+  assert.doesNotMatch(production, /--api-only/u);
 });
