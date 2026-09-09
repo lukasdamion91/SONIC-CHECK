@@ -6,7 +6,7 @@ export const ANALYZER_CAPABILITY_MANIFEST_REVISION = "soniccheck-harry-v36-capab
 export const ANALYZER_CAPABILITY_MANIFEST_SHA256 = "e594f8b3282de37e89ce7da853efde590e779b4db75dc59c6547944cf2fe8b6b";
 // Candidate binding follows tested API main. Merge and deploy this web release
 // only after its exact live API verification gate passes.
-export const ANALYZER_API_RELEASE_COMMIT = "1cc3a5672943cb26354e6d26f703f65b94337e2d";
+export const ANALYZER_API_RELEASE_COMMIT = "7f893bd5fc2958c8431e9e16741c88b93e8063ab";
 
 // Derived from the reviewed API source with runtime_privacy's canonical helper.
 // Update alongside the API release binding; this is an application-root projection.
