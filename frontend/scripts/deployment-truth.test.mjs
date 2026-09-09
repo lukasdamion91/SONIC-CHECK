@@ -1,9 +1,13 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { readFile } from "node:fs/promises";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { runInNewContext } from "node:vm";
 import test from "node:test";
 
-import { apiRuntimeProjectionIsValid, probeApiRelease, probeApiReleaseWithRetry, probeCompositionScreening, probeDeployment, probeDeploymentWithRetry, probeScanFeatures } from "./probe-deployment.mjs";
+import { apiRuntimeProjectionIsValid, deploymentProbeProgress, probeApiRelease, probeApiReleaseWithRetry, probeCompositionScreening, probeDeployment, probeDeploymentWithRetry, probeScanFeatures } from "./probe-deployment.mjs";
 import { ANALYZER_API_RELEASE_COMMIT, ANALYZER_API_RUNTIME_PROJECTION } from "../src/constants/analyzerIdentity.mjs";
 import { FEATURE_INVENTORY_SCHEMA, FEATURE_INVENTORY_INTERPRETATION, RUNTIME_FEATURES } from "../src/lib/featureInventoryPresentation.mjs";
 
@@ -1354,10 +1358,10 @@ test("API gate exhausts its retry budget without claiming a verified release", a
   await assert.rejects(probeApiReleaseWithRetry({ intervalMs: -1 }), /non-negative integer/u);
 });
 
-test("API release gate is a read-only web PR job and full verification remains post-deploy", async () => {
+test("API release gate runs for every built web candidate and full verification remains post-deploy", async () => {
   const workflow = await readFile(new URL("../../.github/workflows/static.yml", import.meta.url), "utf8");
   const gate = workflow.split("  verify-api:\n")[1].split("\n  deploy:\n")[0];
-  assert.match(gate, /if: github\.event_name == 'pull_request'/u);
+  assert.doesNotMatch(gate, /^    if:/mu);
   assert.match(gate, /needs: build/u);
   assert.match(gate, /contents: read/u);
   assert.match(gate, /persist-credentials: false/u);
@@ -1370,4 +1374,147 @@ test("API release gate is a read-only web PR job and full verification remains p
   assert.match(production, /needs: deploy/u);
   assert.match(production, /--expected-commit "\$\{GITHUB_SHA\}"/u);
   assert.doesNotMatch(production, /--api-only/u);
+});
+
+test("Pages deployment requires both successful gates on main push and manual runs, and never deploys a PR", async () => {
+  const workflow = await readFile(new URL("../../.github/workflows/static.yml", import.meta.url), "utf8");
+  const deploy = workflow.split("  deploy:\n")[1].split("\n  verify-production:\n")[0];
+  const needs = deploy.match(/^    needs: \[([^\]]+)\]$/mu)?.[1].split(",").map((name) => name.trim());
+  assert.deepEqual(needs, ["build", "verify-api"]);
+  const condition = deploy.match(/^    if: (.+)$/mu)?.[1];
+  assert.ok(condition);
+  // This workflow condition uses only the JS-compatible equality/AND subset of
+  // GitHub expressions. Exercise its actual text rather than a copied predicate.
+  for (const eventName of ["pull_request", "push", "workflow_dispatch"]) {
+    for (const ref of ["refs/heads/main", "refs/heads/candidate"]) {
+      for (const build of ["success", "failure", "cancelled", "skipped"]) {
+        for (const api of ["success", "failure", "cancelled", "skipped"]) {
+          const context = {
+            github: { event_name: eventName, ref },
+            needs: { build: { result: build }, "verify-api": { result: api } },
+          };
+          const deployAllowed = runInNewContext(condition, context, { timeout: 100 });
+          assert.equal(deployAllowed, eventName !== "pull_request" && ref === "refs/heads/main"
+            && build === "success" && api === "success", JSON.stringify(context));
+        }
+      }
+    }
+  }
+});
+
+test("retry progress identifies stale API commits without changing the final gate receipt", async () => {
+  let versionRequests = 0;
+  const events = [];
+  const result = await probeApiReleaseWithRetry({
+    fetcher: apiGateFetcher({ mutate: (url, body) => {
+      if (url.endsWith("/api/version") && ++versionRequests === 1) body.commit_sha = "0".repeat(40);
+    } }),
+    attempts: 3,
+    intervalMs: 10_000,
+    sleeper: async () => {},
+    onProgress: (event) => { events.push(event); },
+  });
+  assert.deepEqual(events.map(({ phase, attempt }) => [phase, attempt]), [
+    ["started", 1], ["finished", 1], ["started", 2], ["finished", 2],
+  ]);
+  assert.deepEqual(events[1].failed_checks, ["harry_capability_contract.deployed_commit"]);
+  assert.equal(events[1].observed_api_commit, "0".repeat(40));
+  assert.equal(events[1].verified_api_commit, null);
+  assert.equal(events[1].outcome, "retrying");
+  assert.equal(events[1].retry_in_ms, 10_000);
+  assert.equal(events[3].observed_api_commit, ANALYZER_API_RELEASE_COMMIT);
+  assert.equal(events[3].verified_api_commit, ANALYZER_API_RELEASE_COMMIT);
+  assert.equal(events[3].outcome, "passed");
+  assert.equal(events[3].retry_in_ms, null);
+  const expected = await probeApiRelease({ fetcher: apiGateFetcher() });
+  const { captured_at, attempt, max_attempts, ...receipt } = result;
+  delete expected.captured_at;
+  assert.deepEqual(receipt, expected);
+  assert.equal(attempt, 2);
+  assert.equal(max_attempts, 3);
+  assert.ok(captured_at);
+});
+
+test("full deployment retries emit bounded progress and preserve their final receipt", async () => {
+  const expectedCommit = "a".repeat(40);
+  const events = [];
+  const result = await probeDeploymentWithRetry({
+    expectedCommit,
+    fetcher: passingDeploymentFetcher({ commit: expectedCommit }),
+    onProgress: (event) => { events.push(event); },
+  });
+  assert.deepEqual(events.map(({ phase }) => phase), ["started", "finished"]);
+  assert.equal(events[1].outcome, "passed");
+  assert.equal(events[1].verified_api_commit, ANALYZER_API_RELEASE_COMMIT);
+  const { attempt, max_attempts, ...receipt } = result;
+  assert.equal(attempt, 1);
+  assert.equal(max_attempts, 1);
+  assert.deepEqual(receipt, await probeDeployment({
+    expectedCommit, fetcher: passingDeploymentFetcher({ commit: expectedCommit }),
+  }));
+});
+
+test("progress excludes arbitrary keys, payloads, URLs, errors and malformed observed commits", async () => {
+  const marker = "private-diagnostic-marker\n::error::not-a-workflow-command";
+  const events = [];
+  const result = await probeApiReleaseWithRetry({
+    fetcher: apiGateFetcher({ mutate: (url, body) => {
+      body[marker] = marker;
+      if (url.endsWith("/api/version")) body.commit_sha = marker;
+    } }),
+    onProgress: (event) => { events.push(event); },
+  });
+  assert.equal(result.ok, false);
+  assert.equal(events[1].observed_api_commit, null);
+  assert.equal(events[1].verified_api_commit, null);
+  assert.equal(events[1].outcome, "failed");
+  assert.equal(events[1].retry_in_ms, null);
+  assert.equal(JSON.stringify(events).includes(marker), false);
+  const malicious = {
+    ok: false, attempt: 1, max_attempts: 2, error: marker, origins: { api: marker },
+    checks: {
+      [marker]: { ok: false },
+      api_health: { ok: false, payload: marker, error: marker, status: marker },
+      harry_capability_contract: { ok: false, checks: { deployed_commit: false, [marker]: false } },
+      runtime_application_projection: { ok: false, expected: marker, observed: marker },
+    },
+  };
+  const progress = deploymentProbeProgress(malicious, { observedApiCommit: marker });
+  assert.equal(JSON.stringify(progress).includes(marker), false);
+  assert.deepEqual(progress.failed_checks, [
+    "api_health", "harry_capability_contract.deployed_commit", "runtime_application_projection",
+  ]);
+  for (const value of [null, 1, {}, "a".repeat(39), "g".repeat(40), "a".repeat(40) + "\n"]) {
+    assert.equal(deploymentProbeProgress(malicious, { observedApiCommit: value }).observed_api_commit, null);
+  }
+});
+
+test("CLI writes progress only to stderr and retains one final JSON receipt on stdout and disk", async () => {
+  const directory = await mkdtemp(join(tmpdir(), "soniccheck-probe-cli-"));
+  try {
+    const preload = join(directory, "offline-fetch.mjs");
+    const output = join(directory, "receipt.json");
+    const marker = "private-cli-exception-marker";
+    await writeFile(preload, `globalThis.fetch = async () => { throw new Error(${JSON.stringify(marker)}); };\n`);
+    const child = spawnSync(process.execPath, [
+      "--import", preload, new URL("./probe-deployment.mjs", import.meta.url).pathname,
+      "--api-only", "--attempts", "2", "--interval-ms", "0", "--output", output,
+    ], { encoding: "utf8", timeout: 10_000 });
+    assert.equal(child.status, 1);
+    assert.equal(child.error, undefined);
+    assert.equal(child.stdout, await readFile(output, "utf8"));
+    const receipt = JSON.parse(child.stdout);
+    assert.equal(receipt.ok, false);
+    assert.equal(receipt.attempt, 2);
+    assert.equal(receipt.max_attempts, 2);
+    assert.equal(child.stdout.includes("deployment_probe_progress"), false);
+    assert.equal(child.stdout.includes(marker), false);
+    assert.equal(child.stderr.includes(marker), false);
+    const events = child.stderr.trim().split("\n").map((line) => JSON.parse(line));
+    assert.deepEqual(events.map(({ phase, outcome }) => [phase, outcome || null]), [
+      ["started", null], ["finished", "retrying"], ["started", null], ["finished", "failed"],
+    ]);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
 });

@@ -486,7 +486,10 @@ async function probeReadinessBoundary(url, fetcher) {
   }
 }
 
-async function probeHarryCapabilityContract(apiOrigin, fetcher, { includeRuntimeProjection = false } = {}) {
+async function probeHarryCapabilityContract(apiOrigin, fetcher, {
+  includeRuntimeProjection = false,
+  onApiCommitObserved = () => {},
+} = {}) {
   try {
     const [
       versionResponse,
@@ -508,6 +511,9 @@ async function probeHarryCapabilityContract(apiOrigin, fetcher, { includeRuntime
       providerGatesResponse.json().catch(() => null),
       runtimePrivacyResponse.json().catch(() => null),
     ]);
+    // Diagnostics may identify a stale public release, but never turn it into
+    // a verified commit or copy arbitrary response content into progress logs.
+    onApiCommitObserved(sanitizedCommit(version?.commit_sha));
     const analyzer = version?.analyzer;
     const manifest = analyzer?.capability_manifest;
     const contractManifest = contract?.analyzer?.capability_manifest;
@@ -732,6 +738,7 @@ export async function probeDeployment({
   expectedCommit,
   origins = DEFAULTS,
   fetcher = fetch,
+  onApiCommitObserved,
 } = {}) {
   if (!expectedCommit) throw new Error("expectedCommit is required");
   const [landing, login, join, privacy, terms, appRoute, www, legacyApp, health, readiness, harryCapabilityContract, googleProviderConfig, compositionScreening, scanFeatures] = await Promise.all([
@@ -749,7 +756,7 @@ export async function probeDeployment({
     probeRedirect(`${origins.app}/legacy?source=deployment-truth`, `${origins.apex}/app?source=deployment-truth`, fetcher),
     probeHealth(`${origins.api}/api/healthz`, fetcher),
     probeReadinessBoundary(`${origins.api}/api/readyz`, fetcher),
-    probeHarryCapabilityContract(origins.api, fetcher),
+    probeHarryCapabilityContract(origins.api, fetcher, { onApiCommitObserved }),
     probeGoogleProviderConfiguration(`${origins.clerk}/v1/environment`, fetcher),
     probeCompositionScreening(origins.api, fetcher),
     probeScanFeatures(origins.api, fetcher),
@@ -783,7 +790,7 @@ export async function probeDeployment({
   };
 }
 
-// API release checks run in the web repository before its PR can be merged.
+// API release checks run in the web repository before merge and deployment.
 // They must not create a pending check on an API commit awaiting Render deploy.
 function sanitizedRuntimeProjection(value) {
   return {
@@ -832,6 +839,7 @@ async function probeApiRoutes(apiOrigin, fetcher) {
 export async function probeApiRelease({
   apiOrigin = DEFAULTS.api,
   fetcher = fetch,
+  onApiCommitObserved,
 } = {}) {
   if (!/^[0-9a-f]{40}$/.test(ANALYZER_API_RELEASE_COMMIT)) {
     throw new Error("The reviewed API release binding must be a full commit SHA");
@@ -846,7 +854,7 @@ export async function probeApiRelease({
   const [health, readiness, harry, composition, features, routes] = await Promise.all([
     probeHealth(`${apiOrigin}/api/healthz`, request),
     probeReadinessBoundary(`${apiOrigin}/api/readyz`, request),
-    probeHarryCapabilityContract(apiOrigin, request, { includeRuntimeProjection: true }),
+    probeHarryCapabilityContract(apiOrigin, request, { includeRuntimeProjection: true, onApiCommitObserved }),
     probeCompositionScreening(apiOrigin, request),
     probeScanFeatures(apiOrigin, request),
     probeApiRoutes(apiOrigin, request),
@@ -899,11 +907,72 @@ export async function probeApiRelease({
   };
 }
 
+function sanitizedCommit(value) {
+  return typeof value === "string" && /^[0-9a-f]{40}$/.test(value) ? value : null;
+}
+
+// Only code-owned check names may enter progress logs. Do not traverse response
+// bodies, URLs, arbitrary object keys or exception messages from a failed probe.
+const PROGRESS_CHECKS = {
+  landing: [], login: [], join: [], privacy: [], terms: [], app: [],
+  www_redirect: [], legacy_app_redirect: [], api_health: [], api_readiness: [],
+  harry_capability_contract: [
+    "endpoints", "deployed_commit", "living_identity", "exact_capabilities",
+    "runtime_capabilities_exercised", "provider_payment_gates_closed",
+    "deployed_application_root_private", "product_contract_binding",
+    "paid_scanning_closed", "payment_gate_closed", "all_checkout_closed",
+  ],
+  runtime_application_projection: [],
+  google_provider_config: [
+    "production_instance", "identification_strategy", "first_factor", "enabled",
+    "authenticatable", "selectable", "subaddresses_blocked", "privacy_policy", "terms",
+  ],
+  composition_screening: [
+    "endpoint", "method", "research_boundary", "abstention", "references",
+    "configured_reference_behavior", "runtime_behavior", "private",
+  ],
+  scan_features: [
+    "endpoint", "schema", "six_features_three_channels", "method_versions",
+    "execution_states", "read_only",
+  ],
+  api_routes: [
+    "endpoint", "paths", "v35_diagnostic_post", "harry_self_test_get",
+    "runtime_privacy_get", "provider_payment_gates_get",
+  ],
+};
+
+export function deploymentProbeProgress(result, { observedApiCommit = null, intervalMs = 0 } = {}) {
+  const failedChecks = [];
+  for (const [name, details] of Object.entries(PROGRESS_CHECKS)) {
+    if (result?.checks?.[name]?.ok !== false) continue;
+    const failures = details.filter((key) => result.checks[name].checks?.[key] === false);
+    failedChecks.push(...(failures.length ? failures.map((key) => `${name}.${key}`) : [name]));
+  }
+  const attempt = Number.isSafeInteger(result?.attempt) && result.attempt > 0 ? result.attempt : null;
+  const maxAttempts = Number.isSafeInteger(result?.max_attempts) && result.max_attempts > 0
+    ? result.max_attempts : null;
+  const retrying = result?.ok !== true && attempt !== null && maxAttempts !== null && attempt < maxAttempts;
+  return {
+    event: "deployment_probe_progress",
+    phase: "finished",
+    attempt,
+    max_attempts: maxAttempts,
+    outcome: result?.ok === true ? "passed" : retrying ? "retrying" : "failed",
+    failed_checks: failedChecks,
+    expected_api_commit: ANALYZER_API_RELEASE_COMMIT,
+    observed_api_commit: sanitizedCommit(observedApiCommit),
+    verified_api_commit: result?.checks?.harry_capability_contract?.checks?.deployed_commit === true
+      ? sanitizedCommit(result.observed_api_commit || result.checks.harry_capability_contract.api_commit) : null,
+    retry_in_ms: retrying && Number.isSafeInteger(intervalMs) && intervalMs >= 0 ? intervalMs : null,
+  };
+}
+
 async function probeWithRetry({
   probe,
   attempts = 1,
   intervalMs = 0,
   sleeper = (delay) => new Promise((resolveSleep) => setTimeout(resolveSleep, delay)),
+  onProgress = () => {},
 } = {}) {
   if (!Number.isInteger(attempts) || attempts < 1) {
     throw new Error("attempts must be a positive integer");
@@ -914,9 +983,12 @@ async function probeWithRetry({
 
   let result;
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
-    result = await probe();
+    onProgress({ event: "deployment_probe_progress", phase: "started", attempt, max_attempts: attempts });
+    let observedApiCommit = null;
+    result = await probe((commit) => { observedApiCommit = sanitizedCommit(commit); });
     result.attempt = attempt;
     result.max_attempts = attempts;
+    onProgress(deploymentProbeProgress(result, { observedApiCommit, intervalMs }));
     if (result.ok || attempt === attempts) return result;
     await sleeper(intervalMs);
   }
@@ -930,7 +1002,10 @@ export async function probeDeploymentWithRetry({
   fetcher = fetch,
   ...retryOptions
 } = {}) {
-  return probeWithRetry({ ...retryOptions, probe: () => probeDeployment({ expectedCommit, origins, fetcher }) });
+  return probeWithRetry({
+    ...retryOptions,
+    probe: (onApiCommitObserved) => probeDeployment({ expectedCommit, origins, fetcher, onApiCommitObserved }),
+  });
 }
 
 export async function probeApiReleaseWithRetry({
@@ -938,7 +1013,10 @@ export async function probeApiReleaseWithRetry({
   fetcher = fetch,
   ...retryOptions
 } = {}) {
-  return probeWithRetry({ ...retryOptions, probe: () => probeApiRelease({ apiOrigin, fetcher }) });
+  return probeWithRetry({
+    ...retryOptions,
+    probe: (onApiCommitObserved) => probeApiRelease({ apiOrigin, fetcher, onApiCommitObserved }),
+  });
 }
 
 function argument(name) {
@@ -959,6 +1037,8 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   const retryOptions = {
     attempts: integerArgument("--attempts", 1),
     intervalMs: integerArgument("--interval-ms", 0),
+    // Keep stdout and the output artifact as one unchanged final JSON receipt.
+    onProgress: (progress) => process.stderr.write(`${JSON.stringify(progress)}\n`),
   };
   const result = process.argv.includes("--api-only")
     ? await probeApiReleaseWithRetry(retryOptions)

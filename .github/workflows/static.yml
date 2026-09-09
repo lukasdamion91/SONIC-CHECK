@@ -92,9 +92,9 @@ jobs:
           retention-days: 7
 
   verify-api:
-    # This check belongs to the web PR, never to the API commit whose Render
-    # deployment waits for all API checks. The full web probe remains post-deploy.
-    if: github.event_name == 'pull_request'
+    # Check every built web candidate, including main pushes and manual runs.
+    # Keep this in the web repo: Render waits for all checks on the API commit.
+    # The full web probe remains post-deploy.
     needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -111,7 +111,7 @@ jobs:
         with:
           node-version: 20
 
-      - name: Verify exact API release before web merge
+      - name: Verify exact API release before web merge or deployment
         id: api_release
         continue-on-error: true
         run: >-
@@ -135,8 +135,8 @@ jobs:
         run: exit 1
 
   deploy:
-    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
-    needs: build
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && needs.build.result == 'success' && needs['verify-api'].result == 'success'
+    needs: [build, verify-api]
     runs-on: ubuntu-latest
     permissions:
       actions: read

@@ -1,12 +1,15 @@
-# API release verification before web merge
+# API release verification before web merge and deployment
 
 Task: `SC-AUDIO-ACCEPTANCE-20260909`
 
 The web release binds to one reviewed API commit through
-`frontend/src/constants/analyzerIdentity.mjs`. A web pull request now runs
-`verify-api` after its build passes. This job checks that production serves the
-candidate's exact API commit before the web pull request can be accepted for
-merge under the delivery workflow.
+`frontend/src/constants/analyzerIdentity.mjs`. Every web workflow runs
+`verify-api` after its build passes, including pull requests, main pushes and
+manual runs. This job checks that production serves the candidate's exact API
+commit. Pages deployment requires successful `build` and `verify-api` jobs and
+is restricted to non-PR runs on main. A skipped, failed or cancelled API check
+cannot allow deployment. The PR check remains required before merge under the
+delivery workflow, and main repeats it before deploying the merged candidate.
 
 The check belongs to the web repository. The API's Render configuration uses
 `autoDeployTrigger: checksPass`, which waits for all API repository CI checks.
@@ -27,11 +30,12 @@ gate with an API `workflow_run` observer. See
    provider/payment gates, application-root privacy, composition compatibility,
    and six-feature inventory contracts. It also checks the OpenAPI methods for
    the V35 diagnostic POST and HARRY self-test, privacy and provider-gate GETs.
-5. Merge the web PR only after those checks pass. The existing main workflow
-   then builds, checks deployment bytes, deploys Pages, and verifies the exact
-   web and API releases together.
+5. Merge the web PR only after those checks pass. The main workflow builds and
+   repeats the API gate, then checks deployment bytes, deploys Pages, and
+   verifies the exact web and API releases together. A manual run on main uses
+   the same order; a manual run on another branch cannot deploy.
 
-The PR job needs Node 20 only, uses no provider credential or authentication
+The API job needs Node 20 only, uses no provider credential or authentication
 token, submits no audio, and performs only the existing public read-only API
 probes. It makes no web-page or Clerk requests. Each API request times out after
 10 seconds; the workflow allows 30 attempts with 10 seconds between attempts
@@ -58,12 +62,25 @@ node frontend/scripts/probe-deployment.mjs --api-only --attempts 30 --interval-m
 
 The `sonic-check-api-release-gate` artifact records expected/verified API commit,
 capture time, validator outcomes and retry count. It omits raw response bodies
-and exception messages. It does not prove web deployment, an authenticated
+and exception messages. Its existing `API_RELEASE_BEFORE_WEB_MERGE` scope label
+and schema are retained for compatibility; the same API-only check now also
+runs before main/manual deployment. It does not prove web deployment, an authenticated
 audio acceptance scan, whole-container identity, scanner accuracy or catalogue
 source authority. Those retain their separate acceptance evidence. Public paid
 traffic and checkout remain closed.
 
+Both retry modes emit a progress record to stderr when each attempt starts and
+finishes. Finished records name failed checks, report the next retry delay and
+show only a validated public API commit SHA when one was observed. The observed
+SHA is separate from the verified SHA, so a stale release remains a failed
+check. Progress contains no response bodies, exception messages or arbitrary
+response keys. Stdout and the output artifact retain the existing single final
+JSON receipt; progress makes a pending workflow diagnosable without changing
+its pass/fail criteria or making extra API requests.
+
 `npm run test:ops` covers API-only request scope, every reused contract's failure
 path, recording readiness, required routes, exact source projection, stale
-release retry/exhaustion, sanitized receipts and workflow ordering.
+release retry/exhaustion, sanitized receipts and workflow ordering for PR,
+main push and manual runs. Regression tests also exercise stderr progress,
+hostile diagnostic values and unchanged final receipt serialization.
 The existing full production verifier keeps its required web commit check.
