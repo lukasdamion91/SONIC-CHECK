@@ -1,159 +1,60 @@
 # SONIC CHECK Operating Guide
 
-Status: **living and normative**  
-Governance revision: `SC-FOUNDER-OPS/2026-09-05.1`  
-Product authority: **Luke Damion, Architect, Founder and Global Director**
+Status: **current operational guideline subordinate to GOVERNANCE.md**.
+Governance revision: **SC-FOUNDER-GOV/2026-09-11.1**.
+Product authority: **Luke Damion, Architect, Founder and Global Director**.
 
-This is the controlling operating standard for work in the canonical SONIC
-CHECK web and API repositories. Dated V-series notes, research reports,
-validation receipts, screenshots and historical manifests are evidence. They
-do not, by themselves, prove the current production state and cannot override
-this guide.
+Read [GOVERNANCE.md](GOVERNANCE.md) in full. Its 26 founder-approved sections,
+current founder instructions, and specific approval after personal manual
+review control every SONIC CHECK / HARRY workstream. This routing guide does
+not replace, amend or weaken that document.
 
-## Founder directive
+## Operating sequence
 
-A direct founder instruction authorizes completion of the stated task across
-the canonical repositories and already-authorized deployment environments.
-Collaborators must operate as accountable partners: no quiet operating model,
-silent scope reduction, abandoned integration step, concealed failure, or
-representation of partial work as complete.
+Record the actual instruction and requested outcome. Inspect the current
+source and relevant evidence. Prepare the complete authorised candidate and
+run only authorised checks. Report the exact results, failures, tests not run,
+inactive capabilities and unfinished work. Present the review package required
+by governance section 8. Apply only the exact action and version Luke approves;
+verify what actually happened and close with the section 26 handoff.
 
-The following are material truth failures:
+No standing push, PR, merge, publication, deployment, provider activation,
+production configuration, catalogue activation, expenditure, deletion or
+archival authority is created by this sequence. Check downstream automatic
+triggers before any remote action. A materially changed candidate returns for
+manual review. Successful tests and old permissions do not supply approval.
 
-- describing research evidence as application integration;
-- describing local or branch code as merged;
-- describing an open or failed pull request as closed;
-- describing a merge as deployed;
-- describing a deployment job as live verification;
-- implying that a paid SDK, provider or token was used when it was not; and
-- omitting known failures, skipped gates or residual work from a handoff.
+## Evidence and historical terminology
 
-If an earlier statement is discovered to be wrong, correct it and the affected
-ledger promptly. Never defend or repeat a status that the evidence does not
-support.
+Use the status vocabulary in governance section 10. Older tooling may emit
+RUNTIME_INTEGRATED or RESEARCH_CLOSED_NOT_RUNTIME_INTEGRATED; retain those
+observations accurately, but neither means completed delivery. Claim
+PRODUCTION_VERIFIED only after the approved deployment is actually verified.
+AUTHORIZED, CONFIGURED, EXERCISED and PRODUCTION_INTEGRATED describe separate
+provider facts. Provider availability and payment authorization are independent gates.
 
-## Execution default and narrow escalation boundary
+Disclose funded capabilities not used, their exact barriers and remaining work.
+Do not claim licence permission was independently verified when only founder
+confirmation was inspected. Follow the founder's licensing and exclusion
+instructions in sections 17 and 18 without rewriting historical evidence.
 
-Execute every authorized, technically available part of a founder instruction.
-Do not invent policy, licensing or ethics restrictions. A step may pause only
-for a concrete ethical, licensing, legal, security, privacy, destructive-action,
-platform-permission or technical barrier. State the exact barrier and evidence,
-its smallest required resolution, and continue all independent work.
+## Privacy and custody
 
-Founder-supplied screenshots, correspondence, contracts and terms must be
-inspected when relevant and recorded in the task's licence evidence. Do not
-ignore affirmative permission. If sources conflict, cite the exact conflict;
-do not silently choose the more restrictive or permissive interpretation.
+Keep private audio, licences, provider payloads and secrets outside public Git
+and deployment images. A credential pasted into conversational records is
+exposed and must be rotated before production
+use; that blocks only the affected credential, not independent authorised work.
+Credential rotation itself still requires the founder's specific instruction.
+No secret value is evidence to print. Recovery and retention claims require
+actual evidence; preserve failures and report missing custody honestly.
 
-## Truthful delivery states
+## Superseded predecessor
 
-Every status report must name the highest state supported by evidence:
+SC-FOUNDER-OPS/2026-09-05.1 no longer supplies current operating authority.
+The exact previous guide is preserved at
+[operations/governance/predecessor/OPERATING_GUIDE.md](operations/governance/predecessor/OPERATING_GUIDE.md).
+Its historical bytes and the V-series receipts are not rewritten. Its old
+autonomous execution language cannot override GOVERNANCE.md.
 
-`ACCEPTED -> SCOPED -> IMPLEMENTED -> RUNTIME_INTEGRATED -> VERIFIED ->
-PR_OPEN -> CI_GREEN -> MERGED -> DEPLOYED -> PRODUCTION_VERIFIED -> COMPLETE`
-
-Applicable states cannot be skipped. A genuinely inapplicable state requires a
-recorded `N/A` rationale. Cross-repository work cannot advance beyond the least
-advanced required repository.
-
-| State | Minimum evidence |
-| --- | --- |
-| `ACCEPTED` | Founder instruction and task identifier recorded |
-| `SCOPED` | Acceptance criteria, repositories, runtime paths, provider/licence evidence and cost boundary identified |
-| `IMPLEMENTED` | Required changes exist on an exact candidate commit |
-| `RUNTIME_INTEGRATED` | The canonical application call path invokes the change; an offline module or document is insufficient |
-| `VERIFIED` | Relevant tests pass on the exact candidate commit and configured operating systems |
-| `PR_OPEN` | Pull-request URL, head SHA and target branch recorded |
-| `CI_GREEN` | Every required check passes on that exact head SHA |
-| `MERGED` | Canonical `main` contains the change; merge SHA recorded |
-| `DEPLOYED` | The intended environment completed deployment from the recorded merge SHA |
-| `PRODUCTION_VERIFIED` | Live SHA, behavior, analyzer identity, provider/payment gates and privacy boundary verified |
-| `COMPLETE` | Closure record contains all applicable evidence and no required work is undisclosed |
-
-Supporting research may be labelled `EVIDENCE_READY`. An explicitly
-research-only task may end as `RESEARCH_CLOSED_NOT_RUNTIME_INTEGRATED`. Neither
-status means product integration. A failure is `FAILED`; an external dependency
-is `BLOCKED_EXTERNAL`. Both require the exact evidence, impact and next action.
-
-The word **complete** is reserved for the terminal state above.
-
-## Paid providers, SDKs and access tokens
-
-At task start, inventory relevant already-funded capabilities and credential
-classes. When the founder directs use of a commercial provider, SDK or token,
-do not silently replace it with a free, local or synthetic substitute. If the
-credential cannot perform the requested function, demonstrate the exact
-provider boundary and identify the required credential or configuration.
-
-Provider-backed completion requires evidence that:
-
-1. the entitlement and applicable terms were reviewed;
-2. secret presence and credential class were verified without revealing value;
-3. the supported SDK or client is configured;
-4. the canonical runtime path invokes it under an authorized access basis;
-5. provenance, quotas, timeouts, retries and degraded states are handled;
-6. provider failure cannot become a false clean result;
-7. a bounded, sanitized provider contract or smoke test passed; and
-8. production verification proves the promised capability is live.
-
-`AUTHORIZED`, `CONFIGURED`, `EXERCISED`, and `PRODUCTION_INTEGRATED` are
-separate facts. Record each separately; never infer one from another.
-
-## Provider and payment gates
-
-Provider availability, provider authorization, public analysis traffic and
-payment authorization are independent gates. Preserve their fail-closed
-behavior. Using an approved provider does not authorize checkout or paid public
-traffic. No environment flag, token, deployment or research result may bypass a
-source-governed commercial/payment lock or the formal approval it requires.
-
-## Private evidence, audio and secrets
-
-Raw audio, private corpora, provider payloads, access tokens, secret keys,
-licence evidence, custody records, private receipts and identifying research
-material must remain outside public Git history and deployment images.
-
-Public repositories and images may contain application code, schemas, sanitized
-synthetic fixtures and non-sensitive attestations. CI must inspect the final
-deployment artifact or image context; source-directory intention alone is not
-proof. Never print, copy or persist a secret value as evidence.
-
-Credentials supplied through an approved secret store may be used within their
-authorized scope. A credential value pasted into conversational, issue or
-other durable text must be treated as exposed and rotated before production
-use; that blocks only the affected credential, not independent delivery work.
-
-Name the attestation scope exactly. A CI-built image archive proves that
-source-bound candidate only. A live application-root scan proves the deployed
-application filesystem only. Neither may be described as a byte-identical
-whole-production-container digest unless the hosting provider supplies and the
-workflow verifies that digest.
-
-## Financial stewardship
-
-Operate for maximum practical value on SONIC CHECK's shoestring budget. Use
-already-funded capabilities when relevant and permitted. Prefer bounded tests,
-batching, caching, reusable evidence, parallel independent checks and the
-lowest-cost adequate execution path. Estimate and record material provider cost
-before a paid bulk run. Do not purchase a service, increase a plan, open
-checkout, or authorize paid public traffic without explicit founder authority.
-
-Budget discipline is not permission to omit a required gate. If funding blocks
-completion, report `BLOCKED_EXTERNAL` with the exact cost-dependent step.
-
-## Required closure record
-
-Every terminal delivery report must contain:
-
-- requested scope and acceptance criteria;
-- canonical repositories, branches, PR links and exact head/merge/deployed SHAs;
-- runtime wiring path and public response contract;
-- test commands, results and CI run links;
-- provider/SDK authorization, configuration, exercise and integration evidence;
-- payment and provider gate snapshot;
-- deployment-artifact privacy result;
-- live production probes; and
-- every remaining limitation, or an explicit statement that none remain.
-
-The executable sequence and evidence template are in
-[`docs/WORKFLOW.md`](docs/WORKFLOW.md).
+Delivery procedure: [docs/WORKFLOW.md](docs/WORKFLOW.md).
+Installation scope and technical limits: [docs/GOVERNANCE_ROUTING.md](docs/GOVERNANCE_ROUTING.md).

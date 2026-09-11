@@ -1,160 +1,71 @@
 # SONIC CHECK Delivery Workflow
 
-Status: **living and normative**  
-Governance revision: `SC-FOUNDER-OPS/2026-09-05.1`
+Governance revision: **SC-FOUNDER-GOV/2026-09-11.1**.
+Read [../GOVERNANCE.md](../GOVERNANCE.md) and
+[../OPERATING_GUIDE.md](../OPERATING_GUIDE.md) before executing this procedure.
+They govern all development and operations, not only release preparation.
 
-This workflow implements [`../OPERATING_GUIDE.md`](../OPERATING_GUIDE.md) in
-both canonical repositories. Historical V-series files are inputs to this
-workflow, never substitutes for it.
+## 1. Establish the instruction and scope
 
-## 1. Accept and define the finish line
+Record what Luke requested, the exact repositories and starting revisions,
+required outcome, exclusions, financial limits and permitted actions. Do not
+reuse superseded autonomous authority or convert preparation into release
+approval. The governance installation request authorised this document change,
+not an application deployment or a new provider/payment activation.
 
-Record the founder instruction verbatim or by stable reference. Translate it
-into observable acceptance criteria, affected repositories, runtime entry
-points, live surfaces and explicit non-goals. A task that requests integration,
-merge or deployment includes those stages unless the founder narrows it.
+## 2. Inspect and prepare
 
-Create a task evidence record with this schema:
+Read actual source, provider confirmations and current evidence. Prepare the
+complete authorised outcome. Keep private data out of public Git and runtime
+images. Identify each concrete blocker, its effect and smallest resolution;
+continue independent authorised work. Do not invent an easier replacement scope.
 
-| Field | Required content |
-| --- | --- |
-| Task | Stable identifier and founder instruction |
-| Scope | Acceptance criteria and explicit exclusions |
-| Repositories | Canonical repository and starting `main` SHA for each |
-| Runtime path | Entry point, call chain and public/persisted projection |
-| Provider evidence | Terms source, credential class, access basis and intended SDK/API |
-| Gates | Provider, public-traffic and payment state before work |
-| Cost | Expected paid calls or `0`; approval for material spend |
-| Privacy | Private inputs and their non-deployment boundary |
+## 3. Test and disclose
 
-## 2. Audit reality before editing
+Run the checks authorised for the identified candidate. Record commands,
+revision, outcomes, actual provider attempts, failures and NOT RUN checks.
+Distinguish research, runtime wiring and performance evidence. Legacy labels
+such as RUNTIME_INTEGRATED and RESEARCH_CLOSED_NOT_RUNTIME_INTEGRATED remain
+evidence descriptions; neither authorises release nor implies completion.
 
-Fetch current canonical `main`, open PRs, failed runs, deployment identity and
-live contracts. Search for the claimed feature from request through runtime,
-serialization, frontend consumption and tests. Record contradictions
-immediately. Existing code or research is not presumed wired, merged or live.
+## 4. Present the manual-review package
 
-For paid capabilities, inventory each credential by capability without reading
-or logging its value. A management/console token is not presumed to be an
-analysis credential; an SDK licence is not presumed to configure production.
+Supply every applicable item in GOVERNANCE.md section 8: objective, exact
+change/files/revision, practical and analytical effect, provider/privacy/cost
+implications, tests run and not run, failures, limitations, regression risk,
+rollback, recommendation and the precise approval required.
+Stop at READY_FOR_FOUNDER_MANUAL_REVIEW for actions not yet specifically approved.
 
-## 3. Plan the integration and gates
+## 5. Validate approval and downstream effects
 
-Identify the smallest complete vertical slice:
+Before a push, PR, merge, publication, deployment, configuration change,
+activation, spending, deletion or archival, establish that Luke's current
+approval covers the exact reviewed candidate, destination and action. Review
+automatic workflow, hosting and publishing consequences first. A generic
+continue, green check, old permission or silence is not release approval.
+A materially changed candidate returns to Luke for review.
 
-1. core implementation;
-2. canonical runtime invocation;
-3. fail-closed provider behavior and provenance;
-4. additive API/persistence contract;
-5. frontend use when user-visible;
-6. unit, integration, provider-contract and regression tests;
-7. artifact/image privacy verification; and
-8. deployment plus live SHA/capability verification.
+## 6. Apply only the approved action
 
-Provider activation and payment activation remain separate. Do not loosen an
-unrequested gate to make a test pass.
+Use the approved destination and candidate without bundling unrelated work.
+No merge or deployment is implied by approval of preparation. Do not manufacture
+or bypass a gate, and do not claim a gate is technologically enforced merely
+because this document states the rule.
 
-## 4. Implement on review branches
+## 7. Verify what actually happened
 
-Use one review branch per repository. Preserve compatibility unless the scope
-explicitly changes it. Keep private audio, screenshots, contractual evidence,
-provider responses and secret values out of commits and build contexts. Commit
-only sanitized fixtures or attestations needed to verify public behavior.
+Read back the applied files and revision. When a deployment was separately
+approved, verify its actual identity and required behaviour before using
+PRODUCTION_VERIFIED. An unexecuted production or signed-in acceptance remains
+NOT RUN. Retain both unsuccessful attempts and successful correction evidence.
 
-An offline research module reaches `IMPLEMENTED`; it reaches
-`RUNTIME_INTEGRATED` only when the canonical application flow invokes it and its
-result survives the intended API, persistence or UI projection.
+## 8. Handoff and preservation
 
-## 5. Exercise authorized providers truthfully
+Use governance section 26: requested, delivered, evidence, not delivered,
+failures, inactive functionality, external dependencies, costs, recommended
+next action and founder decision required. COMPLETE is limited to the actual
+requested scope satisfied under the applicable approvals.
 
-When provider use is in scope, perform the cheapest bounded call that proves
-the required credential and endpoint. Record only sanitized metadata: provider,
-SDK/client version, operation class, timestamp, outcome and non-secret request
-identifier when permitted.
-
-If a provider cannot be exercised, record `AUTHORIZED`, `CONFIGURED`,
-`EXERCISED`, and `PRODUCTION_INTEGRATED` independently and stop the task at the
-highest supported state. Synthetic tests may verify fallback logic; they do not
-prove provider use.
-
-## 6. Verify the exact candidate commits
-
-Run the complete relevant suite plus focused tests. Verify:
-
-- requested behavior and negative/fail-closed paths;
-- analyzer identity and additive compatibility;
-- provider and payment gates remain closed unless separately authorized;
-- provider outage or abstention cannot become a false clean result;
-- no private evidence or secret enters Git or the deployment artifact; and
-- the closure/governance contract itself remains present.
-
-Record commands, counts, outcomes, OS/runtime versions and exact commit SHAs.
-Do not hide flaky, skipped or unrun checks.
-
-## 7. Pull request and CI
-
-Open a PR to canonical `main` in every affected repository. Complete the PR
-template with runtime wiring, provider truth, gate snapshot, privacy result and
-remaining work. Wait for every required check on the exact head SHA.
-
-- Red or cancelled check: `FAILED`.
-- Pending external check: `BLOCKED_EXTERNAL` or `PR_OPEN` as appropriate.
-- All required checks green: `CI_GREEN`.
-
-Do not merge on an untested replacement SHA.
-
-## 8. Merge, deploy and verify production
-
-Merge the reviewed head and record the merge SHA. Confirm the deploy job used
-that SHA. A successful job reaches `DEPLOYED`, not
-`PRODUCTION_VERIFIED`.
-
-When a host is configured to deploy only after repository checks pass, a live
-verifier that waits for that host must run after deployment and must not be a
-required pre-deploy check; otherwise the verifier and host can wait on each
-other. Validate that its exact SHA is on canonical `main` and has a successful
-test run before executing code from that checkout.
-
-Live verification must bind the web and API to exact deployed SHAs and check:
-
-- canonical routes and analyzer identity;
-- the promised V-series capability fields and method versions;
-- expected provider readiness/provenance without leaking secrets;
-- provider and payment gate states;
-- fail-closed readiness and degraded behavior; and
-- a source-bound candidate artifact/image privacy attestation plus a deployed
-  application-root attestation, without claiming whole-container byte identity.
-
-If a capability requires authenticated or paid traffic that is not authorized,
-record the exact unverified acceptance criterion and do not claim `COMPLETE`.
-
-## 9. Close with evidence
-
-Use this final record. Every `N/A` needs a reason.
-
-```text
-Task:
-Final state:
-Acceptance criteria:
-
-Web repository:
-  PR / head SHA / merge SHA / deployed SHA:
-  CI and deployment runs:
-
-API repository:
-  PR / head SHA / merge SHA / deployed SHA:
-  CI and deployment runs:
-
-Runtime wiring:
-Provider authorization / configured / exercised / production-integrated:
-Provider gate before / after:
-Payment gate before / after:
-Artifact or image privacy result:
-Live probes:
-Remaining limitations:
-Correction to any earlier claim:
-```
-
-Only then may the work be called `COMPLETE`. Research that has passed its own
-protocol but is not wired into the application is
-`RESEARCH_CLOSED_NOT_RUNTIME_INTEGRATED`.
+The superseded SC-FOUNDER-OPS/2026-09-05.1 workflow is retained byte-for-byte at
+[../operations/governance/predecessor/WORKFLOW.md](../operations/governance/predecessor/WORKFLOW.md).
+Its prior automated release sequence is historical, not standing authority.

@@ -1,22 +1,3 @@
-## Founder manual review and exact action approval
-
-Controlling governance: SC-FOUNDER-GOV/2026-09-11.1 (root GOVERNANCE.md).
-
-- Reviewed candidate SHA / exact diff:
-- Founder review evidence / specific approval reference:
-- Approved destination and action (preparation / push / PR / merge / publish / deploy / other):
-- Automatic downstream effects reviewed:
-- Objective, exact change and affected files:
-- Practical and scientific/analytical effect:
-- Provider, privacy and financial implications:
-- Tests actually run / NOT RUN checks:
-- Known failures, limitations and inactive functionality:
-- Regression risk and rollback:
-- Recommendation and precise founder decision required:
-
-Without applicable approval the state is READY_FOR_FOUNDER_MANUAL_REVIEW.
-An open PR or green CI does not authorise merging, publishing or deployment.
-
 ## Founder instruction and acceptance criteria
 
 - Task/reference:
