@@ -218,7 +218,8 @@ const retrievalConsensusCapability = JSON.stringify({
     + "originality, infringement, clearance, or legal evidence."
   ),
 });
-const closedProviderPaymentGates = JSON.stringify({
+// Preserve the predecessor fixture as evidence of the stale release assertion.
+const legacyPendingProviderPaymentGates = JSON.stringify({
   schema_version: "soniccheck-provider-payment-gates/1.1.0",
   acoustid_identification: {
     version: "soniccheck-acoustid-identity-screening/1.0.0",
@@ -278,6 +279,11 @@ const closedProviderPaymentGates = JSON.stringify({
   },
   secrets_included: false,
 });
+// Exact public, non-secret provider snapshot captured during V37 release review.
+const closedProviderPaymentGates = await readFile(
+  new URL("./fixtures/provider-payment-gates.v37-approved.json", import.meta.url),
+  "utf8",
+);
 const deployedApplicationPrivacy = JSON.stringify({
   schema_version: "soniccheck-runtime-application-root-privacy/1.0.0",
   status: "PASS",
@@ -1253,6 +1259,100 @@ function apiGateFetcher({ mutate, calls = [], readinessBody = apiGateReadiness, 
     return response(baseline.status, { body: JSON.stringify(body), url });
   };
 }
+
+async function probeProviderGateSnapshot(snapshot) {
+  return probeApiRelease({
+    fetcher: apiGateFetcher({
+      mutate: (url, body) => {
+        if (!url.endsWith("/api/capabilities/provider-payment-gates")) return;
+        for (const key of Object.keys(body)) delete body[key];
+        Object.assign(body, snapshot);
+      },
+    }),
+  });
+}
+
+test("V37 release gates accept the captured approved metadata-only public snapshot", async () => {
+  const snapshot = JSON.parse(closedProviderPaymentGates);
+  assert.equal(snapshot.musicbrainz_metadata.access_basis, "commercial_approved");
+  assert.equal(snapshot.musicbrainz_metadata.evaluation_only, false);
+  assert.equal(snapshot.musicbrainz_metadata.commercial_use_approved, true);
+  assert.equal(snapshot.acrcloud_identification.secondary_profile_status, "NOT_CONFIGURED");
+  const apiResult = await probeProviderGateSnapshot(snapshot);
+  assert.equal(apiResult.ok, true);
+  const commit = "a".repeat(40);
+  const deploymentResult = await probeDeployment({
+    expectedCommit: commit,
+    fetcher: passingDeploymentFetcher({ commit, providerGatesBody: closedProviderPaymentGates }),
+  });
+  assert.equal(deploymentResult.ok, true);
+  assert.equal(apiResult.authenticated_scan_acceptance_claimed, false);
+  assert.equal(apiResult.web_deployment_verified, false);
+});
+
+test("V37 also accepts a coherent complete but dormant optional ACRCloud project", async () => {
+  const snapshot = JSON.parse(closedProviderPaymentGates);
+  Object.assign(snapshot.acrcloud_identification, {
+    secondary_credentials_present: true,
+    secondary_credentials_complete: true,
+    secondary_profile_status: "DORMANT_UNCLASSIFIED",
+  });
+  const result = await probeProviderGateSnapshot(snapshot);
+  assert.equal(result.ok, true);
+});
+
+test("the preserved pending-evaluation predecessor cannot authorize a production release", async () => {
+  const result = await probeProviderGateSnapshot(JSON.parse(legacyPendingProviderPaymentGates));
+  assert.equal(result.ok, false);
+  assert.equal(result.checks.harry_capability_contract.checks.provider_payment_gates_closed, false);
+});
+
+test("V37 provider gate repair still rejects unsafe, incoherent and incorrectly typed states", async (t) => {
+  const cases = [
+    ["pending MusicBrainz", "musicbrainz_metadata", { access_basis: "pending_evaluation", evaluation_only: true, commercial_use_approved: false }],
+    ["unapproved MusicBrainz", "musicbrainz_metadata", { commercial_use_approved: false }],
+    ["numeric MusicBrainz approval", "musicbrainz_metadata", { commercial_use_approved: 1 }],
+    ["numeric evaluation flag", "musicbrainz_metadata", { evaluation_only: 0 }],
+    ["MusicBrainz live mode", "musicbrainz_metadata", { mode: "on" }],
+    ["MusicBrainz configuration error", "musicbrainz_metadata", { configuration_error: "invalid" }],
+    ["MusicBrainz non-metadata role", "musicbrainz_metadata", { role: "candidate_generation" }],
+    ["MusicBrainz candidate generation", "musicbrainz_metadata", { affects_candidate_generation: true }],
+    ["MusicBrainz confidence changes", "musicbrainz_metadata", { affects_confidence: true }],
+    ["MusicBrainz ranking changes", "musicbrainz_metadata", { affects_ranking: true }],
+    ["MusicBrainz paid traffic", "musicbrainz_metadata", { paid_traffic_enabled: true }],
+    ["partial secondary credentials", "acrcloud_identification", { secondary_credentials_present: true }],
+    ["complete without present", "acrcloud_identification", { secondary_credentials_complete: true }],
+    ["absent with dormant status", "acrcloud_identification", { secondary_profile_status: "DORMANT_UNCLASSIFIED" }],
+    ["complete with absent status", "acrcloud_identification", { secondary_credentials_present: true, secondary_credentials_complete: true }],
+    ["secondary runtime activation", "acrcloud_identification", { secondary_profile_runtime_enabled: true }],
+    ["numeric absent flag", "acrcloud_identification", { secondary_credentials_present: 0 }],
+    ["numeric complete flag", "acrcloud_identification", { secondary_credentials_complete: 0 }],
+    ["numeric disabled flag", "acrcloud_identification", { secondary_profile_runtime_enabled: 0 }],
+    ["numeric dormant flags", "acrcloud_identification", { secondary_credentials_present: 1, secondary_credentials_complete: 1, secondary_profile_status: "DORMANT_UNCLASSIFIED" }],
+    ["ACRCloud recognition activation", "acrcloud_identification", { mode: "on" }],
+    ["ACRCloud access change", "acrcloud_identification", { access_basis: "commercial_approved" }],
+    ["ACRCloud audio transmission", "acrcloud_identification", { customer_audio_transmission_allowed: true }],
+    ["ACRCloud composition changes", "acrcloud_identification", { affects_composition_score: true }],
+    ["AcoustID audio transmission", "acoustid_identification", { raw_audio_transmission_allowed: true }],
+    ["AcoustID composition changes", "acoustid_identification", { affects_composition_score: true }],
+    ["AcoustID paid traffic", "acoustid_identification", { paid_traffic_enabled: true }],
+    ["payment approval", "payment", { approved: true }],
+    ["payment approval revision", "payment", { approval_revision: "unreviewed" }],
+    ["paid traffic requested", "payment", { paid_traffic_requested: true }],
+    ["paid traffic authorized", "payment", { paid_traffic_authorized: true }],
+  ];
+  for (const [name, section, patch] of cases) {
+    await t.test(name, async () => {
+      const snapshot = JSON.parse(closedProviderPaymentGates);
+      Object.assign(snapshot[section], patch);
+      const result = await probeProviderGateSnapshot(snapshot);
+      assert.equal(result.ok, false);
+      assert.equal(result.checks.harry_capability_contract.checks.provider_payment_gates_closed, false);
+      assert.equal(result.checks.api_health.ok, true);
+      assert.equal(result.checks.runtime_application_projection.ok, true);
+    });
+  }
+});
 
 test("API premerge gate verifies all API contracts without web or Clerk requests", async () => {
   const calls = [];

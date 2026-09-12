@@ -320,6 +320,19 @@ function retrievalConsensusContractIsExact(value) {
     );
 }
 
+function inactiveSecondaryAcrcloudIsCoherent(value) {
+  // Match the approved API verifier's production policy: this optional project
+  // may be absent or complete and dormant, but never partial or runtime-enabled.
+  return value?.secondary_profile_runtime_enabled === false && (
+    (value?.secondary_credentials_present === false
+      && value?.secondary_credentials_complete === false
+      && value?.secondary_profile_status === "NOT_CONFIGURED")
+    || (value?.secondary_credentials_present === true
+      && value?.secondary_credentials_complete === true
+      && value?.secondary_profile_status === "DORMANT_UNCLASSIFIED")
+  );
+}
+
 function closedProviderPaymentGates(value) {
   const acoustid = value?.acoustid_identification;
   const acrcloud = value?.acrcloud_identification;
@@ -353,10 +366,7 @@ function closedProviderPaymentGates(value) {
     && acrcloud?.ready === false
     && acrcloud?.status === "DISABLED_BY_POLICY"
     && acrcloud?.customer_audio_transmission_allowed === false
-    && acrcloud?.secondary_credentials_present === true
-    && acrcloud?.secondary_credentials_complete === true
-    && acrcloud?.secondary_profile_status === "DORMANT_UNCLASSIFIED"
-    && acrcloud?.secondary_profile_runtime_enabled === false
+    && inactiveSecondaryAcrcloudIsCoherent(acrcloud)
     && acrcloud?.research_only === true
     && acrcloud?.affects_composition_score === false
     && acrcloud?.secrets_included === false
@@ -364,10 +374,10 @@ function closedProviderPaymentGates(value) {
     && musicbrainz?.version === "soniccheck-musicbrainz-enrichment/0.3.0"
     && musicbrainz?.provider === "MusicBrainz WS/2"
     && musicbrainz?.mode === "shadow"
-    && musicbrainz?.access_basis === "pending_evaluation"
+    && musicbrainz?.access_basis === "commercial_approved"
     && musicbrainz?.enabled === true
-    && musicbrainz?.evaluation_only === true
-    && musicbrainz?.commercial_use_approved === false
+    && musicbrainz?.evaluation_only === false
+    && musicbrainz?.commercial_use_approved === true
     && musicbrainz?.paid_traffic_enabled === false
     && musicbrainz?.configuration_error === null
     && musicbrainz?.role === "candidate_metadata_enrichment_only"
