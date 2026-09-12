@@ -42,6 +42,26 @@ test("six runtime features retain three channels and independently reported outc
   assert.equal(view.partialFeatureCount, 1);
 });
 
+test("saved partial recording coverage keeps its undisclosed provider count and all six entries", () => {
+  const source = inventory();
+  source.features[0].execution_status = "PARTIAL";
+  source.features[0].method_version = "soniccheck-recording-identity-orchestration/1.1.0";
+  const restored = JSON.parse(JSON.stringify({ feature_inventory: source, evidence: { feature_inventory: source } }));
+  const view = featureInventoryView(restored);
+  assert.equal(view.fullyReported, true);
+  assert.equal(view.rows[0].status, "PARTIAL");
+  assert.equal(view.rows[0].completedComparisons, null);
+  assert.equal(view.rows[0].countLabel, "Not disclosed by provider");
+  assert.equal(view.partialFeatureCount, 1);
+  assert.equal(view.completedFeatureCount, 4);
+  for (const index of [1, 2]) {
+    const invalid = inventory();
+    invalid.features[index].execution_status = "PARTIAL";
+    invalid.features[index].completed_comparison_count = null;
+    assert.equal(featureInventoryView({ feature_inventory: invalid }).reported, false);
+  }
+});
+
 test("historical aggregate results never invent individual feature execution", () => {
   const view = featureInventoryView({
     scan_modes: { audio: true, lyrics: true },

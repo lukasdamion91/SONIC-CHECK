@@ -93,6 +93,11 @@ const EXPECTED_ACRCLOUD_GATE_KEYS = [
   "secondary_profile_status",
   "secondary_profile_runtime_enabled",
   "research_only",
+  "authorization_status",
+  "execution_mode",
+  "scientific_validation",
+  "request_policy",
+  "max_requests_per_scan",
   "affects_composition_score",
   "secrets_included",
 ];
@@ -320,17 +325,17 @@ function retrievalConsensusContractIsExact(value) {
     );
 }
 
-function inactiveSecondaryAcrcloudIsCoherent(value) {
-  // Match the approved API verifier's production policy: this optional project
-  // may be absent or complete and dormant, but never partial or runtime-enabled.
-  return value?.secondary_profile_runtime_enabled === false && (
-    (value?.secondary_credentials_present === false
-      && value?.secondary_credentials_complete === false
-      && value?.secondary_profile_status === "NOT_CONFIGURED")
-    || (value?.secondary_credentials_present === true
-      && value?.secondary_credentials_complete === true
-      && value?.secondary_profile_status === "DORMANT_UNCLASSIFIED")
-  );
+function optionalSecondaryProfileIsConsistent(value) {
+  if (value?.secondary_profile_runtime_enabled !== false) return false;
+  if (value?.secondary_credentials_present === false) {
+    return value.secondary_credentials_complete === false
+      && value.secondary_profile_status === "NOT_CONFIGURED";
+  }
+  if (value?.secondary_credentials_present !== true) return false;
+  return (value.secondary_credentials_complete === true
+    && value.secondary_profile_status === "DORMANT_UNCLASSIFIED")
+    || (value.secondary_credentials_complete === false
+      && value.secondary_profile_status === "DORMANT_INCOMPLETE");
 }
 
 function closedProviderPaymentGates(value) {
@@ -360,14 +365,19 @@ function closedProviderPaymentGates(value) {
     && acoustid?.secrets_included === false
     && hasExactKeys(acrcloud, EXPECTED_ACRCLOUD_GATE_KEYS)
     && acrcloud?.provider === "ACRCloud Identification API"
-    && acrcloud?.mode === "off"
-    && acrcloud?.access_basis === "none"
+    && acrcloud?.mode === "shadow"
+    && acrcloud?.access_basis === "commercial_approved"
     && acrcloud?.paid_traffic_enabled === false
-    && acrcloud?.ready === false
-    && acrcloud?.status === "DISABLED_BY_POLICY"
-    && acrcloud?.customer_audio_transmission_allowed === false
-    && inactiveSecondaryAcrcloudIsCoherent(acrcloud)
-    && acrcloud?.research_only === true
+    && acrcloud?.ready === true
+    && acrcloud?.status === "READY_SHADOW"
+    && acrcloud?.customer_audio_transmission_allowed === true
+    && optionalSecondaryProfileIsConsistent(acrcloud)
+    && acrcloud?.research_only === false
+    && acrcloud?.authorization_status === "commercial_approved"
+    && acrcloud?.execution_mode === "shadow"
+    && acrcloud?.scientific_validation === "not_established"
+    && acrcloud?.request_policy === "fallback_once"
+    && acrcloud?.max_requests_per_scan === 1
     && acrcloud?.affects_composition_score === false
     && acrcloud?.secrets_included === false
     && hasExactKeys(musicbrainz, EXPECTED_MUSICBRAINZ_GATE_KEYS)
@@ -691,7 +701,7 @@ export async function probeScanFeatures(apiOrigin, fetcher = fetch) {
     const response = await fetcher(url, webRequestOptions("follow"));
     const payload = await response.json();
     const methods = {
-      recording_identity: "soniccheck-recording-identity-orchestration/1.0.0",
+      recording_identity: "soniccheck-recording-identity-orchestration/1.1.0",
       lyric_phrase_overlap: "soniccheck-exact-lyric-phrase-overlap/1.0.0",
       composition_similarity: "soniccheck-composition/0.4.1-research",
     };

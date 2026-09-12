@@ -4,6 +4,7 @@ import {
   ANALYZER_IDENTITY_REVISION,
 } from "../constants/analyzerIdentity.mjs";
 import { compositionAnalysisView } from "./compositionPresentation.mjs";
+import { buildRecordingProviderCoverage } from "./providerCoveragePresentation.mjs";
 
 const count = (value) => {
   const numeric = Number(value);
@@ -53,6 +54,7 @@ export function buildChannelCoverageRows(result = {}) {
   const recordingUsable = [0, 1001].includes(
     Number(recording.status_code ?? recordingSource.status_code),
   );
+  const providerCoverage = buildRecordingProviderCoverage(result);
 
   let recordingRow;
   if (!audioSubmitted) {
@@ -91,6 +93,19 @@ export function buildChannelCoverageRows(result = {}) {
       outcome: "Unavailable or degraded",
       coverage: `${recordingProvider} · ${recording.status_msg || recordingSource.status || "No usable provider result"}`,
     };
+  }
+
+  if (audioSubmitted && providerCoverage.recorded) {
+    if (providerCoverage.partial) {
+      recordingRow.state = recordingCandidateCount > 0 ? "candidate_evidence" : "unavailable_degraded";
+      recordingRow.outcome = recordingCandidateCount > 0
+        ? "Candidate evidence — partial provider coverage"
+        : "No candidate — partial provider coverage";
+    } else if (providerCoverage.completedCount === 0) {
+      recordingRow.state = "unavailable_degraded";
+      recordingRow.outcome = "No completed provider search recorded";
+    }
+    recordingRow.coverage = providerCoverage.summary;
   }
 
   const lyric = result.lyric_analysis || {};
