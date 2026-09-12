@@ -280,8 +280,13 @@ const legacyPendingProviderPaymentGates = JSON.stringify({
   secrets_included: false,
 });
 // Exact public, non-secret provider snapshot captured during V37 release review.
-const closedProviderPaymentGates = await readFile(
+const capturedV37ProviderPaymentGates = await readFile(
   new URL("./fixtures/provider-payment-gates.v37-approved.json", import.meta.url),
+  "utf8",
+);
+// Synthetic expected snapshot for the reviewed commercial-shadow candidate.
+const closedProviderPaymentGates = await readFile(
+  new URL("./fixtures/provider-payment-gates.acrcloud-commercial-shadow-candidate.json", import.meta.url),
   "utf8",
 );
 const deployedApplicationPrivacy = JSON.stringify({
@@ -350,7 +355,7 @@ const scanFeatureCapability = {
     input_requirement: feature.inputRequirement,
     limitation: feature.limitation,
     method_version: {
-      recording_identity: "soniccheck-recording-identity-orchestration/1.0.0",
+      recording_identity: "soniccheck-recording-identity-orchestration/1.1.0",
       lyric_phrase_overlap: "soniccheck-exact-lyric-phrase-overlap/1.0.0",
       composition_similarity: "soniccheck-composition/0.4.1-research",
     }[feature.parentChannel],
@@ -1096,6 +1101,58 @@ test("provider and payment gate snapshots reject every uncontracted key", async 
   }
 });
 
+test("commercial ACRCloud shadow readiness accepts consistent optional secondary states", async (t) => {
+  for (const [present, complete, status] of [
+    [false, false, "NOT_CONFIGURED"],
+    [true, false, "DORMANT_INCOMPLETE"],
+    [true, true, "DORMANT_UNCLASSIFIED"],
+  ]) {
+    await t.test(status, async () => {
+      const providerGates = JSON.parse(closedProviderPaymentGates);
+      Object.assign(providerGates.acrcloud_identification, {
+        secondary_credentials_present: present,
+        secondary_credentials_complete: complete,
+        secondary_profile_status: status,
+      });
+      const result = await probeDeployment({
+        expectedCommit: "f".repeat(40),
+        fetcher: passingDeploymentFetcher({
+          commit: "f".repeat(40), providerGatesBody: JSON.stringify(providerGates),
+        }),
+      });
+      assert.equal(result.checks.harry_capability_contract.checks.provider_payment_gates_closed, true);
+    });
+  }
+});
+
+test("commercial provider release gate rejects disabled, unapproved, unbounded or paid drift", async (t) => {
+  const cases = [
+    ["disabled primary", (v) => { Object.assign(v.acrcloud_identification, { mode: "off", ready: false, status: "DISABLED_BY_POLICY", customer_audio_transmission_allowed: false }); }],
+    ["evaluation basis", (v) => { v.acrcloud_identification.access_basis = "evaluation_authorized"; }],
+    ["missing primary", (v) => { v.acrcloud_identification.ready = false; v.acrcloud_identification.status = "CONFIGURATION_REQUIRED"; }],
+    ["unbounded request budget", (v) => { v.acrcloud_identification.max_requests_per_scan = 2; }],
+    ["unreviewed request policy", (v) => { v.acrcloud_identification.request_policy = "both_providers"; }],
+    ["scoring promotion", (v) => { v.acrcloud_identification.affects_composition_score = true; }],
+    ["secondary activation", (v) => { v.acrcloud_identification.secondary_profile_runtime_enabled = true; }],
+    ["inconsistent secondary", (v) => { v.acrcloud_identification.secondary_credentials_complete = true; }],
+    ["stale MusicBrainz evaluation", (v) => { Object.assign(v.musicbrainz_metadata, { access_basis: "pending_evaluation", evaluation_only: true, commercial_use_approved: false }); }],
+    ["public paid requests", (v) => { v.payment.paid_traffic_requested = true; }],
+    ["payment approval", (v) => { v.payment.approved = true; v.payment.paid_traffic_authorized = true; }],
+  ];
+  for (const [name, mutate] of cases) {
+    await t.test(name, async () => {
+      const providerGates = JSON.parse(closedProviderPaymentGates);
+      mutate(providerGates);
+      const result = await probeDeployment({
+        expectedCommit: "f".repeat(40),
+        fetcher: passingDeploymentFetcher({ commit: "f".repeat(40), providerGatesBody: JSON.stringify(providerGates) }),
+      });
+      assert.equal(result.ok, false);
+      assert.equal(result.checks.harry_capability_contract.checks.provider_payment_gates_closed, false);
+    });
+  }
+});
+
 test("Pages deployment refuses to redeploy a stale main SHA", async () => {
   const workflow = await readFile(
     new URL("../../.github/workflows/static.yml", import.meta.url),
@@ -1272,7 +1329,7 @@ async function probeProviderGateSnapshot(snapshot) {
   });
 }
 
-test("V37 release gates accept the captured approved metadata-only public snapshot", async () => {
+test("V37 release gates accept the commercial-shadow candidate snapshot", async () => {
   const snapshot = JSON.parse(closedProviderPaymentGates);
   assert.equal(snapshot.musicbrainz_metadata.access_basis, "commercial_approved");
   assert.equal(snapshot.musicbrainz_metadata.evaluation_only, false);
@@ -1307,6 +1364,15 @@ test("the preserved pending-evaluation predecessor cannot authorize a production
   assert.equal(result.checks.harry_capability_contract.checks.provider_payment_gates_closed, false);
 });
 
+test("the preserved captured V37 snapshot records disabled ACRCloud and cannot satisfy the new commercial route", async () => {
+  const captured = JSON.parse(capturedV37ProviderPaymentGates);
+  assert.equal(captured.acrcloud_identification.mode, "off");
+  assert.equal(captured.acrcloud_identification.access_basis, "none");
+  const result = await probeProviderGateSnapshot(captured);
+  assert.equal(result.ok, false);
+  assert.equal(result.checks.harry_capability_contract.checks.provider_payment_gates_closed, false);
+});
+
 test("V37 provider gate repair still rejects unsafe, incoherent and incorrectly typed states", async (t) => {
   const cases = [
     ["pending MusicBrainz", "musicbrainz_metadata", { access_basis: "pending_evaluation", evaluation_only: true, commercial_use_approved: false }],
@@ -1330,8 +1396,8 @@ test("V37 provider gate repair still rejects unsafe, incoherent and incorrectly 
     ["numeric disabled flag", "acrcloud_identification", { secondary_profile_runtime_enabled: 0 }],
     ["numeric dormant flags", "acrcloud_identification", { secondary_credentials_present: 1, secondary_credentials_complete: 1, secondary_profile_status: "DORMANT_UNCLASSIFIED" }],
     ["ACRCloud recognition activation", "acrcloud_identification", { mode: "on" }],
-    ["ACRCloud access change", "acrcloud_identification", { access_basis: "commercial_approved" }],
-    ["ACRCloud audio transmission", "acrcloud_identification", { customer_audio_transmission_allowed: true }],
+    ["ACRCloud access removal", "acrcloud_identification", { access_basis: "none" }],
+    ["ACRCloud approved audio route unavailable", "acrcloud_identification", { customer_audio_transmission_allowed: false }],
     ["ACRCloud composition changes", "acrcloud_identification", { affects_composition_score: true }],
     ["AcoustID audio transmission", "acoustid_identification", { raw_audio_transmission_allowed: true }],
     ["AcoustID composition changes", "acoustid_identification", { affects_composition_score: true }],

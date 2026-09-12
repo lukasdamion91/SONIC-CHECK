@@ -16,6 +16,8 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import CompositionAnalysis from "@/components/CompositionAnalysis";
 import FeatureInventory from "@/components/FeatureInventory";
+import RecordingProviderCoverage from "@/components/RecordingProviderCoverage";
+import { recordingCandidateDetails } from "@/lib/providerCoveragePresentation.mjs";
 import {
   ANALYZER_CAPABILITY_MANIFEST_REVISION,
   ANALYZER_IDENTITY,
@@ -470,6 +472,7 @@ export default function ScanResult() {
       )}
 
       <ChannelCoverage rows={channelCoverageRows} />
+      <RecordingProviderCoverage result={result} />
       <FeatureInventory result={result} />
 
       <section className="mt-6 rounded-2xl border border-white/10 bg-[#202027] p-6 sm:p-8">
@@ -595,7 +598,9 @@ export default function ScanResult() {
             <div className="mt-6 rounded-xl border border-dashed border-white/15 p-8 text-sm leading-6 text-[#F0E9D6]/52">No candidate row was returned by the available recording-identity or lyric channels. This is limited to the sources actually searched.</div>
           ) : (
             <div className="mt-6 space-y-4">
-              {matches.map((match, index) => (
+              {matches.map((match, index) => {
+                const recordingDetails = recordingCandidateDetails(match);
+                return (
                 <article key={`${match.reference_id || "candidate"}-${index}`} data-testid={SCAN.matchRow} className="rounded-xl border border-white/10 bg-[#17171C] p-5">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
@@ -604,6 +609,13 @@ export default function ScanResult() {
                     </div>
                     <span className="rounded-full border border-white/15 px-3 py-1 text-[9px] uppercase tracking-widest text-[#F0E9D6]/55 font-mono-data">human review</span>
                   </div>
+                  {recordingDetails && (
+                    <div className="mt-3 text-xs leading-5 text-[#F0E9D6]/55">
+                      <p>{recordingDetails.provider} · {recordingDetails.scoreLabel}</p>
+                      {recordingDetails.identifier && <p className="break-all font-mono-data">Provider identifier: {recordingDetails.identifier}</p>}
+                      <p>{recordingDetails.interpretation}</p>
+                    </div>
+                  )}
                   {(match.matched_snippet || match.your_snippet) && (
                     <div className="mt-4 grid gap-3 sm:grid-cols-2">
                       <div className="rounded-lg bg-white/[0.035] p-3 text-xs leading-5 text-[#F0E9D6]/55"><span className="block text-[9px] uppercase tracking-widest text-[#F0E9D6]/35 font-mono-data">Reference evidence</span>{match.matched_snippet || "—"}</div>
@@ -611,7 +623,8 @@ export default function ScanResult() {
                     </div>
                   )}
                 </article>
-              ))}
+                );
+              })}
             </div>
           )}
 

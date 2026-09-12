@@ -45,7 +45,7 @@ const validEntry = (entry, feature) => {
   const count = entry.completed_comparison_count;
   const active = ["COMPLETED", "PARTIAL"].includes(status);
   return count === null
-    ? feature.id === "recording_identity" && status === "COMPLETED"
+    ? feature.id === "recording_identity" && active
     : nonnegativeInteger(count) && (active || count === 0)
       && (feature.parentChannel !== "composition_similarity" || !active || count > 0);
 };
@@ -84,7 +84,7 @@ export function featureInventoryView(result = {}) {
     const status = reported ? entry.execution_status : "UNREPORTED";
     const completedComparisons = reported && nonnegativeInteger(suppliedCount) ? suppliedCount : null;
     const countLabel = completedComparisons !== null ? completedComparisons.toLocaleString("en-AU")
-      : reported && feature.id === "recording_identity" && status === "COMPLETED"
+      : reported && feature.id === "recording_identity" && ["COMPLETED", "PARTIAL"].includes(status)
         ? "Not disclosed by provider" : "Not reported";
     return {
       ...feature,
