@@ -365,8 +365,8 @@ test("V36 distinguishes canonical no-applicable and invalid-projection abstentio
 });
 
 const capabilityBody = {
-  revision: "soniccheck-harry-v36-capabilities/1.0.0",
-  analyzer_label: "HARRY_V36",
+  revision: "soniccheck-harry-v37-capabilities/1.0.0",
+  analyzer_label: "HARRY_V37",
   capabilities: [
     {
       capability_id: "v34_structural_missingness_bounds",
@@ -401,18 +401,29 @@ const capabilityBody = {
       authoritative_status_changed: false,
       payment_gate_changed: false,
     },
+    {
+      capability_id: "v37_retrieval_consensus",
+      scientific_stage: "V37",
+      method_version: "soniccheck-v37-eight-channel-retrieval-consensus/1.0.0-research",
+      runtime_state: "RUNTIME_SHADOW_OUTPUT",
+      output_path: "retrieval_consensus",
+      automatic_scan_attachment: true,
+      additional_provider_requests_made_by_capability: 0,
+      authoritative_status_changed: false,
+      payment_gate_changed: false,
+    },
   ],
 };
 const capabilitySha = digest(capabilityBody);
 
 const publicAnalyzer = () => ({
   canonical_name: "HARRY",
-  versioned_label: "HARRY_V36",
+  versioned_label: "HARRY_V37",
   product: "SONIC CHECK",
   role: "evidence-screening analyzer",
-  identity_revision: "soniccheck-harry-identity/1.2.0",
-  scientific_v_series: "V36",
-  completed_v_series_through: "V36",
+  identity_revision: "soniccheck-harry-identity/1.3.0",
+  scientific_v_series: "V37",
+  completed_v_series_through: "V37",
   capability_manifest: { ...clone(capabilityBody), sha256: capabilitySha },
 });
 
@@ -420,24 +431,34 @@ const currentStoredResult = () => ({
   analysis_version: "soniccheck-evidence-screening/0.3.0",
   analyzer: {
     canonical_name: "HARRY",
-    versioned_label: "HARRY_V36",
-    scientific_v_series: "V36",
-    identity_revision: "soniccheck-harry-identity/1.2.0",
+    versioned_label: "HARRY_V37",
+    scientific_v_series: "V37",
+    identity_revision: "soniccheck-harry-identity/1.3.0",
     technical_analysis_version: "soniccheck-evidence-screening/0.3.0",
-    capability_manifest_revision: "soniccheck-harry-v36-capabilities/1.0.0",
+    capability_manifest_revision: "soniccheck-harry-v37-capabilities/1.0.0",
     capability_manifest_sha256: capabilitySha,
   },
 });
 
 test("stored HARRY identity requires exact technical and capability binding", () => {
-  assert.equal(capabilitySha, "e594f8b3282de37e89ce7da853efde590e779b4db75dc59c6547944cf2fe8b6b");
-  assert.equal(storedAnalyzerLabel(currentStoredResult()), "HARRY_V36");
+  assert.equal(capabilitySha, "19ba678b9b2ba351139e8d5ca4da2e0c344c4bc399c37d2f6826db768151e025");
+  assert.equal(storedAnalyzerLabel(currentStoredResult()), "HARRY_V37");
 
-  const historical = currentStoredResult();
-  historical.analyzer.identity_revision = "soniccheck-harry-identity/1.1.0";
-  delete historical.analyzer.capability_manifest_revision;
-  delete historical.analyzer.capability_manifest_sha256;
-  assert.equal(storedAnalyzerLabel(historical), "HARRY_V36");
+  const historicalV36 = currentStoredResult();
+  Object.assign(historicalV36.analyzer, {
+    versioned_label: "HARRY_V36",
+    scientific_v_series: "V36",
+    identity_revision: "soniccheck-harry-identity/1.2.0",
+    capability_manifest_revision: "soniccheck-harry-v36-capabilities/1.0.0",
+    capability_manifest_sha256: "e594f8b3282de37e89ce7da853efde590e779b4db75dc59c6547944cf2fe8b6b",
+  });
+  assert.equal(storedAnalyzerLabel(historicalV36), "HARRY_V36");
+
+  const historicalV36Initial = clone(historicalV36);
+  historicalV36Initial.analyzer.identity_revision = "soniccheck-harry-identity/1.1.0";
+  delete historicalV36Initial.analyzer.capability_manifest_revision;
+  delete historicalV36Initial.analyzer.capability_manifest_sha256;
+  assert.equal(storedAnalyzerLabel(historicalV36Initial), "HARRY_V36");
 
   const corruptions = [
     (value) => { delete value.analyzer.technical_analysis_version; },
@@ -452,9 +473,44 @@ test("stored HARRY identity requires exact technical and capability binding", ()
     corrupt(result);
     assert.equal(storedAnalyzerLabel(result), null);
   }
-  historical.analyzer.capability_manifest_sha256 = capabilitySha;
-  assert.equal(storedAnalyzerLabel(historical), null);
+  historicalV36Initial.analyzer.capability_manifest_sha256 = capabilitySha;
+  assert.equal(storedAnalyzerLabel(historicalV36Initial), null);
 });
+
+const v37NotRequested = () => {
+  const value = {
+    schema_version: "soniccheck-v37-retrieval-consensus/1.0.0",
+    method_version: "soniccheck-v37-eight-channel-retrieval-consensus/1.0.0-research",
+    status: "NOT_EVALUATED_NOT_REQUESTED",
+    evaluated: false,
+    reason_code: "ADMIN_SHADOW_NOT_REQUESTED",
+    source_binding: null,
+    execution: {
+      requested: false,
+      required_channel_count: 8,
+      executed_channel_count: 0,
+      all_required_channels_executed: false,
+    },
+    candidate_summary: null,
+    profile_summary: null,
+    timing: null,
+    claims: {
+      diagnostic_only: true,
+      correctness_estimated: false,
+      accuracy_claimed: false,
+      operational_threshold_established: false,
+      candidate_promotion_authorized: false,
+      authoritative_output_changed: false,
+      provider_calls_permitted: false,
+      payment_gate_changed: false,
+    },
+    provider_requests_made: 0,
+    limitations: [
+      "Cross-channel retrieval consensus measures agreement between correlated candidate-generation views; it is not correctness, recall, accuracy, originality, infringement, clearance, or legal evidence.",
+    ],
+  };
+  return { ...value, diagnostic_sha256: digest(value) };
+};
 
 const currentStoredResultWithDiagnostics = () => {
   const similarity = v34Similarity();
@@ -462,6 +518,7 @@ const currentStoredResultWithDiagnostics = () => {
   return {
     ...currentStoredResult(),
     similarity_analysis: similarity,
+    retrieval_consensus: v37NotRequested(),
   };
 };
 
@@ -471,6 +528,9 @@ test("current analyzer diagnostics require the exact stored capability binding",
   assert.equal(diagnostics.isCurrentCapabilityBoundHarry, true);
   assert.equal(diagnostics.v34?.available, true);
   assert.equal(diagnostics.v36?.available, true);
+  assert.equal(diagnostics.v37?.valid, true);
+  assert.equal(diagnostics.v37?.available, false);
+  assert.equal(diagnostics.v37?.reason, "ADMIN_SHADOW_NOT_REQUESTED");
 
   const invalidDigest = currentStoredResultWithDiagnostics();
   invalidDigest.analyzer.capability_manifest_sha256 = "0".repeat(64);
@@ -478,6 +538,7 @@ test("current analyzer diagnostics require the exact stored capability binding",
     isCurrentCapabilityBoundHarry: false,
     v34: null,
     v36: null,
+    v37: null,
   });
 
   const unrecognisedAnalyzerClaim = currentStoredResultWithDiagnostics();
@@ -486,16 +547,22 @@ test("current analyzer diagnostics require the exact stored capability binding",
     isCurrentCapabilityBoundHarry: false,
     v34: null,
     v36: null,
+    v37: null,
   });
 
   const historical = currentStoredResultWithDiagnostics();
-  historical.analyzer.identity_revision = "soniccheck-harry-identity/1.1.0";
-  delete historical.analyzer.capability_manifest_revision;
-  delete historical.analyzer.capability_manifest_sha256;
+  Object.assign(historical.analyzer, {
+    versioned_label: "HARRY_V36",
+    scientific_v_series: "V36",
+    identity_revision: "soniccheck-harry-identity/1.2.0",
+    capability_manifest_revision: "soniccheck-harry-v36-capabilities/1.0.0",
+    capability_manifest_sha256: "e594f8b3282de37e89ce7da853efde590e779b4db75dc59c6547944cf2fe8b6b",
+  });
   assert.deepEqual(currentAnalyzerDiagnosticViews(historical), {
     isCurrentCapabilityBoundHarry: false,
     v34: null,
     v36: null,
+    v37: null,
   });
 });
 
@@ -848,10 +915,11 @@ test("V35 rejects a resealed and re-summarised false exact-set stability claim",
   assert.equal(multiviewConsistencyView(wrapper), null);
 });
 
-test("the visible result surface consumes all three diagnostic contracts", async () => {
+test("the visible result surface consumes all four diagnostic contracts", async () => {
   const source = await readFile(new URL("../src/pages/ScanResult.jsx", import.meta.url), "utf8");
   assert.match(source, /currentAnalyzerDiagnosticViews\(result\)/u);
   assert.match(source, /multiview-consistency/u);
-  assert.match(source, /\{ANALYZER_IDENTITY\} structural diagnostics/u);
+  assert.match(source, /V37 · eight-channel retrieval consensus/u);
+  assert.match(source, /\{ANALYZER_IDENTITY\} diagnostics/u);
   assert.match(source, /not a confidence interval, probability or accuracy estimate/u);
 });

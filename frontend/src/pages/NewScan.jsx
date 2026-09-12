@@ -28,6 +28,7 @@ export default function NewScan() {
   const [regions, setRegions] = useState([]);
   const [form, setForm] = useState({ title: "", artist_name: user?.name || "", lyrics: "", region: user?.region || "AU" });
   const [audioFile, setAudioFile] = useState(null);
+  const [candidateShadowRequested, setCandidateShadowRequested] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [reconciling, setReconciling] = useState(false);
   const [reconciliationNotice, setReconciliationNotice] = useState("");
@@ -212,6 +213,10 @@ export default function NewScan() {
   }, [abortActiveUpload, stopProgressPolling]);
 
   useEffect(() => {
+    if (user?.role !== "admin") setCandidateShadowRequested(false);
+  }, [user?.role]);
+
+  useEffect(() => {
     api.get("/regions")
       .then(({ data }) => setRegions(data))
       .catch(() => setRegions([
@@ -232,6 +237,15 @@ export default function NewScan() {
       setError("Add an audio file, lyrics, or both before starting the screen.");
       return;
     }
+    if (candidateShadowRequested && user?.role !== "admin") {
+      setCandidateShadowRequested(false);
+      setError("The V37 eight-channel diagnostic is restricted to an authenticated administrator.");
+      return;
+    }
+    if (candidateShadowRequested && !audioFile) {
+      setError("Add an audio file before requesting the V37 eight-channel diagnostic.");
+      return;
+    }
 
     const payload = new FormData();
     payload.append("title", form.title.trim());
@@ -239,6 +253,9 @@ export default function NewScan() {
     payload.append("lyrics", form.lyrics);
     payload.append("region", form.region);
     if (audioFile) payload.append("file", audioFile);
+    if (candidateShadowRequested && user?.role === "admin") {
+      payload.append("candidate_shadow", "true");
+    }
     const progressId = createScanProgressId();
     if (progressId) payload.append("progress_id", progressId);
     const uploadController = new AbortController();
@@ -338,8 +355,36 @@ export default function NewScan() {
                 <div className="mt-1 text-xs text-[#F0E9D6]/42">The API validates file size and decodability before a credit is consumed.</div>
               </div>
             </label>
-            <input id="audio" data-testid={SCAN.audioFileInput} disabled={submitting} type="file" accept="audio/wav,audio/x-wav,audio/aiff,audio/flac,audio/mpeg,audio/mp4,.wav,.aiff,.aif,.flac,.mp3,.m4a" className="sr-only" onChange={(event) => setAudioFile(event.target.files?.[0] || null)} />
+            <input id="audio" data-testid={SCAN.audioFileInput} disabled={submitting} type="file" accept="audio/wav,audio/x-wav,audio/aiff,audio/flac,audio/mpeg,audio/mp4,.wav,.aiff,.aif,.flac,.mp3,.m4a" className="sr-only" onChange={(event) => {
+              const nextAudioFile = event.target.files?.[0] || null;
+              setAudioFile(nextAudioFile);
+              if (!nextAudioFile) setCandidateShadowRequested(false);
+            }} />
           </div>
+
+          {user?.role === "admin" && (
+            <div className="rounded-xl border border-violet-300/20 bg-violet-300/[0.045] p-4">
+              <label htmlFor="candidate-shadow" className="flex items-start gap-3">
+                <input
+                  id="candidate-shadow"
+                  data-testid={SCAN.candidateShadowToggle}
+                  type="checkbox"
+                  checked={candidateShadowRequested}
+                  disabled={submitting || !audioFile}
+                  aria-describedby="candidate-shadow-detail"
+                  onChange={(event) => setCandidateShadowRequested(event.target.checked)}
+                  className="mt-1 h-4 w-4 accent-violet-300"
+                />
+                <span>
+                  <span className="block text-sm font-medium text-violet-100">Run V37 eight-channel research diagnostic</span>
+                  <span id="candidate-shadow-detail" className="mt-1 block text-xs leading-5 text-[#F0E9D6]/48">
+                    Administrator-only and audio-only. This adds retrieval time and stores diagnostic shadow evidence; it does not change the verdict, candidate ranking, provider calls, payment state or entitlement use.
+                  </span>
+                </span>
+              </label>
+              {!audioFile && <p className="mt-2 pl-7 text-[11px] text-violet-100/45">Choose an audio file to enable this control.</p>}
+            </div>
+          )}
 
           <div>
             <Label htmlFor="lyrics" className="text-[#F0E9D6]/78">Lyrics</Label>

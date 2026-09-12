@@ -20,6 +20,7 @@ export const SCAN = {
   artistInput: 'scan-artist-input',
   lyricsInput: 'scan-lyrics-input',
   audioFileInput: 'scan-audio-file-input',
+  candidateShadowToggle: 'scan-v37-candidate-shadow-toggle',
   regionSelect: 'scan-region-select',
   submitBtn: 'scan-submit-btn',
   progressPanel: 'scan-progress-panel',
@@ -33,6 +34,7 @@ export const SCAN = {
   overallScore: 'scan-overall-score',
   verdictBadge: 'scan-verdict-badge',
   matchRow: 'scan-match-row',
+  retrievalConsensusPanel: 'scan-v37-retrieval-consensus-panel',
   deleteBtn: 'scan-delete-btn',
 };
 

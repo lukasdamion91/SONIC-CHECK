@@ -33,9 +33,12 @@ runtime integration, merge, deployment or live verification.
   A$149.99/year, and A$499.99/year enterprise
 - Evidence boundary: results are candidate evidence for human review, not legal,
   plagiarism, infringement, or ownership determinations
-- Analyzer UI identity: the source-owned scanner mark is `HARRY_V36`; it names
+- Analyzer UI identity: the source-owned scanner mark is `HARRY_V37`; it names
   the analyzer implementation and does not rename the SONIC CHECK product or
   accept runtime relabelling from API metadata
+- V37 research control: only an authenticated administrator with an audio file
+  can request the eight-channel retrieval shadow; every V37 result state is
+  integrity-checked and remains diagnostic-only
 - Catalogue boundary: the governed catalogue contains symbolic profiles and
   MusicBrainz identity/metadata context; it is not a claim that SONIC CHECK hosts
   71,000 licensed audio recordings
@@ -60,10 +63,18 @@ Run the release checks with:
 
 ```bash
 cd frontend
+SC_RELEASE_SHA="$(git rev-parse HEAD)"
 CI=true PUBLIC_URL= \
   REACT_APP_BACKEND_URL=https://api.soniccheck.io \
+  REACT_APP_CLERK_PUBLISHABLE_KEY=pk_live_Y2xlcmsuc29uaWNjaGVjay5pbyQ \
+  REACT_APP_CLERK_CONFIGURED=true \
+  REACT_APP_DEPLOYMENT_COMMIT="$SC_RELEASE_SHA" \
+  GENERATE_SOURCEMAP=false \
   npm run verify
 ```
+
+Run that command from a clean, committed candidate when using its result as
+release evidence; a dirty-worktree build proves local behavior only.
 
 ## Deployment
 

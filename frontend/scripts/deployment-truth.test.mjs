@@ -51,8 +51,8 @@ function canonicalJson(value) {
 }
 
 const capabilityManifestBody = {
-  revision: "soniccheck-harry-v36-capabilities/1.0.0",
-  analyzer_label: "HARRY_V36",
+  revision: "soniccheck-harry-v37-capabilities/1.0.0",
+  analyzer_label: "HARRY_V37",
   capabilities: [
     {
       capability_id: "v34_structural_missingness_bounds",
@@ -87,6 +87,17 @@ const capabilityManifestBody = {
       authoritative_status_changed: false,
       payment_gate_changed: false,
     },
+    {
+      capability_id: "v37_retrieval_consensus",
+      scientific_stage: "V37",
+      method_version: "soniccheck-v37-eight-channel-retrieval-consensus/1.0.0-research",
+      runtime_state: "RUNTIME_SHADOW_OUTPUT",
+      output_path: "retrieval_consensus",
+      automatic_scan_attachment: true,
+      additional_provider_requests_made_by_capability: 0,
+      authoritative_status_changed: false,
+      payment_gate_changed: false,
+    },
   ],
 };
 
@@ -95,14 +106,14 @@ const harryCapabilityManifest = {
   sha256: createHash("sha256").update(canonicalJson(capabilityManifestBody)).digest("hex"),
 };
 const harryAnalyzer = {
-  versioned_label: "HARRY_V36",
-  identity_revision: "soniccheck-harry-identity/1.2.0",
-  scientific_v_series: "V36",
+  versioned_label: "HARRY_V37",
+  identity_revision: "soniccheck-harry-identity/1.3.0",
+  scientific_v_series: "V37",
   capability_manifest: harryCapabilityManifest,
 };
 const harryVersion = JSON.stringify({
   commit_sha: ANALYZER_API_RELEASE_COMMIT,
-  analyzer_label: "HARRY_V36",
+  analyzer_label: "HARRY_V37",
   analyzer: harryAnalyzer,
 });
 const closedProductContract = JSON.stringify({
@@ -122,9 +133,9 @@ const closedProductContract = JSON.stringify({
 });
 
 const harryRuntimeSelfTestBody = {
-  schema_version: "soniccheck-harry-v36-runtime-self-test/1.0.0",
+  schema_version: "soniccheck-harry-v37-runtime-self-test/1.0.0",
   status: "PASS",
-  analyzer_label: "HARRY_V36",
+  analyzer_label: "HARRY_V37",
   fixture_scope: "SANITIZED_SOFTWARE_SELF_TEST_ONLY",
   production_audio_used: false,
   research_validation_claimed: false,
@@ -152,11 +163,60 @@ harryRuntimeSelfTestBody.capabilities.v35_multi_view_consistency.diagnostic_sha2
 harryRuntimeSelfTestBody.capabilities.v36_channel_loss_sensitivity.status = (
   "EVALUATED_SHADOW_ONLY"
 );
+harryRuntimeSelfTestBody.capabilities.v37_retrieval_consensus.status = (
+  "EVALUATED_SHADOW_ONLY"
+);
+harryRuntimeSelfTestBody.capabilities.v37_retrieval_consensus.diagnostic_sha256 = (
+  "c".repeat(64)
+);
 const harryRuntimeSelfTest = JSON.stringify({
   ...harryRuntimeSelfTestBody,
   self_test_sha256: createHash("sha256")
     .update(canonicalJson(harryRuntimeSelfTestBody))
     .digest("hex"),
+});
+const legacyV36SelfTestBody = {
+  ...harryRuntimeSelfTestBody,
+  schema_version: "soniccheck-harry-v36-runtime-self-test/1.0.0",
+  analyzer_label: "HARRY_V36",
+  capabilities: Object.fromEntries(Object.entries(harryRuntimeSelfTestBody.capabilities).filter(
+    ([capabilityId]) => capabilityId !== "v37_retrieval_consensus",
+  )),
+};
+const legacyV36SelfTest = JSON.stringify({
+  ...legacyV36SelfTestBody,
+  self_test_sha256: createHash("sha256")
+    .update(canonicalJson(legacyV36SelfTestBody))
+    .digest("hex"),
+});
+const retrievalConsensusCapability = JSON.stringify({
+  schema_version: "soniccheck-v37-retrieval-consensus-capability/1.0.0",
+  scientific_stage: "V37",
+  method_version: "soniccheck-v37-eight-channel-retrieval-consensus/1.0.0-research",
+  runtime_state: "RUNTIME_SHADOW_OUTPUT",
+  output_path: "result.retrieval_consensus",
+  source_contract_id: "SC-EIGHT-CHANNEL-CONTROLLED-SHADOW-20260910",
+  source_mode: "admin_opt_in",
+  source_available: true,
+  request_field: "candidate_shadow",
+  access: "AUTHENTICATED_ADMIN_UPLOAD_ONLY",
+  channels: [
+    "v4:L160", "v4:L208", "v4:L257", "v4:FULL",
+    "v6:L160", "v6:L208", "v6:L257", "v6:FULL",
+  ],
+  automatic_scan_attachment: true,
+  eight_channel_execution_requires_admin_opt_in: true,
+  authoritative_output_changed: false,
+  candidate_ranking_changed: false,
+  correctness_estimated: false,
+  activation_authorized: false,
+  additional_provider_requests_made: 0,
+  payment_gate_changed: false,
+  interpretation: (
+    "Cross-channel retrieval consensus measures agreement between correlated "
+    + "candidate-generation views; it is not correctness, recall, accuracy, "
+    + "originality, infringement, clearance, or legal evidence."
+  ),
 });
 const closedProviderPaymentGates = JSON.stringify({
   schema_version: "soniccheck-provider-payment-gates/1.1.0",
@@ -302,8 +362,14 @@ function governedApiContractResponse(url) {
   if (url.endsWith("/api/product-contract")) {
     return response(200, { body: closedProductContract, url });
   }
-  if (url.endsWith("/api/capabilities/harry-v36/self-test")) {
+  if (url.endsWith("/api/capabilities/harry-v37/self-test")) {
     return response(200, { body: harryRuntimeSelfTest, url });
+  }
+  if (url.endsWith("/api/capabilities/harry-v36/self-test")) {
+    return response(200, { body: legacyV36SelfTest, url });
+  }
+  if (url.endsWith("/api/capabilities/retrieval-consensus")) {
+    return response(200, { body: retrievalConsensusCapability, url });
   }
   if (url.endsWith("/api/capabilities/provider-payment-gates")) {
     return response(200, { body: closedProviderPaymentGates, url });
@@ -477,10 +543,10 @@ test("deployment truth requires exact artifact identity and routing", async () =
     result.checks.harry_capability_contract.api_commit,
     ANALYZER_API_RELEASE_COMMIT,
   );
-  assert.equal(result.checks.harry_capability_contract.analyzer_label, "HARRY_V36");
+  assert.equal(result.checks.harry_capability_contract.analyzer_label, "HARRY_V37");
   assert.equal(
     result.checks.harry_capability_contract.capability_manifest_revision,
-    "soniccheck-harry-v36-capabilities/1.0.0",
+    "soniccheck-harry-v37-capabilities/1.0.0",
   );
   assert.equal(result.checks.harry_capability_contract.paid_public_scanning, "closed");
   assert.match(
@@ -792,7 +858,7 @@ test("deployment truth rejects a declared capability whose runtime self-test is 
   const badSelfTest = JSON.parse(harryRuntimeSelfTest);
   badSelfTest.capabilities.v36_channel_loss_sensitivity.executed = false;
   const fetcher = async (url) => {
-    if (url.endsWith("/api/capabilities/harry-v36/self-test")) {
+    if (url.endsWith("/api/capabilities/harry-v37/self-test")) {
       return response(200, { body: JSON.stringify(badSelfTest), url });
     }
     const governed = governedApiContractResponse(url);
@@ -1159,6 +1225,8 @@ const apiGateRoutes = {
   paths: {
     "/api/diagnostics/multiview-consistency": { post: {} },
     "/api/capabilities/harry-v36/self-test": { get: {} },
+    "/api/capabilities/harry-v37/self-test": { get: {} },
+    "/api/capabilities/retrieval-consensus": { get: {} },
     "/api/capabilities/runtime-privacy": { get: {} },
     "/api/capabilities/provider-payment-gates": { get: {} },
   },
@@ -1207,7 +1275,9 @@ test("API premerge gate verifies all API contracts without web or Clerk requests
   assert.deepEqual(calls.map(({ url }) => new URL(url).pathname).sort(), [
     "/api/capabilities/composition-screening",
     "/api/capabilities/harry-v36/self-test",
+    "/api/capabilities/harry-v37/self-test",
     "/api/capabilities/provider-payment-gates",
+    "/api/capabilities/retrieval-consensus",
     "/api/capabilities/runtime-privacy",
     "/api/capabilities/scan-features",
     "/api/healthz",
@@ -1225,7 +1295,9 @@ test("API premerge gate preserves each existing fail-closed validator", async (t
   const cases = [
     ["stale API commit", "/api/version", (body) => { body.commit_sha = "0".repeat(40); }, "harry_capability_contract"],
     ["unsealed capability", "/api/version", (body) => { body.analyzer.capability_manifest.sha256 = "0".repeat(64); }, "harry_capability_contract"],
-    ["unexecuted self-test", "/api/capabilities/harry-v36/self-test", (body) => { body.status = "NOT_RUN"; }, "harry_capability_contract"],
+    ["unexecuted self-test", "/api/capabilities/harry-v37/self-test", (body) => { body.status = "NOT_RUN"; }, "harry_capability_contract"],
+    ["broken legacy V36 self-test", "/api/capabilities/harry-v36/self-test", (body) => { body.status = "NOT_RUN"; }, "harry_capability_contract"],
+    ["promoting retrieval consensus", "/api/capabilities/retrieval-consensus", (body) => { body.candidate_ranking_changed = true; }, "harry_capability_contract"],
     ["open provider payment gate", "/api/capabilities/provider-payment-gates", (body) => { body.payment.approved = true; }, "harry_capability_contract"],
     ["open product checkout", "/api/product-contract", (body) => { body.pricing.plans[0].checkout_enabled = true; }, "harry_capability_contract"],
     ["private audio in application", "/api/capabilities/runtime-privacy", (body) => { body.raw_audio_present = true; }, "harry_capability_contract"],
