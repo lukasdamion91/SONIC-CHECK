@@ -207,7 +207,7 @@ export default function ScanResult() {
   const matches = result.matches || [];
   const limitations = result.evidence?.limitations || [];
   const channelCoverageRows = buildChannelCoverageRows(result);
-  const { isCurrentCapabilityBoundHarry, v34, v36 } = currentAnalyzerDiagnosticViews(result);
+  const { isCurrentCapabilityBoundHarry, v34, v36, v37 } = currentAnalyzerDiagnosticViews(result);
   const v35 = multiviewConsistencyView(activeComparison.result);
   const analyzerLabel = storedAnalyzerLabel(result);
   const analyzer = result.analyzer || {};
@@ -225,8 +225,11 @@ export default function ScanResult() {
   if (isCurrentCapabilityBoundHarry && !v36?.available) {
     harryContractFailures.push(`V36 channel-loss output is ${v36?.reason ? `invalid (${v36.reason})` : "missing"}`);
   }
+  if (isCurrentCapabilityBoundHarry && !v37?.valid) {
+    harryContractFailures.push(`V37 retrieval-consensus output is ${v37?.reason ? `invalid (${v37.reason})` : "missing"}`);
+  }
   const harryContractWarning = harryContractFailures.length
-    ? `Fail-closed capability warning: ${harryContractFailures.join("; ")}. Do not interpret unavailable structural diagnostics as a successful ${ANALYZER_IDENTITY} result.`
+    ? `Fail-closed capability warning: ${harryContractFailures.join("; ")}. Do not interpret unavailable diagnostics as a successful ${ANALYZER_IDENTITY} result.`
     : "";
   const unavailableDiagnosticDetail = hasCurrentHarryMarker
     ? `not shown because the stored ${ANALYZER_IDENTITY} identity or capability-manifest binding is incomplete or invalid`
@@ -236,6 +239,9 @@ export default function ScanResult() {
     : unavailableDiagnosticDetail;
   const v36UnavailableDetail = isCurrentCapabilityBoundHarry
     ? (v36?.reason || `required output missing from the current ${ANALYZER_IDENTITY} capability contract`)
+    : unavailableDiagnosticDetail;
+  const v37UnavailableDetail = isCurrentCapabilityBoundHarry
+    ? (v37?.reason || `required output missing from the current ${ANALYZER_IDENTITY} capability contract`)
     : unavailableDiagnosticDetail;
   const reportAvailable = accessPolicy.can_download_report && Boolean(scanResultEnvelopeHash) && !integrityError;
 
@@ -467,8 +473,8 @@ export default function ScanResult() {
       <FeatureInventory result={result} />
 
       <section className="mt-6 rounded-2xl border border-white/10 bg-[#202027] p-6 sm:p-8">
-        <div className="eyebrow">{ANALYZER_IDENTITY} structural diagnostics</div>
-        <h2 className="mt-2 text-xl font-semibold text-[#F0E9D6]">Coverage bounds and sensitivity</h2>
+        <div className="eyebrow">{ANALYZER_IDENTITY} diagnostics</div>
+        <h2 className="mt-2 text-xl font-semibold text-[#F0E9D6]">Coverage bounds, sensitivity and retrieval consensus</h2>
         <p className="mt-3 max-w-4xl text-xs leading-5 text-[#F0E9D6]/48">
           These diagnostics describe the evidence returned by this run. They do not change screening status and are not a confidence interval, probability or accuracy estimate.
         </p>
@@ -503,6 +509,30 @@ export default function ScanResult() {
               <p className="mt-3 text-xs leading-5 text-[#F0E9D6]/48">Diagnostic unavailable: {v36UnavailableDetail}.</p>
             )}
           </div>
+        </div>
+
+        <div data-testid={SCAN.retrievalConsensusPanel} className="mt-4 rounded-xl border border-sky-300/15 bg-sky-300/[0.035] p-5">
+          <div className="text-[10px] uppercase tracking-[0.15em] text-sky-100/60 font-mono-data">V37 · eight-channel retrieval consensus</div>
+          {v37?.valid && v37.available ? (
+            <>
+              <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <Metric label="Execution" value={`${v37.executedChannels}/${v37.requiredChannels}`} note="Required retrieval channels completed." />
+                <Metric label="Candidate sets" value={`${v37.baselineCandidates} → ${v37.challengerCandidates}`} note={`Added ${v37.addedCandidates} · lost ${v37.lostCandidates}.`} />
+                <Metric label="Channel support" value={v37.multiChannelCandidates} note={`Majority ${v37.majorityChannelCandidates} · all eight ${v37.allChannelCandidates}.`} />
+                <Metric label="Mean set overlap" value={v37.meanPairwiseJaccard == null ? "—" : `${(v37.meanPairwiseJaccard * 100).toFixed(1)}%`} note={`${v37.observedPairCount} non-empty channel pair${v37.observedPairCount === 1 ? "" : "s"}; descriptive only.`} />
+              </div>
+              <p className="mt-3 text-xs leading-5 text-[#F0E9D6]/48">Profiles checked {v37.profileCount} · 305-frame eligible {v37.frameEligibleProfileCount}. Candidate identifiers are deliberately omitted from this view.</p>
+            </>
+          ) : v37?.valid ? (
+            <p className="mt-3 text-xs leading-5 text-[#F0E9D6]/48">
+              {v37.requested
+                ? `The administrator shadow abstained (${String(v37.reason).replaceAll("_", " ")}); no consensus metrics were calculated.`
+                : "The administrator-only eight-channel shadow was not requested; no eight-channel retrieval ran and no consensus metrics were calculated."}
+            </p>
+          ) : (
+            <p className="mt-3 text-xs leading-5 text-[#F0E9D6]/48">Diagnostic unavailable: {v37UnavailableDetail}.</p>
+          )}
+          <p className="mt-3 text-[11px] leading-5 text-[#F0E9D6]/40">{v37?.limitation || "Retrieval-view agreement is not correctness, accuracy, originality, infringement, clearance or legal evidence."}</p>
         </div>
 
         <div className="mt-4 rounded-xl border border-violet-300/15 bg-violet-300/[0.035] p-5">

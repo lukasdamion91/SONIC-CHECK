@@ -143,12 +143,20 @@ const REQUIRED_HARRY_CAPABILITIES = {
     output_path: "similarity_analysis.channel_loss_sensitivity",
     automatic_scan_attachment: true,
   },
+  v37_retrieval_consensus: {
+    scientific_stage: "V37",
+    method_version: "soniccheck-v37-eight-channel-retrieval-consensus/1.0.0-research",
+    runtime_state: "RUNTIME_SHADOW_OUTPUT",
+    output_path: "retrieval_consensus",
+    automatic_scan_attachment: true,
+  },
 };
 
 const REQUIRED_SELF_TEST_STATUSES = {
   v34_structural_missingness_bounds: "PARTIALLY_IDENTIFIED",
   v35_multi_view_consistency: "NO_EXACT_VIEW_DIVERGENCE_OBSERVED",
   v36_channel_loss_sensitivity: "EVALUATED_SHADOW_ONLY",
+  v37_retrieval_consensus: "EVALUATED_SHADOW_ONLY",
 };
 
 function canonicalJson(value) {
@@ -208,7 +216,7 @@ function runtimeSelfTestIsExact(selfTest, manifest) {
   );
   const exercised = selfTest?.capabilities;
   if (
-    selfTest?.schema_version !== "soniccheck-harry-v36-runtime-self-test/1.0.0"
+    selfTest?.schema_version !== "soniccheck-harry-v37-runtime-self-test/1.0.0"
     || selfTest?.status !== "PASS"
     || selfTest?.analyzer_label !== ANALYZER_IDENTITY
     || selfTest?.fixture_scope !== "SANITIZED_SOFTWARE_SELF_TEST_ONLY"
@@ -235,6 +243,93 @@ function runtimeSelfTestIsExact(selfTest, manifest) {
     && exercised[capabilityId]?.status === REQUIRED_SELF_TEST_STATUSES[capabilityId]
   )) && /^[0-9a-f]{64}$/.test(
     exercised.v35_multi_view_consistency?.diagnostic_sha256 || "",
+  ) && /^[0-9a-f]{64}$/.test(
+    exercised.v37_retrieval_consensus?.diagnostic_sha256 || "",
+  );
+}
+
+function legacyV36SelfTestIsExact(selfTest) {
+  const expected = {
+    v34_structural_missingness_bounds: REQUIRED_HARRY_CAPABILITIES.v34_structural_missingness_bounds,
+    v35_multi_view_consistency: REQUIRED_HARRY_CAPABILITIES.v35_multi_view_consistency,
+    v36_channel_loss_sensitivity: REQUIRED_HARRY_CAPABILITIES.v36_channel_loss_sensitivity,
+  };
+  const exercised = selfTest?.capabilities;
+  if (
+    selfTest?.schema_version !== "soniccheck-harry-v36-runtime-self-test/1.0.0"
+    || selfTest?.status !== "PASS"
+    || selfTest?.analyzer_label !== "HARRY_V36"
+    || selfTest?.fixture_scope !== "SANITIZED_SOFTWARE_SELF_TEST_ONLY"
+    || selfTest?.production_audio_used !== false
+    || selfTest?.research_validation_claimed !== false
+    || selfTest?.provider_requests_made !== 0
+    || selfTest?.payment_entitlements_consumed !== 0
+    || selfTest?.authoritative_status_changed !== false
+    || !hasExactKeys(exercised, Object.keys(expected))
+    || !/^[0-9a-f]{64}$/.test(selfTest?.self_test_sha256 || "")
+  ) return false;
+  const body = { ...selfTest };
+  delete body.self_test_sha256;
+  return createHash("sha256").update(canonicalJson(body)).digest("hex")
+      === selfTest.self_test_sha256
+    && Object.entries(expected).every(([capabilityId, declared]) => (
+      exercised[capabilityId]?.executed === true
+      && exercised[capabilityId]?.method_version === declared.method_version
+      && exercised[capabilityId]?.status === REQUIRED_SELF_TEST_STATUSES[capabilityId]
+    ))
+    && /^[0-9a-f]{64}$/.test(
+      exercised.v35_multi_view_consistency?.diagnostic_sha256 || "",
+    );
+}
+
+function retrievalConsensusContractIsExact(value) {
+  return hasExactKeys(value, [
+    "schema_version", "scientific_stage", "method_version", "runtime_state",
+    "output_path", "source_contract_id", "source_mode", "source_available",
+    "request_field", "access", "channels", "automatic_scan_attachment",
+    "eight_channel_execution_requires_admin_opt_in", "authoritative_output_changed",
+    "candidate_ranking_changed", "correctness_estimated", "activation_authorized",
+    "additional_provider_requests_made", "payment_gate_changed", "interpretation",
+  ])
+    && value.schema_version === "soniccheck-v37-retrieval-consensus-capability/1.0.0"
+    && value.scientific_stage === "V37"
+    && value.method_version === REQUIRED_HARRY_CAPABILITIES.v37_retrieval_consensus.method_version
+    && value.runtime_state === "RUNTIME_SHADOW_OUTPUT"
+    && value.output_path === "result.retrieval_consensus"
+    && value.source_contract_id === "SC-EIGHT-CHANNEL-CONTROLLED-SHADOW-20260910"
+    && value.source_mode === "admin_opt_in"
+    && value.source_available === true
+    && value.request_field === "candidate_shadow"
+    && value.access === "AUTHENTICATED_ADMIN_UPLOAD_ONLY"
+    && canonicalJson(value.channels) === canonicalJson([
+      "v4:L160", "v4:L208", "v4:L257", "v4:FULL",
+      "v6:L160", "v6:L208", "v6:L257", "v6:FULL",
+    ])
+    && value.automatic_scan_attachment === true
+    && value.eight_channel_execution_requires_admin_opt_in === true
+    && value.authoritative_output_changed === false
+    && value.candidate_ranking_changed === false
+    && value.correctness_estimated === false
+    && value.activation_authorized === false
+    && value.additional_provider_requests_made === 0
+    && value.payment_gate_changed === false
+    && value.interpretation === (
+      "Cross-channel retrieval consensus measures agreement between correlated "
+      + "candidate-generation views; it is not correctness, recall, accuracy, "
+      + "originality, infringement, clearance, or legal evidence."
+    );
+}
+
+function inactiveSecondaryAcrcloudIsCoherent(value) {
+  // Match the approved API verifier's production policy: this optional project
+  // may be absent or complete and dormant, but never partial or runtime-enabled.
+  return value?.secondary_profile_runtime_enabled === false && (
+    (value?.secondary_credentials_present === false
+      && value?.secondary_credentials_complete === false
+      && value?.secondary_profile_status === "NOT_CONFIGURED")
+    || (value?.secondary_credentials_present === true
+      && value?.secondary_credentials_complete === true
+      && value?.secondary_profile_status === "DORMANT_UNCLASSIFIED")
   );
 }
 
@@ -271,10 +366,7 @@ function closedProviderPaymentGates(value) {
     && acrcloud?.ready === false
     && acrcloud?.status === "DISABLED_BY_POLICY"
     && acrcloud?.customer_audio_transmission_allowed === false
-    && acrcloud?.secondary_credentials_present === true
-    && acrcloud?.secondary_credentials_complete === true
-    && acrcloud?.secondary_profile_status === "DORMANT_UNCLASSIFIED"
-    && acrcloud?.secondary_profile_runtime_enabled === false
+    && inactiveSecondaryAcrcloudIsCoherent(acrcloud)
     && acrcloud?.research_only === true
     && acrcloud?.affects_composition_score === false
     && acrcloud?.secrets_included === false
@@ -282,10 +374,10 @@ function closedProviderPaymentGates(value) {
     && musicbrainz?.version === "soniccheck-musicbrainz-enrichment/0.3.0"
     && musicbrainz?.provider === "MusicBrainz WS/2"
     && musicbrainz?.mode === "shadow"
-    && musicbrainz?.access_basis === "pending_evaluation"
+    && musicbrainz?.access_basis === "commercial_approved"
     && musicbrainz?.enabled === true
-    && musicbrainz?.evaluation_only === true
-    && musicbrainz?.commercial_use_approved === false
+    && musicbrainz?.evaluation_only === false
+    && musicbrainz?.commercial_use_approved === true
     && musicbrainz?.paid_traffic_enabled === false
     && musicbrainz?.configuration_error === null
     && musicbrainz?.role === "candidate_metadata_enrichment_only"
@@ -495,19 +587,33 @@ async function probeHarryCapabilityContract(apiOrigin, fetcher, {
       versionResponse,
       contractResponse,
       selfTestResponse,
+      legacySelfTestResponse,
+      retrievalConsensusResponse,
       providerGatesResponse,
       runtimePrivacyResponse,
     ] = await Promise.all([
       fetcher(`${apiOrigin}/api/version`, { redirect: "follow" }),
       fetcher(`${apiOrigin}/api/product-contract`, { redirect: "follow" }),
+      fetcher(`${apiOrigin}/api/capabilities/harry-v37/self-test`, { redirect: "follow" }),
       fetcher(`${apiOrigin}/api/capabilities/harry-v36/self-test`, { redirect: "follow" }),
+      fetcher(`${apiOrigin}/api/capabilities/retrieval-consensus`, { redirect: "follow" }),
       fetcher(`${apiOrigin}/api/capabilities/provider-payment-gates`, { redirect: "follow" }),
       fetcher(`${apiOrigin}/api/capabilities/runtime-privacy`, { redirect: "follow" }),
     ]);
-    const [version, contract, selfTest, providerGates, runtimePrivacy] = await Promise.all([
+    const [
+      version,
+      contract,
+      selfTest,
+      legacySelfTest,
+      retrievalConsensus,
+      providerGates,
+      runtimePrivacy,
+    ] = await Promise.all([
       versionResponse.json().catch(() => null),
       contractResponse.json().catch(() => null),
       selfTestResponse.json().catch(() => null),
+      legacySelfTestResponse.json().catch(() => null),
+      retrievalConsensusResponse.json().catch(() => null),
       providerGatesResponse.json().catch(() => null),
       runtimePrivacyResponse.json().catch(() => null),
     ]);
@@ -523,15 +629,19 @@ async function probeHarryCapabilityContract(apiOrigin, fetcher, {
       endpoints: versionResponse.status === 200
         && contractResponse.status === 200
         && selfTestResponse.status === 200
+        && legacySelfTestResponse.status === 200
+        && retrievalConsensusResponse.status === 200
         && providerGatesResponse.status === 200
         && runtimePrivacyResponse.status === 200,
       deployed_commit: version?.commit_sha === ANALYZER_API_RELEASE_COMMIT,
       living_identity: version?.analyzer_label === ANALYZER_IDENTITY
         && analyzer?.versioned_label === ANALYZER_IDENTITY
         && analyzer?.identity_revision === ANALYZER_IDENTITY_REVISION
-        && analyzer?.scientific_v_series === "V36",
+        && analyzer?.scientific_v_series === "V37",
       exact_capabilities: capabilitiesAreExact(manifest),
       runtime_capabilities_exercised: runtimeSelfTestIsExact(selfTest, manifest),
+      legacy_v36_self_test_preserved: legacyV36SelfTestIsExact(legacySelfTest),
+      retrieval_consensus_contract: retrievalConsensusContractIsExact(retrievalConsensus),
       provider_payment_gates_closed: closedProviderPaymentGates(providerGates),
       deployed_application_root_private: deployedApplicationRootIsPrivate(runtimePrivacy),
       product_contract_binding: contract?.analyzer?.versioned_label === ANALYZER_IDENTITY
@@ -780,7 +890,7 @@ export async function probeDeployment({
   const maintenanceVerificationPassed = Object.values(checks).every((check) => check.ok);
   return {
     schema_version: "soniccheck-deployment-truth/1.1.0",
-    verification_scope: "WEB_RELEASE_AND_HARRY_V34_V36_MAINTENANCE",
+    verification_scope: "WEB_RELEASE_AND_HARRY_V34_V37_INTEGRATION",
     expected_commit: expectedCommit,
     origins,
     ok: maintenanceVerificationPassed,
@@ -817,7 +927,9 @@ async function probeApiRoutes(apiOrigin, fetcher) {
     const payload = await response.json();
     const routes = [
       ["v35_diagnostic_post", "/api/diagnostics/multiview-consistency", "post"],
-      ["harry_self_test_get", "/api/capabilities/harry-v36/self-test", "get"],
+      ["harry_v36_legacy_self_test_get", "/api/capabilities/harry-v36/self-test", "get"],
+      ["harry_v37_self_test_get", "/api/capabilities/harry-v37/self-test", "get"],
+      ["retrieval_consensus_get", "/api/capabilities/retrieval-consensus", "get"],
       ["runtime_privacy_get", "/api/capabilities/runtime-privacy", "get"],
       ["provider_payment_gates_get", "/api/capabilities/provider-payment-gates", "get"],
     ];
@@ -918,7 +1030,8 @@ const PROGRESS_CHECKS = {
   www_redirect: [], legacy_app_redirect: [], api_health: [], api_readiness: [],
   harry_capability_contract: [
     "endpoints", "deployed_commit", "living_identity", "exact_capabilities",
-    "runtime_capabilities_exercised", "provider_payment_gates_closed",
+    "runtime_capabilities_exercised", "legacy_v36_self_test_preserved",
+    "retrieval_consensus_contract", "provider_payment_gates_closed",
     "deployed_application_root_private", "product_contract_binding",
     "paid_scanning_closed", "payment_gate_closed", "all_checkout_closed",
   ],
@@ -936,8 +1049,9 @@ const PROGRESS_CHECKS = {
     "execution_states", "read_only",
   ],
   api_routes: [
-    "endpoint", "paths", "v35_diagnostic_post", "harry_self_test_get",
-    "runtime_privacy_get", "provider_payment_gates_get",
+    "endpoint", "paths", "v35_diagnostic_post", "harry_v36_legacy_self_test_get",
+    "harry_v37_self_test_get", "retrieval_consensus_get", "runtime_privacy_get",
+    "provider_payment_gates_get",
   ],
 };
 

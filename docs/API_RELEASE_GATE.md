@@ -26,10 +26,11 @@ gate with an API `workflow_run` observer. See
 3. Prepare the web release binding to that API merge commit. The web PR's
    `build` and `verify-api` jobs must both succeed on the reviewed candidate.
 4. The API gate waits for Render to serve the exact API commit and checks the
-   existing public health, readiness, HARRY capability and runtime self-test,
+   existing public health, readiness, HARRY capability and current V37 runtime
+   self-test, the preserved V36 self-test, V37 retrieval-consensus capability,
    provider/payment gates, application-root privacy, composition compatibility,
    and six-feature inventory contracts. It also checks the OpenAPI methods for
-   the V35 diagnostic POST and HARRY self-test, privacy and provider-gate GETs.
+   the V35 diagnostic POST and all current, legacy and privacy/provider GETs.
 5. Merge the web PR only after those checks pass. The main workflow builds and
    repeats the API gate, then checks deployment bytes, deploys Pages, and
    verifies the exact web and API releases together. A manual run on main uses

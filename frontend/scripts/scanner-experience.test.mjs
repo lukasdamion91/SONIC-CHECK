@@ -338,13 +338,13 @@ test("scanner exposes one source-owned accessible analyzer identity", async () =
     deployedSourceFiles(new URL("../src/", import.meta.url)),
   ]);
 
-  assert.equal(ANALYZER_IDENTITY, "HARRY_V36");
+  assert.equal(ANALYZER_IDENTITY, "HARRY_V37");
   assert.match(analyzer, /import \{ ANALYZER_IDENTITY \} from "@\/constants\/analyzerIdentity\.mjs";/u);
   assert.match(
     analyzer,
     /className="scanner-analyzer-mark font-mono-data"[\s\S]*data-testid=\{SCAN\.analyzerIdentity\}[\s\S]*<span className="sr-only">Analyzer identity: <\/span>[\s\S]*\{ANALYZER_IDENTITY\}/u,
   );
-  assert.doesNotMatch(analyzer, /HARRY_V36/u);
+  assert.doesNotMatch(analyzer, /HARRY_V37/u);
   assert.match(styles, /\.scanner-analyzer-mark \{[\s\S]*white-space: nowrap;/u);
   assert.match(styles, /@media \(max-width: 420px\) \{[\s\S]*\.scanner-analyzer-mark/u);
   assert.match(styles, /@media \(forced-colors: active\) \{[\s\S]*\.scanner-analyzer-mark/u);

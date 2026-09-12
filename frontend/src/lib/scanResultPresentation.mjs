@@ -1031,6 +1031,310 @@ export function channelLossSensitivityView(similarity = {}) {
   };
 }
 
+const V37_SCHEMA = "soniccheck-v37-retrieval-consensus/1.0.0";
+const V37_METHOD = "soniccheck-v37-eight-channel-retrieval-consensus/1.0.0-research";
+const V37_SOURCE_CONTRACT = "SC-EIGHT-CHANNEL-CONTROLLED-SHADOW-20260910";
+const V37_EVALUATED_STATUS = "EVALUATED_SHADOW_ONLY";
+const V37_NOT_REQUESTED_STATUS = "NOT_EVALUATED_NOT_REQUESTED";
+const V37_ABSTAIN_STATUS = "ABSTAIN_INVALID_OR_INCOMPLETE_SHADOW";
+const V37_LIMITATION = (
+  "Cross-channel retrieval consensus measures agreement between correlated "
+  + "candidate-generation views; it is not correctness, recall, accuracy, "
+  + "originality, infringement, clearance, or legal evidence."
+);
+const V37_CHANNELS = [
+  "v4:L160", "v4:L208", "v4:L257", "v4:FULL",
+  "v6:L160", "v6:L208", "v6:L257", "v6:FULL",
+];
+const V37_PROFILE_STATUSES = ["SCORED", "INSUFFICIENT_SIGNAL", "UNAVAILABLE", "INELIGIBLE"];
+const V37_FAILURE_STATUSES = new Set([
+  "DISABLED", "INPUT_OR_RELEASE_UNAVAILABLE", "BUSY", "TIMED_OUT",
+  "WORKER_FAILED", "INVALID_RECEIPT", "CAPTURE_FAILED", "QUERY_NOT_ELIGIBLE",
+]);
+const V37_NULL_EXECUTION_COUNT_FAILURES = new Set([
+  "TIMED_OUT", "WORKER_FAILED", "CAPTURE_FAILED", "INVALID_RECEIPT",
+]);
+const V37_CLAIMS = {
+  diagnostic_only: true,
+  correctness_estimated: false,
+  accuracy_claimed: false,
+  operational_threshold_established: false,
+  candidate_promotion_authorized: false,
+  authoritative_output_changed: false,
+  provider_calls_permitted: false,
+  payment_gate_changed: false,
+};
+const V37_KEYS = [
+  "schema_version", "method_version", "status", "evaluated", "reason_code",
+  "source_binding", "execution", "candidate_summary", "profile_summary", "timing",
+  "claims", "provider_requests_made", "limitations", "diagnostic_sha256",
+];
+const V37_CANDIDATE_SUMMARY_KEYS = [
+  "baseline_candidate_count", "challenger_candidate_count", "added_candidate_count",
+  "lost_candidate_count", "baseline_challenger_jaccard_ppm",
+  "unique_channel_candidate_count", "channel_candidate_observation_count",
+  "channel_candidate_counts", "challenger_channel_support_histogram",
+  "challenger_multi_channel_candidate_count", "challenger_majority_channel_candidate_count",
+  "challenger_all_channel_candidate_count", "top_ranked_challenger_channel_count",
+  "pairwise_channel_jaccard_ppm",
+];
+
+const v37Identifier = (value) => (
+  typeof value === "string"
+  && /^[A-Za-z0-9][A-Za-z0-9_.:@+/-]{0,191}$/u.test(value)
+  && !value.includes("..")
+  && !value.includes("://")
+);
+
+const validV37SourceBinding = (value, evaluated) => {
+  if (!exactKeys(value, [
+    "contract_id", "receipt_sha256", "release_id", "release_manifest_sha256",
+    "generator_id", "generator_sha256", "observer_sha256", "deployment_commit_sha",
+  ])) return false;
+  if (
+    value.contract_id !== V37_SOURCE_CONTRACT
+    || !HASH_PATTERN.test(value.receipt_sha256 || "")
+    || !(value.deployment_commit_sha === null || /^[0-9a-f]{40}$/u.test(value.deployment_commit_sha))
+  ) return false;
+  if (!evaluated) {
+    return [
+      "release_id", "release_manifest_sha256", "generator_id",
+      "generator_sha256", "observer_sha256",
+    ].every((field) => value[field] === null);
+  }
+  return v37Identifier(value.release_id)
+    && v37Identifier(value.generator_id)
+    && [
+      "release_manifest_sha256", "generator_sha256", "observer_sha256",
+    ].every((field) => HASH_PATTERN.test(value[field] || ""));
+};
+
+const validV37CandidateSummary = (value) => {
+  if (!exactKeys(value, V37_CANDIDATE_SUMMARY_KEYS)) return false;
+  const countFields = [
+    "baseline_candidate_count", "challenger_candidate_count", "added_candidate_count",
+    "lost_candidate_count", "unique_channel_candidate_count",
+    "channel_candidate_observation_count", "challenger_multi_channel_candidate_count",
+    "challenger_majority_channel_candidate_count", "challenger_all_channel_candidate_count",
+  ];
+  if (!countFields.every((field) => nonnegativeInteger(value[field]))) return false;
+  const baseline = value.baseline_candidate_count;
+  const challenger = value.challenger_candidate_count;
+  const added = value.added_candidate_count;
+  const lost = value.lost_candidate_count;
+  const intersection = baseline - lost;
+  const union = baseline + challenger - intersection;
+  const expectedJaccard = union === 0
+    ? null
+    : Math.floor(((intersection * 1_000_000) + Math.floor(union / 2)) / union);
+  if (
+    lost > baseline
+    || added > challenger
+    || intersection !== challenger - added
+    || value.unique_channel_candidate_count < challenger
+    || value.channel_candidate_observation_count < value.unique_channel_candidate_count
+    || value.baseline_challenger_jaccard_ppm !== expectedJaccard
+  ) return false;
+
+  const channelCounts = value.channel_candidate_counts;
+  if (
+    !Array.isArray(channelCounts)
+    || channelCounts.length !== V37_CHANNELS.length
+    || channelCounts.some((row, index) => (
+      !exactKeys(row, ["channel_id", "candidate_count"])
+      || row.channel_id !== V37_CHANNELS[index]
+      || !nonnegativeInteger(row.candidate_count, 500)
+    ))
+    || channelCounts.reduce((total, row) => total + row.candidate_count, 0)
+      !== value.channel_candidate_observation_count
+  ) return false;
+
+  const histogram = value.challenger_channel_support_histogram;
+  const histogramKeys = V37_CHANNELS.map((_channel, index) => String(index + 1));
+  if (
+    !exactKeys(histogram, histogramKeys)
+    || !histogramKeys.every((key) => nonnegativeInteger(histogram[key]))
+    || histogramKeys.reduce((total, key) => total + histogram[key], 0) !== challenger
+    || histogramKeys.reduce((total, key) => total + (Number(key) * histogram[key]), 0)
+      > value.channel_candidate_observation_count
+    || value.challenger_multi_channel_candidate_count
+      !== histogramKeys.slice(1).reduce((total, key) => total + histogram[key], 0)
+    || value.challenger_majority_channel_candidate_count
+      !== histogramKeys.slice(4).reduce((total, key) => total + histogram[key], 0)
+    || value.challenger_all_channel_candidate_count !== histogram["8"]
+  ) return false;
+  const topSupport = value.top_ranked_challenger_channel_count;
+  if (
+    (challenger === 0 && topSupport !== null)
+    || (challenger > 0 && (
+      !nonnegativeInteger(topSupport, 8)
+      || topSupport < 1
+      || histogram[String(topSupport)] === 0
+    ))
+  ) return false;
+
+  const overlap = value.pairwise_channel_jaccard_ppm;
+  if (!exactKeys(overlap, [
+    "possible_channel_pairs", "observed_nonempty_union_pairs",
+    "minimum_ppm", "mean_ppm", "maximum_ppm",
+  ])) return false;
+  if (
+    overlap.possible_channel_pairs !== 28
+    || !nonnegativeInteger(overlap.observed_nonempty_union_pairs, 28)
+  ) return false;
+  if (overlap.observed_nonempty_union_pairs === 0) {
+    return ["minimum_ppm", "mean_ppm", "maximum_ppm"].every(
+      (field) => overlap[field] === null,
+    );
+  }
+  return ["minimum_ppm", "mean_ppm", "maximum_ppm"].every(
+    (field) => nonnegativeInteger(overlap[field], 1_000_000),
+  ) && overlap.minimum_ppm <= overlap.mean_ppm && overlap.mean_ppm <= overlap.maximum_ppm;
+};
+
+const validV37ProfileSummary = (value, candidateCount) => {
+  if (!exactKeys(value, [
+    "candidate_profile_count", "status_counts", "v16r_305_frame_eligible_count",
+  ])) return false;
+  const statuses = value.status_counts;
+  return value.candidate_profile_count === candidateCount
+    && exactKeys(statuses, V37_PROFILE_STATUSES)
+    && V37_PROFILE_STATUSES.every((status) => nonnegativeInteger(statuses[status]))
+    && V37_PROFILE_STATUSES.reduce((total, status) => total + statuses[status], 0)
+      === candidateCount
+    && nonnegativeInteger(value.v16r_305_frame_eligible_count, candidateCount);
+};
+
+const validV37Timing = (value) => (
+  exactKeys(value, [
+    "baseline_retrieval_microseconds", "challenger_retrieval_microseconds",
+    "profile_check_microseconds", "shadow_total_microseconds",
+  ])
+  && (value.baseline_retrieval_microseconds === null
+    || nonnegativeInteger(value.baseline_retrieval_microseconds))
+  && [
+    "challenger_retrieval_microseconds", "profile_check_microseconds",
+    "shadow_total_microseconds",
+  ].every((field) => nonnegativeInteger(value[field]))
+);
+
+export function retrievalConsensusView(result = {}) {
+  const value = result?.retrieval_consensus;
+  if (!isObject(value)) return null;
+  const invalid = (reason = "Invalid or unsupported V37 diagnostic") => ({
+    valid: false,
+    available: false,
+    reason,
+  });
+  if (
+    !exactKeys(value, V37_KEYS)
+    || value.schema_version !== V37_SCHEMA
+    || value.method_version !== V37_METHOD
+    || !digestMatches(value, "diagnostic_sha256")
+    || canonicalCompactJson(value.claims) !== canonicalCompactJson(V37_CLAIMS)
+    || value.provider_requests_made !== 0
+    || !sameStringArray(value.limitations, [V37_LIMITATION])
+    || !exactKeys(value.execution, [
+      "requested", "required_channel_count", "executed_channel_count",
+      "all_required_channels_executed",
+    ])
+    || typeof value.execution.requested !== "boolean"
+    || value.execution.required_channel_count !== 8
+    || typeof value.execution.all_required_channels_executed !== "boolean"
+    || typeof value.evaluated !== "boolean"
+  ) return invalid();
+
+  const execution = value.execution;
+  if (value.evaluated) {
+    const summary = value.candidate_summary;
+    if (
+      value.status !== V37_EVALUATED_STATUS
+      || value.reason_code !== null
+      || execution.requested !== true
+      || execution.executed_channel_count !== 8
+      || execution.all_required_channels_executed !== true
+      || !validV37CandidateSummary(summary)
+      || !validV37ProfileSummary(
+        value.profile_summary,
+        summary?.baseline_candidate_count + summary?.added_candidate_count,
+      )
+      || !validV37Timing(value.timing)
+      || !validV37SourceBinding(value.source_binding, true)
+    ) return invalid();
+    const overlap = summary.pairwise_channel_jaccard_ppm;
+    return {
+      valid: true,
+      available: true,
+      status: value.status,
+      evaluated: true,
+      requested: true,
+      executedChannels: execution.executed_channel_count,
+      requiredChannels: execution.required_channel_count,
+      baselineCandidates: summary.baseline_candidate_count,
+      challengerCandidates: summary.challenger_candidate_count,
+      addedCandidates: summary.added_candidate_count,
+      lostCandidates: summary.lost_candidate_count,
+      multiChannelCandidates: summary.challenger_multi_channel_candidate_count,
+      majorityChannelCandidates: summary.challenger_majority_channel_candidate_count,
+      allChannelCandidates: summary.challenger_all_channel_candidate_count,
+      observedPairCount: overlap.observed_nonempty_union_pairs,
+      meanPairwiseJaccardPpm: overlap.mean_ppm,
+      meanPairwiseJaccard: overlap.mean_ppm === null ? null : overlap.mean_ppm / 1_000_000,
+      profileCount: value.profile_summary.candidate_profile_count,
+      frameEligibleProfileCount: value.profile_summary.v16r_305_frame_eligible_count,
+      releaseId: value.source_binding.release_id,
+      receiptDigest: value.source_binding.receipt_sha256,
+      diagnosticDigest: value.diagnostic_sha256,
+      limitation: V37_LIMITATION,
+    };
+  }
+
+  if (
+    execution.all_required_channels_executed !== false
+    || value.candidate_summary !== null
+    || value.profile_summary !== null
+    || value.timing !== null
+    || typeof value.reason_code !== "string"
+  ) return invalid();
+  if (value.status === V37_NOT_REQUESTED_STATUS) {
+    if (
+      value.reason_code !== "ADMIN_SHADOW_NOT_REQUESTED"
+      || execution.requested !== false
+      || execution.executed_channel_count !== 0
+      || value.source_binding !== null
+    ) return invalid();
+  } else if (value.status === V37_ABSTAIN_STATUS) {
+    if (value.reason_code === "SHADOW_RECEIPT_INVALID") {
+      if (
+        execution.requested !== true
+        || execution.executed_channel_count !== null
+        || value.source_binding !== null
+      ) return invalid();
+    } else {
+      const expectedCount = V37_NULL_EXECUTION_COUNT_FAILURES.has(value.reason_code) ? null : 0;
+      if (
+        !V37_FAILURE_STATUSES.has(value.reason_code)
+        || execution.requested !== true
+        || execution.executed_channel_count !== expectedCount
+        || !validV37SourceBinding(value.source_binding, false)
+      ) return invalid();
+    }
+  } else return invalid();
+
+  return {
+    valid: true,
+    available: false,
+    status: value.status,
+    evaluated: false,
+    requested: execution.requested,
+    executedChannels: execution.executed_channel_count,
+    requiredChannels: execution.required_channel_count,
+    reason: value.reason_code,
+    diagnosticDigest: value.diagnostic_sha256,
+    limitation: V37_LIMITATION,
+  };
+}
+
 const EXPECTED_CAPABILITIES = [
   {
     capability_id: "v34_structural_missingness_bounds",
@@ -1065,6 +1369,17 @@ const EXPECTED_CAPABILITIES = [
     authoritative_status_changed: false,
     payment_gate_changed: false,
   },
+  {
+    capability_id: "v37_retrieval_consensus",
+    scientific_stage: "V37",
+    method_version: V37_METHOD,
+    runtime_state: "RUNTIME_SHADOW_OUTPUT",
+    output_path: "retrieval_consensus",
+    automatic_scan_attachment: true,
+    additional_provider_requests_made_by_capability: 0,
+    authoritative_status_changed: false,
+    payment_gate_changed: false,
+  },
 ];
 const EXPECTED_CAPABILITY_BODY = {
   revision: ANALYZER_CAPABILITY_MANIFEST_REVISION,
@@ -1072,6 +1387,8 @@ const EXPECTED_CAPABILITY_BODY = {
   capabilities: EXPECTED_CAPABILITIES,
 };
 const EXPECTED_CAPABILITY_SHA256 = sha256Hex(canonicalCompactJson(EXPECTED_CAPABILITY_BODY));
+const HISTORICAL_V36_CAPABILITY_REVISION = "soniccheck-harry-v36-capabilities/1.0.0";
+const HISTORICAL_V36_CAPABILITY_SHA256 = "e594f8b3282de37e89ce7da853efde590e779b4db75dc59c6547944cf2fe8b6b";
 
 const validTechnicalVersion = (value) => (
   typeof value === "string"
@@ -1088,8 +1405,6 @@ export function storedAnalyzerLabel(result = {}) {
     !validTechnicalVersion(technicalVersion)
     || !isObject(analyzer)
     || analyzer.canonical_name !== "HARRY"
-    || analyzer.versioned_label !== ANALYZER_IDENTITY
-    || analyzer.scientific_v_series !== "V36"
     || analyzer.technical_analysis_version !== technicalVersion
   ) return null;
   if (analyzer.identity_revision === ANALYZER_IDENTITY_REVISION) {
@@ -1098,8 +1413,22 @@ export function storedAnalyzerLabel(result = {}) {
       "technical_analysis_version", "capability_manifest_revision", "capability_manifest_sha256",
     ];
     return exactKeys(analyzer, keys)
+      && analyzer.versioned_label === ANALYZER_IDENTITY
+      && analyzer.scientific_v_series === "V37"
       && analyzer.capability_manifest_revision === ANALYZER_CAPABILITY_MANIFEST_REVISION
       && analyzer.capability_manifest_sha256 === EXPECTED_CAPABILITY_SHA256
+      ? analyzer.versioned_label : null;
+  }
+  if (analyzer.identity_revision === "soniccheck-harry-identity/1.2.0") {
+    const keys = [
+      "canonical_name", "versioned_label", "scientific_v_series", "identity_revision",
+      "technical_analysis_version", "capability_manifest_revision", "capability_manifest_sha256",
+    ];
+    return exactKeys(analyzer, keys)
+      && analyzer.versioned_label === "HARRY_V36"
+      && analyzer.scientific_v_series === "V36"
+      && analyzer.capability_manifest_revision === HISTORICAL_V36_CAPABILITY_REVISION
+      && analyzer.capability_manifest_sha256 === HISTORICAL_V36_CAPABILITY_SHA256
       ? analyzer.versioned_label : null;
   }
   if (analyzer.identity_revision === "soniccheck-harry-identity/1.1.0") {
@@ -1107,7 +1436,10 @@ export function storedAnalyzerLabel(result = {}) {
       "canonical_name", "versioned_label", "scientific_v_series", "identity_revision",
       "technical_analysis_version",
     ];
-    return exactKeys(analyzer, keys) ? analyzer.versioned_label : null;
+    return exactKeys(analyzer, keys)
+      && analyzer.versioned_label === "HARRY_V36"
+      && analyzer.scientific_v_series === "V36"
+      ? analyzer.versioned_label : null;
   }
   return null;
 }
@@ -1123,6 +1455,7 @@ export function currentAnalyzerDiagnosticViews(result = {}) {
       isCurrentCapabilityBoundHarry: false,
       v34: null,
       v36: null,
+      v37: null,
     };
   }
   const similarity = result?.similarity_analysis || {};
@@ -1130,6 +1463,7 @@ export function currentAnalyzerDiagnosticViews(result = {}) {
     isCurrentCapabilityBoundHarry: true,
     v34: structuralMissingnessView(similarity),
     v36: channelLossSensitivityView(similarity),
+    v37: retrievalConsensusView(result),
   };
 }
 
@@ -1145,8 +1479,8 @@ const validPublicAnalyzer = (analyzer) => {
     || analyzer.product !== "SONIC CHECK"
     || analyzer.role !== "evidence-screening analyzer"
     || analyzer.identity_revision !== ANALYZER_IDENTITY_REVISION
-    || analyzer.scientific_v_series !== "V36"
-    || analyzer.completed_v_series_through !== "V36"
+    || analyzer.scientific_v_series !== "V37"
+    || analyzer.completed_v_series_through !== "V37"
   ) return false;
   const manifest = analyzer.capability_manifest;
   if (!exactKeys(manifest, ["revision", "analyzer_label", "capabilities", "sha256"])) return false;
