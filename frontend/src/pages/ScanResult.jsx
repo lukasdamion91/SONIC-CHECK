@@ -14,6 +14,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import RelationalSpecificity from "@/components/RelationalSpecificity";
+import { relationalScoreView } from "@/lib/relationalScorePresentation.mjs";
 import CompositionAnalysis from "@/components/CompositionAnalysis";
 import FeatureInventory from "@/components/FeatureInventory";
 import RecordingProviderCoverage from "@/components/RecordingProviderCoverage";
@@ -205,6 +207,8 @@ export default function ScanResult() {
   };
   const StatusIcon = status.icon;
   const similarity = result.similarity_analysis || {};
+  const relationalScore = relationalScoreView(similarity);
+  const aggregateScore = relationalScore ? (relationalScore.valid ? relationalScore.score : {}) : similarity.evidence_confidence;
   const composition = result.composition_analysis || {};
   const matches = result.matches || [];
   const limitations = result.evidence?.limitations || [];
@@ -459,7 +463,7 @@ export default function ScanResult() {
 
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Metric label="Similarity signal" value={similarity.similarity_signal?.value_percent} suffix="%" note="Method-specific signal, not a probability." />
-          <Metric label="Aggregate evidence score" value={similarity.evidence_confidence?.value} suffix="/100" note={`${similarity.evidence_confidence?.band || "Coverage dependent"}${similarity.evidence_confidence?.channel_coverage_percent != null ? ` · ${similarity.evidence_confidence.channel_coverage_percent}% weighted channel coverage` : ""}`} />
+          <Metric label="Aggregate evidence score" value={aggregateScore?.value} suffix="/100" note={`${aggregateScore?.band || "Coverage dependent"}${aggregateScore?.channel_coverage_percent != null ? ` · ${aggregateScore.channel_coverage_percent}% weighted channel coverage` : ""}`} />
           <Metric label="Candidates" value={matches.length} note="Named candidate-evidence rows." />
           <Metric label="Regional context" value={result.region || scan.region} note={result.regional_context || "Context recorded only."} />
         </div>
@@ -473,6 +477,7 @@ export default function ScanResult() {
 
       <ChannelCoverage rows={channelCoverageRows} />
       <RecordingProviderCoverage result={result} />
+      <RelationalSpecificity similarity={similarity} />
       <FeatureInventory result={result} />
 
       <section className="mt-6 rounded-2xl border border-white/10 bg-[#202027] p-6 sm:p-8">
@@ -488,6 +493,7 @@ export default function ScanResult() {
           </div>
         )}
 
+        {relationalScore?.valid && <p className="mt-3 text-xs leading-5 text-[#F0E9D6]/55">V34, V35 and V36 retain their original three-channel scoring basis, before Relational Specificity. The four-category aggregate is shown above.</p>}
         <div className="mt-5 grid gap-4 lg:grid-cols-2">
           <div className="rounded-xl border border-white/10 bg-[#17171C] p-5">
             <div className="text-[10px] uppercase tracking-[0.15em] text-[#F0E9D6]/40 font-mono-data">V34 · structural missingness</div>
