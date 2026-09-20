@@ -1,0 +1,48 @@
+diff --git a/frontend/scripts/research-pair-presentation.test.mjs b/frontend/scripts/research-pair-presentation.test.mjs
+new file mode 100644
+index 0000000000000000000000000000000000000000..30e30cbcaba3b6775c7f445a58cc6ab83045550c
+--- /dev/null
++++ b/frontend/scripts/research-pair-presentation.test.mjs
+@@ -0,0 +1,282 @@
++import test from "node:test";
++import assert from "node:assert/strict";
++import { webcrypto } from "node:crypto";
++import {
++  RESEARCH_RECEIPT_FIELDS,
++  RESEARCH_RECEIPT_SCHEMA,
++  buildResearchPairRequest,
++  buildResearchReceiptEnvelope,
++  buildResearchRequestContract,
++  canonicalJson,
++  createResearchRequestId,
++  numberText,
++  researchLaneView,
++  researchPairCapabilityView,
++  researchRuntimeRows,
++  sha256Hex,
++  validateResearchPairRecord,
++  verifyResearchHtmlReport,
++  verifyResearchPairRecordIntegrity,
++} from "../src/lib/researchPairPresentation.mjs";
++
++const LEFT = "507f1f77bcf86cd799439011";
++const RIGHT = "507f1f77bcf86cd799439012";
++const REQUEST_ID = "11111111-1111-4111-8111-111111111111";
++const HASH = "0".repeat(64);
++
++async function hashBytes(value) {
++  return sha256Hex(typeof value === "string" ? new TextEncoder().encode(value) : value, webcrypto);
++}
++
++async function sealedRecord() {
++  const leftEncoded = await hashBytes("left-audio");
++  const rightEncoded = await hashBytes("right-audio");
++  const leftPcm = await hashBytes("decoded-left");
++  const rightPcm = await hashBytes("decoded-right");
++  const result = {
++    method_version: "soniccheck-s5p-pairwise/0.1.0-candidate",
++    status: "DIAGNOSTIC_READY",
++    lanes: { s54: { status: "DIAGNOSTIC_READY" } },
++    input_source_sha256: [leftEncoded, rightEncoded].sort(),
++    decoded_input: {
++      status: "AVAILABLE",
