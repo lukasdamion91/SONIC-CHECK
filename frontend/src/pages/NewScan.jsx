@@ -26,7 +26,7 @@ export default function NewScan() {
   const { user, refresh } = useAuth();
   const navigate = useNavigate();
   const [regions, setRegions] = useState([]);
-  const [form, setForm] = useState({ title: "", artist_name: user?.name || "", lyrics: "", region: user?.region || "AU" });
+  const [form, setForm] = useState({ title: "", artist_name: user?.name || "", lyrics: "", region: user?.region || "AU", reference_lyrics: "", reference_lyrics_title: "", reference_lyrics_authorized: false });
   const [audioFile, setAudioFile] = useState(null);
   const [candidateShadowRequested, setCandidateShadowRequested] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -248,6 +248,16 @@ export default function NewScan() {
     }
 
     const payload = new FormData();
+    if (form.reference_lyrics.trim()) {
+      if (!form.lyrics.trim() || !form.reference_lyrics_authorized) {
+        setError("Add submitted lyrics and confirm permission to compare the reference text.");
+        setSubmitting(false);
+        return;
+      }
+      payload.append("reference_lyrics", form.reference_lyrics);
+      payload.append("reference_lyrics_title", form.reference_lyrics_title);
+      payload.append("reference_lyrics_authorized", "true");
+    }
     payload.append("title", form.title.trim());
     payload.append("artist_name", form.artist_name.trim());
     payload.append("lyrics", form.lyrics);
@@ -389,7 +399,16 @@ export default function NewScan() {
           <div>
             <Label htmlFor="lyrics" className="text-[#F0E9D6]/78">Lyrics</Label>
             <Textarea id="lyrics" data-testid={SCAN.lyricsInput} disabled={submitting} value={form.lyrics} onChange={(event) => setForm({ ...form, lyrics: event.target.value })} placeholder="Paste the submitted lyrics here…" className="mt-2 min-h-48 border-white/10 bg-[#17171C] text-[#F0E9D6]" />
-            <p className="mt-2 text-xs text-[#F0E9D6]/42">The lyric channel reports distinctive exact phrase overlap with review context; it does not infer ownership.</p>
+            <p className="mt-2 text-xs text-[#F0E9D6]/42">Exact phrase overlap and Lyric Order Recovery compare available reference text. Lyrics are not automatically transcribed from audio.</p>
+            <details className="mt-4 rounded-xl border border-white/10 p-4 text-[#F0E9D6]/75">
+              <summary className="cursor-pointer text-sm">Compare with a reference lyric text</summary>
+              <p className="mt-3 text-xs leading-5 text-[#F0E9D6]/50">Optional: supply a text you own or have permission to compare. This compares the two supplied texts; it does not search a catalogue. The full reference text is not stored; measurements and short exact-match evidence are retained with the scan. Rescans need the reference supplied again.</p>
+              <Label htmlFor="reference-lyrics-title" className="mt-4 block text-sm">Reference title</Label>
+              <Input id="reference-lyrics-title" disabled={submitting} maxLength={200} value={form.reference_lyrics_title} onChange={(event) => setForm({ ...form, reference_lyrics_title: event.target.value })} className="mt-2 border-white/10 bg-[#17171C]" />
+              <Label htmlFor="reference-lyrics" className="mt-4 block text-sm">Reference lyrics</Label>
+              <Textarea id="reference-lyrics" disabled={submitting} maxLength={20000} value={form.reference_lyrics} onChange={(event) => setForm({ ...form, reference_lyrics: event.target.value })} className="mt-2 min-h-36 border-white/10 bg-[#17171C]" />
+              <label className="mt-3 flex items-start gap-3 text-xs leading-5"><input type="checkbox" disabled={submitting} checked={form.reference_lyrics_authorized} onChange={(event) => setForm({ ...form, reference_lyrics_authorized: event.target.checked })} className="mt-1" />I have permission to submit this reference text for comparison and retain the resulting evidence.</label>
+            </details>
           </div>
 
           <div>
