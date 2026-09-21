@@ -493,7 +493,7 @@ export default function ScanResult() {
           </div>
         )}
 
-        {relationalScore?.valid && <p className="mt-3 text-xs leading-5 text-[#F0E9D6]/55">V34, V35 and V36 retain their original three-channel scoring basis, before Relational Specificity. The four-category aggregate is shown above.</p>}
+        {relationalScore?.valid && <p className="mt-3 text-xs leading-5 text-[#F0E9D6]/55">V34, V35 and V36 retain their original three-channel scoring basis. The versioned aggregate is shown above.</p>}
         <div className="mt-5 grid gap-4 lg:grid-cols-2">
           <div className="rounded-xl border border-white/10 bg-[#17171C] p-5">
             <div className="text-[10px] uppercase tracking-[0.15em] text-[#F0E9D6]/40 font-mono-data">V34 · structural missingness</div>
