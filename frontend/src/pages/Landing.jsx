@@ -46,8 +46,6 @@ export default function Landing() {
   return (
     <main>
       <section className="relative overflow-hidden border-b border-white/10">
-        <div className="landing-orbit landing-orbit-one" />
-        <div className="landing-orbit landing-orbit-two" />
         <div className="mx-auto grid max-w-7xl gap-14 px-6 pb-24 pt-20 lg:grid-cols-[1.25fr_0.75fr] lg:items-end lg:pb-32 lg:pt-28">
           <div className="relative z-10 fade-up">
             <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-[#D4FF00]/25 bg-[#D4FF00]/5 px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] text-[#D4FF00] font-mono-data">
@@ -76,7 +74,7 @@ export default function Landing() {
           </div>
 
           <div className="relative z-10 fade-up delay-200">
-            <div className="rounded-2xl border border-white/10 bg-[#1A1A21]/90 p-6 shadow-2xl backdrop-blur-xl sm:p-8">
+            <div className="metallic-evidence-card rounded-2xl border p-6 sm:p-8">
               <div className="flex items-center justify-between border-b border-white/10 pb-5">
                 <div>
                   <div className="text-[10px] uppercase tracking-[0.2em] text-[#F0E9D6]/45 font-mono-data">Evidence record</div>
@@ -108,6 +106,7 @@ export default function Landing() {
         </div>
       </section>
 
+      <div className="landing-content">
       <section id="method" className="mx-auto max-w-7xl px-6 py-24">
         <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16">
           <div>
@@ -223,6 +222,7 @@ export default function Landing() {
           </span>
         </footer>
       </section>
+      </div>
     </main>
   );
 }
