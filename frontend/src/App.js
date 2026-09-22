@@ -31,7 +31,7 @@ function Entitled({ children }) {
 
 function App() {
   return (
-    <div className="App grain min-h-screen">
+    <div className="App min-h-screen">
       <AuthProvider>
         <BrowserRouter basename={baseName}>
           <Navbar />
