@@ -19,6 +19,7 @@ import { relationalScoreView } from "@/lib/relationalScorePresentation.mjs";
 import CompositionAnalysis from "@/components/CompositionAnalysis";
 import FeatureInventory from "@/components/FeatureInventory";
 import RecordingProviderCoverage from "@/components/RecordingProviderCoverage";
+import ResearchPairDiagnostic from "@/components/ResearchPairDiagnostic";
 import { recordingCandidateDetails } from "@/lib/providerCoveragePresentation.mjs";
 import {
   ANALYZER_CAPABILITY_MANIFEST_REVISION,
@@ -587,6 +588,8 @@ export default function ScanResult() {
       </section>
 
       <CompositionAnalysis analysis={result.composition_analysis} />
+
+      <ResearchPairDiagnostic key={`${user?.id || "unknown"}:${id}`} scanId={id} ownedScans={activeComparison.records} />
 
       {badgeUrl && (
         <div className="mt-5 flex flex-wrap items-center gap-3 rounded-xl border border-[#D4FF00]/20 bg-[#D4FF00]/5 p-4 text-sm text-[#F0E9D6]/70">
