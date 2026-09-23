@@ -1,21 +1,23 @@
-## Founder manual review and exact action approval
+## Delegated action record and reserved decisions
 
-Controlling governance: SC-FOUNDER-GOV/2026-09-11.1 (root GOVERNANCE.md).
+Controlling governance: SC-FOUNDER-GOV/2026-09-23.1 (root GOVERNANCE.md).
 
-- Reviewed candidate SHA / exact diff:
-- Founder review evidence / specific approval reference:
-- Approved destination and action (preparation / push / PR / merge / publish / deploy / other):
-- Automatic downstream effects reviewed:
+- Candidate SHA / exact diff:
+- Delegated scope or specific Founder approval reference for a reserved action:
+- Destination and action (preparation / push / PR / merge / deploy / other):
+- Automatic downstream effects checked:
 - Objective, exact change and affected files:
 - Practical and scientific/analytical effect:
 - Provider, privacy and financial implications:
 - Tests actually run / NOT RUN checks:
 - Known failures, limitations and inactive functionality:
 - Regression risk and rollback:
-- Recommendation and precise founder decision required:
+- Recommendation and precise reserved Founder decision, if any:
 
-Without applicable approval the state is READY_FOR_FOUNDER_MANUAL_REVIEW.
-An open PR or green CI does not authorise merging, publishing or deployment.
+In-scope repository actions may proceed under the 23 September delegation
+after applicable checks. A reserved decision without specific approval remains
+READY_FOR_FOUNDER_MANUAL_REVIEW. An open PR or green CI does not prove scientific
+acceptance, rights, deployment or launch readiness.
 
 ## Founder instruction and acceptance criteria
 

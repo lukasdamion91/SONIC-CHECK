@@ -1,28 +1,26 @@
 # SONIC CHECK Operating Guide
 
 Status: **current operational guideline subordinate to GOVERNANCE.md**.
-Governance revision: **SC-FOUNDER-GOV/2026-09-11.1**.
+Governance revision: **SC-FOUNDER-GOV/2026-09-23.1**.
 Product authority: **Luke Damion, Architect, Founder and Global Director**.
 
-Read [GOVERNANCE.md](GOVERNANCE.md) in full. Its 26 founder-approved sections,
-current founder instructions, and specific approval after personal manual
-review control every SONIC CHECK / HARRY workstream. This routing guide does
-not replace, amend or weaken that document.
+Apply [the current acceptance standard](docs/ACCEPTANCE_STANDARD.md): mandatory
+independent adjudication is banned. Do not count absent independent reviews,
+external audits or reviewer signature quorums as threshold or launch blockers.
+
+Read [GOVERNANCE.md](GOVERNANCE.md) in full. Its 26 sections and current
+Founder amendments control every SONIC CHECK / HARRY workstream. The current
+delegation is recorded in [the 23 September authority record](docs/GOVERNANCE_AUTONOMY_2026-09-23.md).
 
 ## Operating sequence
 
-Record the actual instruction and requested outcome. Inspect the current
-source and relevant evidence. Prepare the complete authorised candidate and
-run only authorised checks. Report the exact results, failures, tests not run,
-inactive capabilities and unfinished work. Present the review package required
-by governance section 8. Apply only the exact action and version Luke approves;
-verify what actually happened and close with the section 26 handoff.
-
-No standing push, PR, merge, publication, deployment, provider activation,
-production configuration, catalogue activation, expenditure, deletion or
-archival authority is created by this sequence. Check downstream automatic
-triggers before any remote action. A materially changed candidate returns for
-manual review. Successful tests and old permissions do not supply approval.
+Record the actual instruction and requested outcome. Inspect source and
+evidence, prepare the candidate, run applicable checks and disclose failures,
+unrun checks and inactive capabilities. Keep the governance section 8 action
+record. For delegated GitHub, research and deployment actions, progress through
+CI and evidence gates and verify the applied revision. Check automatic triggers
+before remote changes and reassess material changes. Return reserved decisions
+to Luke; successful tests alone do not establish scientific acceptance.
 
 ## Evidence and historical terminology
 
@@ -44,7 +42,7 @@ Keep private audio, licences, provider payloads and secrets outside public Git
 and deployment images. A credential pasted into conversational records is
 exposed and must be rotated before production
 use; that blocks only the affected credential, not independent authorised work.
-Credential rotation itself still requires the founder's specific instruction.
+Credential rotation itself remains a reserved decision.
 No secret value is evidence to print. Recovery and retention claims require
 actual evidence; preserve failures and report missing custody honestly.
 

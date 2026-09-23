@@ -1,6 +1,6 @@
 # Validation governance
 
-SC-FOUNDER-GOV/2026-09-11.1 controls this subtree. Read
+SC-FOUNDER-GOV/2026-09-23.1 controls this subtree. Read
 [../GOVERNANCE.md](../GOVERNANCE.md) in full and follow root AGENTS.md.
 Preserve historical receipts, frozen inputs and failures. Use additive
 corrections rather than rewriting earlier results. A missing, rejected or

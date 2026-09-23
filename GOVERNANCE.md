@@ -2,12 +2,29 @@
 
 ## SUPERSEDING FOUNDER GOVERNANCE & OPERATING STANDARD
 
-**Governance ID:** `SC-FOUNDER-GOV/2026-09-11.1`
+**Governance ID:** `SC-FOUNDER-GOV/2026-09-23.1` (amends `SC-FOUNDER-GOV/2026-09-11.1`)
 **Status:** **FOUNDER APPROVED — CONTROLLING PROJECT GOVERNANCE**
-**Effective date:** 12 September 2026 — explicit Founder installation instruction
+**Effective date:** 23 September 2026 — direct Founder amendment to the 12 September installation
 **Project:** SONIC CHECK / HARRY
 **Founder authority:** Luke Damion
 **Document character:** Controlling project governance under explicit Founder approval
+
+**Current direct-founder amendment, 22 September 2026:** Independent adjudication
+is abolished and banned as a mandatory SONIC CHECK threshold, evidence or launch
+standard. [SC-ACCEPTANCE-2026-09-22.1](docs/ACCEPTANCE_STANDARD.md) governs current
+acceptance. Older independent-review requirements have no current authority.
+
+**Current direct-founder amendment, 23 September 2026:** Luke authorises
+ChatGPT/Codex to pull, branch, commit, push, open and update PRs, squash, merge,
+deploy and roll back repository changes in the authorised SONIC CHECK launch
+workstream using its judgment. This instruction supersedes the exact-candidate
+manual approval requirement for those actions and their ordinary CI/hosting
+effects. It also authorises progress on the catalogue, held-out, audio
+retrieval, HOEL, lyrics and authenticated-flow components under section 7.
+Evidence and rights gates remain facts to establish, not process holds to
+waive. [The 23 September authority record](docs/GOVERNANCE_AUTONOMY_2026-09-23.md)
+states the scope and retained limits. Earlier governance and receipts remain
+historical evidence.
 
 ---
 
@@ -35,13 +52,16 @@ Upon Founder approval, the following hierarchy applies to SONIC CHECK project op
 
 An unmistakable current instruction from Luke Damion concerning SONIC CHECK is the highest project-level authority.
 
-### LEVEL 2 — FOUNDER MANUAL REVIEW AND SPECIFIC APPROVAL
+### LEVEL 2 — CURRENT DELEGATED SCOPE AND RESERVED DECISIONS
 
-Any consequential change requiring application, publication, merging, deployment, activation, deletion, archival, configuration change, production modification, or expenditure requires the Founder to review the proposed action and expressly approve that specific action.
+The 23 September Founder instruction grants continuing discretion for the
+specified repository and launch-development actions. Section 7 states the
+delegated scope and the decisions reserved to Luke. Direct Founder instructions
+can expand, narrow or revoke that scope at any time.
 
 ### LEVEL 3 — THIS GOVERNANCE STANDARD
 
-`SC-FOUNDER-GOV/2026-09-11.1`
+`SC-FOUNDER-GOV/2026-09-23.1`
 
 This document controls project execution unless subsequently amended or superseded by the Founder.
 
@@ -70,20 +90,20 @@ They do **not** independently grant current operational authority.
 
 ---
 
-# 3. SUPERSESSION OF PREVIOUS AUTONOMOUS AUTHORITY
+# 3. HISTORICAL AUTHORITY AND THE CURRENT DELEGATION
 
-All previous general, continuing or blanket authority granted to ChatGPT, Codex, agents, connectors, automated workflows or other project collaborators to work autonomously through versions, merge work, publish changes, deploy changes, activate services or otherwise exercise consequential discretion is hereby **SUPERSEDED**.
+The 11 September governance superseded earlier general autonomous permissions.
+The Founder has now made a new, affirmative delegation on 23 September 2026.
+It is current authority for the actions in section 7, not a revival of an
+unbounded historical permission.
 
 Historical records documenting such authority remain historically accurate and must not be altered merely because the authority has subsequently been superseded.
 
-However, those historical permissions cannot be relied upon as current authority.
+Those historical permissions cannot be relied upon to extend the new scope.
 
 There is no implied continuing authority arising from:
 
-* previous autonomous-development instructions;
-* previous permission to work through multiple V-series stages;
-* previous merge authority;
-* previous deployment authority;
+* earlier autonomous-development instructions outside the current delegation;
 * previous provider-integration authority;
 * a successful test;
 * a green CI result;
@@ -94,7 +114,7 @@ There is no implied continuing authority arising from:
 * an assumed preference;
 * or the fact that a change appears technically beneficial.
 
-**Current specific Founder approval governs.**
+**Current direct Founder instruction and the bounded delegation in section 7 govern.**
 
 ---
 
@@ -150,7 +170,8 @@ The existence of a barrier does not authorise unrelated work to be abandoned.
 
 When the Founder directs a task, the objective is the **actual requested outcome**, not the earliest intermediate state that can plausibly be described as progress.
 
-Work should therefore proceed through every technically available preparatory stage required to place the requested outcome before the Founder for review.
+Work should therefore proceed through every technically available stage within
+the delegated scope. Present a reserved decision to the Founder when needed.
 
 Documentation alone is not implementation.
 
@@ -158,9 +179,9 @@ Implementation alone is not runtime integration.
 
 Runtime integration alone is not verification.
 
-Verification alone is not Founder approval.
+Verification alone is not scientific or launch acceptance.
 
-Founder approval alone is not deployment unless deployment was specifically approved.
+Delegated deployment authority does not prove a deployment occurred.
 
 A task must not be silently abandoned because an intermediate milestone has been reached.
 
@@ -168,37 +189,51 @@ If completion cannot presently be achieved, the task must remain visibly incompl
 
 ---
 
-# 7. NO PUBLISHING OR DEPLOYMENT WITHOUT SPECIFIC FOUNDER APPROVAL
+# 7. DELEGATED LAUNCH-DEVELOPMENT AUTHORITY AND RESERVED DECISIONS
 
-ChatGPT and associated project tooling have **no standing authority** under this governance to perform consequential release actions.
+For the Founder-directed SONIC CHECK launch workstream, ChatGPT/Codex may
+autonomously fetch/pull, create branches, commit, push, open/update PRs, squash,
+merge and deploy repository revisions. This includes CI-triggered deployment,
+verification and rollback of a bad revision. It may also conduct and publish
+source-bound research, run authorised local or staging experiments, repair the
+160-item catalogue decision inventory, establish the 1,100-source held-out
+protocol, restore and test full-catalogue audio retrieval, develop and integrate
+HOEL, and test synthetic lyrics and authenticated product flows. It may progress
+through overall HARRY versions without returning for approval of every commit.
 
-Without specific Founder approval following manual review, the following actions must not occur:
+Before a production code or catalogue change, identify the exact revision,
+check applicable CI and scientific gates, protect customer data and secrets,
+account for automatic downstream effects, and retain a rollback path. A failed
+gate must be repaired or reported as failed. Production changes may use this
+delegation when their actual effects stay within the authorised workstream and
+the relevant evidence, rights and privacy standards have been met. A deployment
+must be observed before it is called deployed or production verified.
 
-* merging a pull request into canonical `main`;
-* pushing directly to protected or production branches;
-* publishing a release;
-* deploying to Render, Cloudflare or another production environment;
-* changing production environment variables;
-* activating or deactivating production providers;
-* changing production DNS;
-* opening public paid traffic;
-* changing Stripe production behaviour;
-* publishing customer-facing claims;
-* deleting production resources;
-* deleting repositories;
-* deleting branches containing unique evidence;
-* permanently archiving unique project material;
-* altering provider licensing status;
-* rotating or replacing production credentials unless specifically directed;
-* changing authoritative scoring behaviour;
-* activating new catalogue releases; or
-* otherwise materially changing the live SONIC CHECK system.
+The following decisions remain reserved for specific Founder instruction:
+
+* new expenditure, paid provider usage beyond a verified included entitlement,
+  subscriptions or plan increases, public checkout or paid-traffic activation;
+* production secret or credential rotation, access grants, DNS/ownership changes,
+  deletion of unique evidence or production resources, or repository deletion;
+* a disputed or unverified rights, attribution, identity or cultural-context
+  determination; no such hold is resolved by a heuristic or bulk waiver;
+* changing the scientific acceptance standard or announcing unsupported legal,
+  forensic, performance, certification or public marketing claims; and
+* the public commercial launch decision, including customer-facing claims and
+  exposure beyond the already authorised operating scope.
+
+An existing provider can be examined and used within its documented no-new-cost
+entitlement where terms and privacy permit it. When cost, licence or scope
+cannot be established, retain the hold and continue independent work. This
+delegation does not create credentials, source assets, labels, vector shards,
+ground truth or proof of HOEL benefit.
 
 ---
 
-# 8. FOUNDER REVIEW GATE
+# 8. ACTION RECORD AND FOUNDER REVIEW WHEN RESERVED
 
-Before a consequential action is performed, the Founder must be given a review package containing, where applicable:
+For a delegated consequential action, maintain a reviewable action record
+containing, where applicable:
 
 1. **Requested objective**
 2. **Exact proposed change**
@@ -216,9 +251,9 @@ Before a consequential action is performed, the Founder must be given a review p
 14. **Rollback method**
 15. **Exact candidate revision or diff**
 16. **Recommended action**
-17. **Explicit statement that Founder approval is required**
+17. **Delegated authority or the precise reserved Founder decision**
 
-The correct terminal state before Founder approval is:
+For a reserved decision not yet approved, the correct terminal state is:
 
 **READY FOR FOUNDER MANUAL REVIEW**
 
@@ -232,15 +267,21 @@ or
 
 **PRODUCTION VERIFIED**
 
-unless those states have actually occurred under separate Founder authority.
+unless those states have actually occurred under delegated or specific Founder
+authority.
 
 ---
 
-# 9. APPROVAL MUST BE SPECIFIC
+# 9. SCOPE CONTROL FOR DELEGATED AND RESERVED ACTIONS
 
-Founder approval applies to the reviewed action.
+Delegated repository work may evolve as tests and review expose changes.
+Re-run appropriate checks and record the actual revision before a merge or
+deployment. A material change is evaluated against the delegated scope and
+remaining gates; it does not automatically require another manual approval.
 
-Approval of one candidate does not automatically authorise a materially changed candidate.
+Specific Founder approval remains tied to the reviewed action for decisions
+reserved in section 7. A materially changed reserved action must return for
+review. Do not split one reserved action into smaller steps to evade this rule.
 
 If a proposed implementation materially changes after review because of:
 
@@ -255,7 +296,8 @@ If a proposed implementation materially changes after review because of:
 * changed financial implications;
 * or another substantive modification,
 
-the revised implementation must return to the Founder for review.
+the revised implementation must be rechecked against the current delegated
+scope and evidence gates. If it changes a reserved decision, return it to Luke.
 
 Minor non-substantive evidence updates may be presented alongside the candidate but must not be used to disguise substantive changes.
 
@@ -271,7 +313,8 @@ A change has been suggested but not authorised for implementation.
 
 ### `AUTHORISED_TO_PREPARE`
 
-The Founder has authorised preparation or investigation but not consequential application.
+The Founder has authorised preparation or investigation only. Current delegated
+repository authority may also apply when the action is within section 7.
 
 ### `IN_PROGRESS`
 
@@ -303,15 +346,17 @@ The blocker must be identified.
 
 ### `READY_FOR_FOUNDER_MANUAL_REVIEW`
 
-The candidate and evidence package are ready for Luke's inspection.
+The candidate and evidence package are ready for Luke's inspection for a
+reserved decision.
 
 ### `FOUNDER_APPROVED`
 
-Luke has explicitly approved the identified action.
+Luke has explicitly approved the identified reserved action.
 
 ### `APPLIED`
 
-The approved change has been applied to the specifically authorised destination.
+The change has been applied to the identified destination under delegated or
+specific Founder authority.
 
 ### `MERGED`
 
@@ -319,7 +364,7 @@ The reviewed change exists on the identified canonical branch.
 
 ### `DEPLOYED`
 
-The approved revision has been deployed to the identified environment.
+The identified revision has been deployed to the identified environment.
 
 ### `PRODUCTION_VERIFIED`
 
@@ -378,7 +423,7 @@ Where a capability is:
 
 that state and its reason must be disclosed.
 
-Where changing that state is proposed, the Founder must be informed of:
+Where changing that state is proposed, the action record must state:
 
 * what would become active;
 * why it was inactive;
@@ -576,9 +621,15 @@ Where security prevents a requested action, the exact security issue and a viabl
 
 # 21. FINANCIAL AUTHORITY
 
-No new expenditure, subscription, paid provider run, plan increase, public checkout activation or financial commitment may be made without Founder approval.
+No new expenditure, subscription, incremental paid provider run, plan increase,
+public checkout activation or financial commitment may be made without specific
+Founder approval. Exercise within a documented existing included entitlement
+is delegated when terms, privacy and quota are verified and no additional
+charge can result.
 
-Existing paid capabilities may be investigated and prepared for authorised use within their documented entitlement, but consequential paid execution must respect the Founder’s specific financial instructions.
+Existing paid capabilities may be investigated and exercised within that
+verified entitlement. Consequential incremental paid execution must respect
+the Founder's specific financial instructions.
 
 Cost estimates should be disclosed before material expenditure.
 
@@ -646,9 +697,11 @@ If the Founder requested research only, research completion may be sufficient.
 
 If the Founder requested integration, research completion is insufficient.
 
-If the Founder requested a candidate for review, the task can end at `READY_FOR_FOUNDER_MANUAL_REVIEW`.
+If the Founder requested a candidate for a reserved decision, the task can end
+at `READY_FOR_FOUNDER_MANUAL_REVIEW`.
 
-If the Founder separately authorises merge or deployment, those actions must actually occur before those respective states may be claimed.
+If delegated or specifically authorised merge or deployment is requested,
+those actions must actually occur before those respective states may be claimed.
 
 No status may be inflated to create an appearance of greater progress.
 
@@ -696,7 +749,8 @@ The technically preferred continuation.
 
 **Founder decision required**
 
-The precise consequential action awaiting Luke's approval.
+The precise reserved action awaiting Luke's approval, or `NONE` when the work
+remains within the delegated authority.
 
 ---
 

@@ -53,6 +53,34 @@ test("pull requests require delivery, provider, gate and privacy evidence", asyn
   }
 });
 
+test("current delegation reaches frontend and retains evidence gates", async () => {
+  const routes = [
+    "GOVERNANCE.md",
+    "AGENTS.md",
+    "OPERATING_GUIDE.md",
+    "docs/WORKFLOW.md",
+    "docs/GOVERNANCE_ROUTING.md",
+    "docs/ACCEPTANCE_STANDARD.md",
+    "docs/GOVERNANCE_AUTONOMY_2026-09-23.md",
+    "frontend/AGENTS.md",
+    ".github/AGENTS.md",
+    ".github/copilot-instructions.md",
+    ".github/pull_request_template.md",
+  ];
+  for (const route of routes) {
+    const document = await text(route);
+    assert.match(document, /SC-FOUNDER-GOV\/2026-09-23\.1|SC-ACCEPTANCE-2026-09-22\.1/u, route);
+  }
+  const governance = await text("GOVERNANCE.md");
+  const scope = await text("docs/GOVERNANCE_AUTONOMY_2026-09-23.md");
+  const frontend = await text("frontend/AGENTS.md");
+  assert.match(governance, /DELEGATED LAUNCH-DEVELOPMENT AUTHORITY/u);
+  assert.match(governance, /The following decisions remain reserved/u);
+  assert.match(scope, /does not\nchange rights, privacy or scientific thresholds/u);
+  assert.match(frontend, /API release binding, CI, privacy/u);
+  assert.doesNotMatch(frontend, /no old autonomous permission/u);
+});
+
 test("raw audio and private research paths are ignored", async () => {
   const ignore = await text(".gitignore");
   for (const pattern of [
