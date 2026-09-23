@@ -4,10 +4,9 @@ export const ANALYZER_IDENTITY = "HARRY_V37";
 export const ANALYZER_IDENTITY_REVISION = "soniccheck-harry-identity/1.3.0";
 export const ANALYZER_CAPABILITY_MANIFEST_REVISION = "soniccheck-harry-v37-capabilities/1.0.0";
 export const ANALYZER_CAPABILITY_MANIFEST_SHA256 = "19ba678b9b2ba351139e8d5ca4da2e0c344c4bc399c37d2f6826db768151e025";
-// Prepared API consolidation candidate; publication requires the exact deployed
-// revision and runtime projection to match. If merging creates a new commit,
-// rebind to that verified deployment before publishing this frontend candidate.
-export const ANALYZER_API_RELEASE_COMMIT = "6ccaac5049f88f2cc1081df377d6089724158e85";
+// API main release binding; publishing requires the exact deployed revision
+// and runtime projection to match this source-owned value.
+export const ANALYZER_API_RELEASE_COMMIT = "e523d279808a7ef8150296697de7bc6de72e4b56";
 
 // Derived from the reviewed API source with runtime_privacy's canonical helper.
 // Update alongside the API release binding; this is an application-root projection.
