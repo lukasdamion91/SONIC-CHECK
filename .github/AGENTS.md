@@ -1,9 +1,10 @@
 # Workflow and review governance
 
-SC-FOUNDER-GOV/2026-09-11.1 controls this subtree. Read
+SC-FOUNDER-GOV/2026-09-23.1 controls this subtree. Read
 [../GOVERNANCE.md](../GOVERNANCE.md) and the root AGENTS.md in full.
-Workflow definitions, PR templates, release triggers and external deployment
-hooks confer no standing approval. Before any action, check its actual
-publishing, deployment and cost effects against Luke's specific reviewed
-approval. Do not relabel skipped CI as passing tests. The installation of
-these instructions is not proof of changed GitHub or hosting permissions.
+Luke's current delegation permits GitHub branch/commit/push/PR/squash/merge
+and deployment actions in the launch workstream without exact-revision manual
+approval. Check actual publishing, deployment, evidence, privacy and cost
+effects and retain rollback. Reserved section 7 decisions still require Luke.
+Do not relabel skipped CI as passing tests or claim these instructions change
+GitHub or hosting permissions by themselves.
