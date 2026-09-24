@@ -33,8 +33,8 @@ import { resolveAccessPolicy } from "@/lib/accessPolicy.mjs";
 import {
   prepareScanResultIntegrity,
   ReportIntegrityError,
-  verifyReportDelivery,
 } from "@/lib/scanResultIntegrity.mjs";
+import { createReportDownloadSession, reportErrorDetail } from "@/lib/reportDownload.mjs";
 import {
   buildChannelCoverageRows,
   currentAnalyzerDiagnosticViews,
@@ -125,6 +125,16 @@ export default function ScanResult() {
   const [badgeUrl, setBadgeUrl] = useState("");
   const [scanResultEnvelopeHash, setScanResultEnvelopeHash] = useState("");
   const [integrityError, setIntegrityError] = useState("");
+  const [preparedReport, setPreparedReport] = useState(null);
+  const [reportFailure, setReportFailure] = useState(null);
+  const reportDownloadSession = useMemo(() => createReportDownloadSession({
+    scanId: id, ownerId: user?.id, scanResultEnvelopeHash,
+  }), [id, user?.id, scanResultEnvelopeHash]);
+  useEffect(() => {
+    reportDownloadSession.activate();
+    setAction("");
+    return () => reportDownloadSession.dispose();
+  }, [reportDownloadSession]);
   const [comparisonState, setComparisonState] = useState(() => emptyComparisonState(id));
   const multiviewRequestSequence = useRef(0);
   const accessPolicy = resolveAccessPolicy(user);
@@ -250,7 +260,11 @@ export default function ScanResult() {
   const v37UnavailableDetail = isCurrentCapabilityBoundHarry
     ? (v37?.reason || `required output missing from the current ${ANALYZER_IDENTITY} capability contract`)
     : unavailableDiagnosticDetail;
-  const reportAvailable = accessPolicy.can_download_report && Boolean(scanResultEnvelopeHash) && !integrityError;
+  const reportAvailable = scan?.id === id && accessPolicy.can_download_report && Boolean(scanResultEnvelopeHash) && !integrityError;
+  const activeReportDownload = preparedReport?.session === reportDownloadSession && !integrityError
+    ? preparedReport.download : null;
+  const activeReportFailure = reportFailure?.session === reportDownloadSession
+    ? reportFailure.message : "";
 
   const provenanceRows = useMemo(() => {
     const provenance = result.evidence?.provenance || {};
@@ -279,35 +293,34 @@ export default function ScanResult() {
       );
       if (!confirmed) return;
     }
+    const reportRequest = reportDownloadSession.begin();
+    if (reportRequest == null) return;
+    setReportFailure(null);
     setAction("report");
     try {
       const response = await api.get(`/scans/${id}/report`, { responseType: "blob" });
-      await verifyReportDelivery({
-        blob: response.data,
-        headers: response.headers,
-        expectedScanResultEnvelopeHash: scanResultEnvelopeHash,
-      });
-      const url = URL.createObjectURL(response.data);
-      const anchor = document.createElement("a");
-      anchor.href = url;
-      anchor.download = `soniccheck-evidence-${id}.pdf`;
-      document.body.appendChild(anchor);
-      anchor.click();
-      anchor.remove();
-      URL.revokeObjectURL(url);
-      toast.success("Integrity-checked evidence report downloaded");
+      const download = await reportDownloadSession.prepare(response.data, response.headers, reportRequest);
+      if (download) {
+        setPreparedReport({ session: reportDownloadSession, download });
+        toast.success("PDF ready. Use Save verified PDF to download it.");
+      }
     } catch (requestError) {
-      toast.error(
-        requestError instanceof ReportIntegrityError
-          ? requestError.message
-          : formatApiErrorDetail(requestError?.response?.data?.detail),
-      );
+      if (!reportDownloadSession.isCurrent(reportRequest)) return;
+      const message = requestError instanceof ReportIntegrityError
+        ? requestError.message
+        : formatApiErrorDetail(await reportErrorDetail(requestError?.response?.data));
+      if (reportDownloadSession.isCurrent(reportRequest)) {
+        setReportFailure({ session: reportDownloadSession, message });
+        toast.error(message);
+      }
     } finally {
+      const stillCurrent = reportDownloadSession.isCurrent(reportRequest);
+      reportDownloadSession.finish(reportRequest);
+      if (stillCurrent) setAction("");
       await refreshAfterCreditAttempt(
         accessPolicy.report_credit_will_be_consumed,
         refresh,
       );
-      setAction("");
     }
   };
 
@@ -439,15 +452,21 @@ export default function ScanResult() {
       <div className="flex flex-wrap items-center justify-between gap-4">
         <Link to="/app" className="inline-flex items-center gap-2 text-sm text-[#F0E9D6]/55 hover:text-[#F0E9D6]"><ArrowLeft className="h-4 w-4" />Dashboard</Link>
         <div className="flex flex-wrap gap-2">
-          <Button onClick={downloadReport} disabled={Boolean(action) || !reportAvailable} title={reportAvailable ? "Download PDF with integrity checks" : (integrityError || "Report access unavailable")} variant="outline" className="border-white/15 bg-transparent text-[#F0E9D6] hover:bg-white/10">
+          {activeReportDownload ? (
+            <a href={activeReportDownload.href} download={activeReportDownload.filename} className="inline-flex items-center rounded-md border border-white/15 px-4 py-2 text-sm font-medium text-[#F0E9D6] hover:bg-white/10">
+              <Download className="mr-2 h-4 w-4" />Save verified PDF
+            </a>
+          ) : <Button onClick={downloadReport} disabled={Boolean(action) || !reportAvailable} title={reportAvailable ? "Prepare PDF with integrity checks" : (integrityError || "Report access unavailable")} variant="outline" className="border-white/15 bg-transparent text-[#F0E9D6] hover:bg-white/10">
             {action === "report" ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}{reportAvailable ? "PDF report" : "Report unavailable"}
-          </Button>
+          </Button>}
           <Button onClick={createBadge} disabled={Boolean(action) || !accessPolicy.can_create_badge} title={accessPolicy.can_create_badge ? "Publish a public evidence-record link" : "Public sharing unavailable"} variant="outline" className="border-white/15 bg-transparent text-[#F0E9D6] hover:bg-white/10">
             {action === "badge" ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Share2 className="mr-2 h-4 w-4" />}{accessPolicy.can_create_badge ? "Share record" : "Sharing unavailable"}
           </Button>
           <Button data-testid={SCAN.deleteBtn} onClick={remove} disabled={Boolean(action)} variant="ghost" className="text-red-200 hover:bg-red-400/10 hover:text-red-100"><Trash2 className="h-4 w-4" /></Button>
         </div>
       </div>
+      {activeReportDownload && <p className="mt-3 text-sm text-[#F0E9D6]/60">Your PDF is ready. The save link stays available while you view this record; saving it again does not use another report credit.</p>}
+      {activeReportFailure && <p role="alert" className="mt-3 text-sm text-red-200">{activeReportFailure}</p>}
 
       <section className="mt-8 rounded-2xl border border-white/10 bg-[#202027] p-7 sm:p-10">
         <div className="flex flex-wrap items-start justify-between gap-8">
