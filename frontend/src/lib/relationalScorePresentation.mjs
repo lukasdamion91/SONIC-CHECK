@@ -3,6 +3,8 @@ export const RELATIONAL_METHOD_VERSION = "harry-counterfactual-binding/1.0.0-res
 export const SIX_FUNCTION_SCORE_VERSION = "harry-six-function-score/1.0.0-research";
 export const LYRIC_ORDER_VERSION = "harry-lyric-order-recovery/1.0.0-research";
 export const INTERVAL_PATH_VERSION = "harry-interval-path-specificity/1.0.0-research";
+export const BETA_SCORE_VERSION = "harry-six-function-score/1.1.0-beta";
+export const BETA_INTERVAL_VERSION = "harry-verified-interval/1.0.0-beta";
 const percent = (value) => typeof value === "number" && Number.isFinite(value) && value >= 0 && value <= 100;
 const near = (a, b, tolerance = 0.001) => typeof a === "number" && Number.isFinite(a) && Math.abs(a - b) <= tolerance;
 
@@ -10,8 +12,9 @@ export function relationalScoreView(similarity = {}) {
   if (!Object.hasOwn(similarity, "aggregate_evidence_score")) return null;
   const score = similarity.aggregate_evidence_score;
   const diagnostic = similarity.relational_specificity;
-  const six = similarity.aggregate_score_method_version === SIX_FUNCTION_SCORE_VERSION;
-  const version = six ? SIX_FUNCTION_SCORE_VERSION : RELATIONAL_SCORE_VERSION;
+  const beta = similarity.aggregate_score_method_version === BETA_SCORE_VERSION;
+  const six = beta || similarity.aggregate_score_method_version === SIX_FUNCTION_SCORE_VERSION;
+  const version = beta ? BETA_SCORE_VERSION : six ? SIX_FUNCTION_SCORE_VERSION : RELATIONAL_SCORE_VERSION;
   const WEIGHTS = six ? [.18, .18, .24, .10, .15, .15] : [.27, .27, .36, .10];
   const MODALITIES = ["recording_identity", "lyric_overlap", "composition_similarity", "relational_specificity",
     ...(six ? ["lyric_order_recovery", "interval_path_specificity"] : [])];
@@ -42,7 +45,7 @@ export function relationalScoreView(similarity = {}) {
     || (relational.checked ? !near(diagnostic.aggregate_contribution_points, relational.weighted_signal_points)
       : diagnostic.aggregate_contribution_points !== null)) return invalid;
   const additional = [];
-  if (six) for (const [index, method] of [[4, LYRIC_ORDER_VERSION], [5, INTERVAL_PATH_VERSION]]) {
+  if (six) for (const [index, method] of [[4, LYRIC_ORDER_VERSION], [5, beta ? BETA_INTERVAL_VERSION : INTERVAL_PATH_VERSION]]) {
     const row = score.components[index];
     const detail = similarity[row.modality];
     if (detail?.method_version !== method || detail.weight_percent !== 15

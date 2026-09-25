@@ -15,6 +15,7 @@ import {
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import RelationalSpecificity from "@/components/RelationalSpecificity";
+import BetaEvidence from "@/components/BetaEvidence";
 import { relationalScoreView } from "@/lib/relationalScorePresentation.mjs";
 import CompositionAnalysis from "@/components/CompositionAnalysis";
 import FeatureInventory from "@/components/FeatureInventory";
@@ -498,6 +499,7 @@ export default function ScanResult() {
       <ChannelCoverage rows={channelCoverageRows} />
       <RecordingProviderCoverage result={result} />
       <RelationalSpecificity similarity={similarity} />
+      <BetaEvidence result={result} />
       <FeatureInventory result={result} />
 
       <section className="mt-6 rounded-2xl border border-white/10 bg-[#202027] p-6 sm:p-8">
