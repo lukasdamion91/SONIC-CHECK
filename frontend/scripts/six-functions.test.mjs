@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { relationalScoreView, SIX_FUNCTION_SCORE_VERSION, RELATIONAL_METHOD_VERSION, LYRIC_ORDER_VERSION, INTERVAL_PATH_VERSION } from "../src/lib/relationalScorePresentation.mjs";
+import { relationalScoreView, SIX_FUNCTION_SCORE_VERSION, RELATIONAL_METHOD_VERSION, LYRIC_ORDER_VERSION, INTERVAL_PATH_VERSION, BETA_SCORE_VERSION, BETA_INTERVAL_VERSION } from "../src/lib/relationalScorePresentation.mjs";
 
 function fixture() {
   const weights = [.18, .18, .24, .10, .15, .15];
@@ -26,6 +26,22 @@ test("missing lyrics reserve their 15 percent", () => {
   Object.assign(data.lyric_order_recovery, { selected_signal_percent: null, aggregate_contribution_points: null });
   Object.assign(score, { value: 85, channel_coverage_percent: 85, unscored_weight_percent: 15 });
   assert.equal(relationalScoreView(data).valid, true);
+});
+test("beta interval decisions remain separate from the numeric score", () => {
+  for (const selected_rule_decision of [true, false, null]) {
+    const data = fixture(); const score = data.aggregate_evidence_score;
+    data.aggregate_score_method_version = score.score_method_version = BETA_SCORE_VERSION;
+    Object.assign(score.components[5], { signal_percent: 6.0345, weighted_signal_points: .905175 });
+    score.value = 85.9;
+    Object.assign(data.interval_path_specificity, { method_version: BETA_INTERVAL_VERSION,
+      selected_signal_percent: 6.0345, aggregate_contribution_points: .905175, selected_rule_decision });
+    const view = relationalScoreView(data);
+    assert.equal(view.valid, true);
+    assert.equal(view.score.value, 85.9);
+    assert.equal(view.additional[1].selected_rule_decision, selected_rule_decision);
+    data.interval_path_specificity.method_version = INTERVAL_PATH_VERSION;
+    assert.equal(relationalScoreView(data).valid, false);
+  }
 });
 for (const [name, mutate] of Object.entries({
   weight: (d) => { d.aggregate_evidence_score.components[4].base_weight = .3; },
