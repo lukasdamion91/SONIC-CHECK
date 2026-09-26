@@ -265,11 +265,12 @@ test("result source gates actions by API capabilities and preserves interpretati
   assert.match(resultSource, /report_credit_will_be_consumed/u);
   assert.match(resultSource, /window\.confirm\([\s\S]*consume \$\{creditCopy\}/u);
   assert.match(resultSource, /prepareScanResultIntegrity\(data\)/u);
-  assert.match(resultSource, /verifyReportDelivery\(\{/u);
+  assert.match(resultSource, /reportDownloadSession\.prepare\(response\.data, response\.headers, reportRequest\)/u);
   assert.match(resultSource, /await refreshAfterCreditAttempt\(/u);
   assert.match(resultSource, /const copied = await copyTextBestEffort\(url\)/u);
   assert.match(resultSource, /Public evidence-record link created; copy it manually/u);
-  assert.match(resultSource, /Integrity-checked evidence report downloaded/u);
+  assert.match(resultSource, /Save verified PDF/u);
+  assert.doesNotMatch(resultSource, /evidence report downloaded/u);
   assert.doesNotMatch(resultSource, /signer|authenticity|authentic report/iu);
   assert.match(resultSource, /disabled=\{Boolean\(action\) \|\| !accessPolicy\.can_create_badge\}/u);
   assert.match(resultSource, /icon: FileSearch/u);

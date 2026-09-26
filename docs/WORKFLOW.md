@@ -1,17 +1,18 @@
 # SONIC CHECK Delivery Workflow
 
-Governance revision: **SC-FOUNDER-GOV/2026-09-11.1**.
+Governance revision: **SC-FOUNDER-GOV/2026-09-23.1**.
+Acceptance amendment: [SC-ACCEPTANCE-2026-09-22.1](ACCEPTANCE_STANDARD.md).
+Independent adjudication is not a permissible mandatory acceptance requirement.
 Read [../GOVERNANCE.md](../GOVERNANCE.md) and
 [../OPERATING_GUIDE.md](../OPERATING_GUIDE.md) before executing this procedure.
 They govern all development and operations, not only release preparation.
 
 ## 1. Establish the instruction and scope
 
-Record what Luke requested, the exact repositories and starting revisions,
-required outcome, exclusions, financial limits and permitted actions. Do not
-reuse superseded autonomous authority or convert preparation into release
-approval. The governance installation request authorised this document change,
-not an application deployment or a new provider/payment activation.
+Record what Luke requested, the repositories and starting revisions, outcome,
+exclusions, financial limits and delegated actions. Apply the 23 September
+authority record for GitHub and launch-development work. Keep reserved
+financial, rights, security and commercial-launch decisions distinct.
 
 ## 2. Inspect and prepare
 
@@ -28,34 +29,32 @@ Distinguish research, runtime wiring and performance evidence. Legacy labels
 such as RUNTIME_INTEGRATED and RESEARCH_CLOSED_NOT_RUNTIME_INTEGRATED remain
 evidence descriptions; neither authorises release nor implies completion.
 
-## 4. Present the manual-review package
+## 4. Maintain the action record
 
-Supply every applicable item in GOVERNANCE.md section 8: objective, exact
-change/files/revision, practical and analytical effect, provider/privacy/cost
-implications, tests run and not run, failures, limitations, regression risk,
-rollback, recommendation and the precise approval required.
-Stop at READY_FOR_FOUNDER_MANUAL_REVIEW for actions not yet specifically approved.
+Record every applicable item in GOVERNANCE.md section 8: objective, change,
+revision, effects, provider/privacy/cost implications, tests and failures,
+limitations, risk and rollback. Stop at READY_FOR_FOUNDER_MANUAL_REVIEW only
+for a reserved action without specific Founder approval.
 
-## 5. Validate approval and downstream effects
+## 5. Validate scope, gates and downstream effects
 
-Before a push, PR, merge, publication, deployment, configuration change,
-activation, spending, deletion or archival, establish that Luke's current
-approval covers the exact reviewed candidate, destination and action. Review
-automatic workflow, hosting and publishing consequences first. A generic
-continue, green check, old permission or silence is not release approval.
-A materially changed candidate returns to Luke for review.
+Before a push, PR, merge or deployment, check the delegated scope, actual
+candidate, CI, automatic workflow and hosting effects. A materially changed
+candidate requires a fresh gate check and action record. Specific approval is
+required for the reserved decisions in governance section 7. A green check
+does not prove scientific performance or rights.
 
-## 6. Apply only the approved action
+## 6. Apply within delegated or specific authority
 
-Use the approved destination and candidate without bundling unrelated work.
-No merge or deployment is implied by approval of preparation. Do not manufacture
-or bypass a gate, and do not claim a gate is technologically enforced merely
-because this document states the rule.
+Use the recorded destination and checked candidate without bundling unrelated
+work. The delegated GitHub actions can proceed without a new exact-candidate
+approval. Do not manufacture or bypass an evidence gate or claim a written rule
+is technologically enforced when it is not.
 
 ## 7. Verify what actually happened
 
-Read back the applied files and revision. When a deployment was separately
-approved, verify its actual identity and required behaviour before using
+Read back the applied files and revision. When a deployment occurs, verify its
+actual identity and required behaviour before using
 PRODUCTION_VERIFIED. An unexecuted production or signed-in acceptance remains
 NOT RUN. Retain both unsuccessful attempts and successful correction evidence.
 

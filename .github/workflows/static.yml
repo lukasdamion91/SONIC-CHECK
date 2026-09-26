@@ -130,6 +130,17 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
+      - name: Verify beta runtime and catalogue binding
+        run: node frontend/scripts/verify-beta-release.mjs
+
+      - name: Preserve beta runtime verification
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sonic-check-beta-release-verification
+          path: beta-release-verification.json
+          retention-days: 30
+
       - name: Enforce API release gate
         if: always() && steps.api_release.outcome != 'success'
         run: exit 1

@@ -26,6 +26,9 @@ export default function RelationalSpecificity({ similarity }) {
           <h3 className="font-medium text-[#F0E9D6]">{detail.label} <span className="text-teal-200">{detail.weight_percent}%</span></h3>
           <p className="mt-3 text-2xl text-[#F0E9D6]">{detail.selected_signal_percent == null ? "Unscored" : `${detail.selected_signal_percent.toFixed(1)}%`}</p>
           <p className="mt-2 text-xs leading-5 text-[#F0E9D6]/60">{detail.interpretation}</p>
+          {Object.hasOwn(detail, "selected_rule_decision") && <p className="mt-2 text-xs text-teal-100/70">
+            Selected interval rule: {detail.selected_rule_decision === true ? "Review signal" : detail.selected_rule_decision === false ? "Below the selected rule" : "Decision unavailable"}
+          </p>}
           <p className="mt-3 text-xs text-teal-100/70">{detail.aggregate_contribution_points == null ? "Weight reserved" : `${detail.aggregate_contribution_points.toFixed(2)} / ${detail.weight_percent} points`} · {detail.completed_comparisons} comparison(s)</p>
           <details className="mt-3 text-xs text-[#F0E9D6]/50"><summary className="cursor-pointer py-2">Evidence and limits</summary>
             {detail.limitations?.map((limit) => <p className="mt-2 leading-5" key={limit}>{limit}</p>)}

@@ -4,15 +4,14 @@ export const ANALYZER_IDENTITY = "HARRY_V37";
 export const ANALYZER_IDENTITY_REVISION = "soniccheck-harry-identity/1.3.0";
 export const ANALYZER_CAPABILITY_MANIFEST_REVISION = "soniccheck-harry-v37-capabilities/1.0.0";
 export const ANALYZER_CAPABILITY_MANIFEST_SHA256 = "19ba678b9b2ba351139e8d5ca4da2e0c344c4bc399c37d2f6826db768151e025";
-// Exact founder-authorized benchmark API merge; application bytes are unchanged. The deployment
-// gate must verify this live commit and application-root projection before
-// releasing the matching frontend. Stored historical identities are unchanged.
-export const ANALYZER_API_RELEASE_COMMIT = "399b6eaa879af7faa586a95087d2afde959a36b3";
+// API main release binding; publishing requires the exact deployed revision
+// and runtime projection to match this source-owned value.
+export const ANALYZER_API_RELEASE_COMMIT = "ce07f0dd288a0a6ce0aac2c268315596d35d2c6e";
 
 // Derived from the reviewed API source with runtime_privacy's canonical helper.
 // Update alongside the API release binding; this is an application-root projection.
 export const ANALYZER_API_RUNTIME_PROJECTION = Object.freeze({
-  application_manifest_sha256: "e489f9c204c41e96eb578f2e60d9cb0c751fc0d9925c1a72710ca1eb636875c4",
-  application_files_checked: 61,
-  application_bytes_scanned: 1693907,
+  application_manifest_sha256: "57b7a544fc20c122715c5a2cae953ae7594fc9b54e96d2657a39e657f81e44a0",
+  application_files_checked: 87,
+  application_bytes_scanned: 2050053,
 });
