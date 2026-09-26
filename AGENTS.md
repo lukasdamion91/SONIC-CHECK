@@ -36,6 +36,8 @@ Development retains the founder's forensic-certification objective without
 claiming certification has been achieved.
 
 This file routes the amended governance; it does not add replacement policy.
+Current beta scope and gates are routed by docs/BETA_ACCEPTANCE_CURRENT.md to
+the single canonical API acceptance register; dated readiness records are evidence.
 Historical instructions and the unchanged research receipts are evidence, not
 current release authority. See operations/governance/ADOPTION.json and
 docs/GOVERNANCE_ROUTING.md for adoption, scope and technical-enforcement limits.
