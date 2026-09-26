@@ -92,3 +92,5 @@ for the complete blob inventory, extraction decisions and rollback anchor.
 The canonical production API is maintained separately and was not removed or
 replaced. See [RC0_HOST_CONVERGENCE.md](RC0_HOST_CONVERGENCE.md) for the host
 cutover that retired the obsolete public application surface.
+
+Current beta scope and remaining release gates: [beta acceptance register](docs/BETA_ACCEPTANCE_CURRENT.md). Dated readiness records are historical evidence.
