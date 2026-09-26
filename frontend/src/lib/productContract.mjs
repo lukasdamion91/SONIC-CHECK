@@ -13,8 +13,8 @@ export function commercialLicenseState(contract) {
       status: "unconfirmed",
       approved: false,
       checkoutOpen: false,
-      label: "Commercial licence status unavailable",
-      message: "Paid checkout remains closed unless the API confirms a reviewed formal commercial licence and separately authorizes paid traffic. Creating an account does not enable purchase or paid screening.",
+      label: "Paid checkout status unavailable",
+      message: "Paid checkout remains closed until the API confirms authorization for paid public scanning. Provider permissions and payment approval are separate; creating an account does not enable purchase or paid screening.",
     };
   }
 
@@ -23,8 +23,8 @@ export function commercialLicenseState(contract) {
       status: gate.status || FORMAL_LICENCE_REQUIRED,
       approved: false,
       checkoutOpen: false,
-      label: "Formal commercial licence required",
-      message: "Paid checkout is closed pending a reviewed formal commercial licence. Creating an account does not enable purchase or paid screening.",
+      label: "Paid checkout closed",
+      message: "Paid public scanning has not been activated. Provider permissions and payment approval are separate; creating an account does not enable purchase or paid screening.",
     };
   }
 

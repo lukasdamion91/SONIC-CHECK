@@ -12,7 +12,7 @@ const source = async (path) => readFile(new URL(path, import.meta.url), "utf8");
 test("commercial licensing and paid traffic fail closed independently", () => {
   const unavailable = commercialLicenseState(null);
   assert.equal(unavailable.checkoutOpen, false);
-  assert.equal(unavailable.label, "Commercial licence status unavailable");
+  assert.equal(unavailable.label, "Paid checkout status unavailable");
 
   const licenceRequired = commercialLicenseState({
     paid_public_scanning: "enabled",
@@ -23,7 +23,8 @@ test("commercial licensing and paid traffic fail closed independently", () => {
     },
   });
   assert.equal(licenceRequired.checkoutOpen, false);
-  assert.equal(licenceRequired.label, "Formal commercial licence required");
+  assert.equal(licenceRequired.label, "Paid checkout closed");
+  assert.match(licenceRequired.message, /Provider permissions and payment approval are separate/);
 
   const paidTrafficClosed = commercialLicenseState({
     paid_public_scanning: "closed",
