@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { SCAN } from "@/constants/testIds";
 import { useAuth } from "@/context/AuthContext";
 import { api, formatApiErrorDetail } from "@/lib/api";
+import { AUDIO_UPLOAD_LIMIT_LABEL, audioUploadValidationError } from "@/lib/audioUpload.mjs";
 import { INITIAL_SCAN_PROGRESS, scanProgressReducer, uploadCompletedByEvent } from "@/lib/scanProgress.mjs";
 import {
   createScanPostRecovery,
@@ -237,6 +238,11 @@ export default function NewScan() {
       setError("Add an audio file, lyrics, or both before starting the screen.");
       return;
     }
+    const audioValidationError = audioUploadValidationError(audioFile);
+    if (audioValidationError) {
+      setError(audioValidationError);
+      return;
+    }
     if (candidateShadowRequested && user?.role !== "admin") {
       setCandidateShadowRequested(false);
       setError("The V37 eight-channel diagnostic is restricted to an authenticated administrator.");
@@ -362,11 +368,20 @@ export default function NewScan() {
               <div>
                 {audioFile ? <FileAudio className="mx-auto h-7 w-7 text-[#D4FF00]" /> : <Upload className="mx-auto h-7 w-7 text-[#9DB8F0]" />}
                 <div className="mt-3 text-sm text-[#F0E9D6]">{audioFile ? audioFile.name : "Choose an audio file"}</div>
-                <div className="mt-1 text-xs text-[#F0E9D6]/42">The API validates file size and decodability before a credit is consumed.</div>
+                <div className="mt-1 text-xs text-[#F0E9D6]/42">Audio files up to {AUDIO_UPLOAD_LIMIT_LABEL}. File size and decodability are checked before a credit is consumed.</div>
               </div>
             </label>
             <input id="audio" data-testid={SCAN.audioFileInput} disabled={submitting} type="file" accept="audio/wav,audio/x-wav,audio/aiff,audio/flac,audio/mpeg,audio/mp4,.wav,.aiff,.aif,.flac,.mp3,.m4a" className="sr-only" onChange={(event) => {
               const nextAudioFile = event.target.files?.[0] || null;
+              const audioValidationError = audioUploadValidationError(nextAudioFile);
+              if (audioValidationError) {
+                setAudioFile(null);
+                setCandidateShadowRequested(false);
+                setError(audioValidationError);
+                event.target.value = "";
+                return;
+              }
+              setError("");
               setAudioFile(nextAudioFile);
               if (!nextAudioFile) setCandidateShadowRequested(false);
             }} />

@@ -23,6 +23,12 @@ function makeDevServerV5Compatible(devServerConfig) {
       : https
         ? "https"
         : "http";
+  // CRA defaults to "all" without a proxy, which opts out of the patched
+  // dev server's Host/Origin checks. Preserve explicit host lists and use
+  // webpack-dev-server's automatic checks for the permissive CRA default.
+  if (compatibleConfig.allowedHosts === "all") {
+    compatibleConfig.allowedHosts = "auto";
+  }
   compatibleConfig.headers = {
     ...compatibleConfig.headers,
     "Cross-Origin-Resource-Policy": "same-origin",
