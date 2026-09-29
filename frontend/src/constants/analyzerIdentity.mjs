@@ -6,12 +6,12 @@ export const ANALYZER_CAPABILITY_MANIFEST_REVISION = "soniccheck-harry-v37-capab
 export const ANALYZER_CAPABILITY_MANIFEST_SHA256 = "19ba678b9b2ba351139e8d5ca4da2e0c344c4bc399c37d2f6826db768151e025";
 // API main release binding; publishing requires the exact deployed revision
 // and runtime projection to match this source-owned value.
-export const ANALYZER_API_RELEASE_COMMIT = "d3f4f2876adf2a7022e22af102651d5ad006336e";
+export const ANALYZER_API_RELEASE_COMMIT = "a3e0c9c7ec9c424989fa6f3346def282bfafa6ce";
 
 // Derived from the reviewed API source with runtime_privacy's canonical helper.
 // Update alongside the API release binding; this is an application-root projection.
 export const ANALYZER_API_RUNTIME_PROJECTION = Object.freeze({
-  application_manifest_sha256: "fc4c3b09b8f1873ce2faa4efabd2ad4f808772f2227a1600cba9d1bd79ce03e8",
+  application_manifest_sha256: "0b5d2a70dc5621a3ee40135ecaa12f28de8fe82db16585600169bd1fcfb529d0",
   application_files_checked: 87,
-  application_bytes_scanned: 2052865,
+  application_bytes_scanned: 2055688,
 });

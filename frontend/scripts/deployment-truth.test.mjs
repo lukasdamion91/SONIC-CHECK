@@ -356,7 +356,7 @@ const scanFeatureCapability = {
     limitation: feature.limitation,
     method_version: {
       recording_identity: "soniccheck-recording-identity-orchestration/1.1.0",
-      lyric_phrase_overlap: "soniccheck-exact-lyric-phrase-overlap/1.0.0",
+      lyric_phrase_overlap: "soniccheck-exact-lyric-phrase-overlap/1.1.0",
       composition_similarity: "soniccheck-composition/0.4.1-research",
     }[feature.parentChannel],
   })),
