@@ -62,6 +62,48 @@ test("saved partial recording coverage keeps its undisclosed provider count and 
   }
 });
 
+test("saved 1.0.0 lyric evidence retains its method, limitation and execution counts", () => {
+  const source = inventory();
+  Object.assign(source.features[1], {
+    method_version: "soniccheck-exact-lyric-phrase-overlap/1.0.0",
+    limitation: "Exact normalized phrases in retrieved text only; no sung-word transcription or semantic paraphrase analysis.",
+    execution_status: "PARTIAL",
+    completed_comparison_count: 2,
+  });
+  const snapshot = JSON.stringify(source);
+  for (const result of [
+    { feature_inventory: source },
+    { evidence: { feature_inventory: source } },
+    { feature_inventory: source, evidence: { feature_inventory: JSON.parse(snapshot) } },
+  ]) {
+    const view = featureInventoryView(result);
+    assert.equal(view.fullyReported, true);
+    assert.equal(view.rows[1].methodVersion, source.features[1].method_version);
+    assert.equal(view.rows[1].limitation, source.features[1].limitation);
+    assert.equal(view.rows[1].status, "PARTIAL");
+    assert.equal(view.rows[1].completedComparisons, 2);
+  }
+  assert.equal(JSON.stringify(source), snapshot);
+});
+
+test("historical lyric limitation requires the exact previous method and known text", () => {
+  const legacy = "Exact normalized phrases in retrieved text only; no sung-word transcription or semantic paraphrase analysis.";
+  for (const method of [null, "", "unknown", "soniccheck-exact-lyric-phrase-overlap/1.1.0"]) {
+    const source = inventory();
+    Object.assign(source.features[1], { method_version: method, limitation: legacy });
+    assert.equal(featureInventoryView({ feature_inventory: source }).reported, false);
+  }
+  const altered = inventory();
+  Object.assign(altered.features[1], {
+    method_version: "soniccheck-exact-lyric-phrase-overlap/1.0.0",
+    limitation: `${legacy} Accuracy certified.`,
+  });
+  assert.equal(featureInventoryView({ feature_inventory: altered }).reported, false);
+  const wrongFeature = inventory();
+  Object.assign(wrongFeature.features[2], { method_version: "soniccheck-exact-lyric-phrase-overlap/1.0.0", limitation: legacy });
+  assert.equal(featureInventoryView({ feature_inventory: wrongFeature }).reported, false);
+});
+
 test("historical aggregate results never invent individual feature execution", () => {
   const view = featureInventoryView({
     scan_modes: { audio: true, lyrics: true },

@@ -3,7 +3,7 @@ export const FEATURE_INVENTORY_INTERPRETATION = "Six named analytical entries wi
 
 export const RUNTIME_FEATURES = Object.freeze([
   ["recording_identity", "Recording identity", "Recording identity", "recording_identity", "audio", "Provider recording candidates are not composition conclusions. Provider-side comparison totals are not disclosed."],
-  ["lyric_phrase_overlap", "Lyric phrase overlap", "Lyric overlap", "lyric_phrase_overlap", "submitted_lyrics", "Exact normalized phrases in retrieved text only; no sung-word transcription or semantic paraphrase analysis."],
+  ["lyric_phrase_overlap", "Lyric phrase overlap", "Lyric overlap", "lyric_phrase_overlap", "submitted_lyrics", "Exact Unicode word phrases in retrieved text only; English generic-word heuristic, no language-specific segmentation, sung-word transcription or semantic paraphrase analysis."],
   ["harmonic_pitch_classes", "Harmonic pitch classes", "Composition comparison", "composition_similarity", "audio_and_eligible_reference", "Pitch-class energy agreement, not chord transcription; common harmony may agree strongly."],
   ["dominant_pitch_class_contour", "Dominant pitch-class contour", "Composition comparison", "composition_similarity", "audio_and_eligible_reference", "Changes in the strongest pitch class of the mix, not isolated melody or note transcription."],
   ["onset_pattern", "Onset pattern", "Composition comparison", "composition_similarity", "audio_and_eligible_reference", "Positive frame-energy changes, not beat, meter or tempo transcription."],
@@ -33,12 +33,19 @@ const nonnegativeInteger = (value) => Number.isSafeInteger(value) && value >= 0;
 const text = (value, fallback = "") => typeof value === "string" && value.trim()
   ? value.trim().slice(0, 1000) : fallback;
 
+// Keep the original limitation on saved 1.0.0 lyric evidence. Current capability
+// checks still require the current definition; history is not relabelled.
+const validLimitation = (entry, feature) => entry.limitation === feature.limitation
+  || (feature.id === "lyric_phrase_overlap"
+    && entry.method_version === "soniccheck-exact-lyric-phrase-overlap/1.0.0"
+    && entry.limitation === "Exact normalized phrases in retrieved text only; no sung-word transcription or semantic paraphrase analysis.");
+
 const validEntry = (entry, feature) => {
   if (!object(entry)
     || entry.feature_id !== feature.id || entry.label !== feature.label
     || entry.parent_channel !== feature.parentChannel
     || entry.input_requirement !== feature.inputRequirement
-    || entry.limitation !== feature.limitation
+    || !validLimitation(entry, feature)
     || !(entry.method_version === null || typeof entry.method_version === "string")) return false;
   const status = entry.execution_status;
   if (!Object.hasOwn(STATUS_LABELS, status) || status === "UNREPORTED") return false;
