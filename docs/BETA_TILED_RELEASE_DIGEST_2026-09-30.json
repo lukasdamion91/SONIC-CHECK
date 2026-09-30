@@ -1,0 +1,723 @@
+{
+  "scope": "SOURCE_BOUND_TILED_METADATA_DIGEST_TRANSITION_NOT_ACCURACY",
+  "api_main": "d4397f3ca5ca373d69b3ddaadfe156c87acce5e9",
+  "local_source_tree": "d381bb3456a698a4c44ffab2e205826682aa982e",
+  "old_scientific_digest": "42478792a9cbd5e6a021664c363afdd4a08414a7400b23ff69d00b642282428d",
+  "current_self_test": {
+    "schema_version": "soniccheck-beta-runtime-self-test/1",
+    "release_id": "SC-BETA-2026-09-25-1",
+    "status": "PASS",
+    "comparisons": {
+      "same": {
+        "query_sha256": "407ac97cd9fc29ed7b03089f548cd034acb14a41b1ad13cbd69d3593d9d30f4b",
+        "reference_sha256": "407ac97cd9fc29ed7b03089f548cd034acb14a41b1ad13cbd69d3593d9d30f4b",
+        "signal_percent": 100.0,
+        "trigger": true,
+        "decision_route": "STRONG_INTERVAL",
+        "candidate_evidence_sha256": "0777bb6e5154cd5da9d849b1a4ae14a1970b8f3bc8c8210ec1c1d23c5a0630b1"
+      },
+      "transposed": {
+        "query_sha256": "407ac97cd9fc29ed7b03089f548cd034acb14a41b1ad13cbd69d3593d9d30f4b",
+        "reference_sha256": "ff2b7a47f0ac22ca445dd00f9dee1d86fc0e734e7446c3d0b8841c8c1e4cafe0",
+        "signal_percent": 100.0,
+        "trigger": true,
+        "decision_route": "STRONG_INTERVAL",
+        "candidate_evidence_sha256": "6254b85fcd409b1e37a18b008fcbc6966f461d58bf3d246705ebf707370a4b12"
+      },
+      "reversed": {
+        "query_sha256": "407ac97cd9fc29ed7b03089f548cd034acb14a41b1ad13cbd69d3593d9d30f4b",
+        "reference_sha256": "dbe076289a906dbd541b2eb100548b32590031590e3354c7d1713b847d75aaee",
+        "signal_percent": 6.0345,
+        "trigger": false,
+        "decision_route": "BELOW_INTERVAL_FLOOR",
+        "candidate_evidence_sha256": "780de63db1837f8bbbf13128557623e1c76b89c564cfb13922fd0e339e935a64"
+      }
+    },
+    "hoel_checks": {
+      "measured_zero": true,
+      "absence_is_null": true,
+      "duplicate_idempotent": true
+    },
+    "evidence_sha256": "f6662598c02730ef10e0f9db3a8fd2fdcb3a8a19e72c2afe65e7ae3f24ad5259",
+    "scope": "GENERATED_AUDIO_RUNTIME_PARITY_NOT_ACCURACY_ACCEPTANCE",
+    "provider_requests": 0
+  },
+  "source_and_live_exact_equal": true,
+  "all_full_scientific_fields_equal_to_frozen_reference": true,
+  "candidate_evidence": [
+    {
+      "current": {
+        "method_version": "harry-verified-interval-runtime/0.2.0-research",
+        "interval_signal_percent": 100.0,
+        "verification_cutoff": 23,
+        "production_integrated": false,
+        "calibrated_probability": false,
+        "independent_corroboration": false,
+        "trigger": true,
+        "route": "STRONG_INTERVAL",
+        "r6_evidence": {
+          "method_version": "harry-r6-evidence-runtime/0.1.1-research",
+          "status": "COMPLETED_RESEARCH_ONLY",
+          "signal_percent": 100.0,
+          "baseline": {
+            "method_version": "harry-interval-path-specificity/1.0.0-research",
+            "status": "COMPLETED_RESEARCH_ONLY",
+            "signal_percent": 100.0,
+            "observed_alignment_percent": 100.0,
+            "control_q95_percent": 40.5882,
+            "counterfactual_count": 63,
+            "probability_calibrated": false,
+            "control_scope": "REFERENCE_MULTISET_PRESERVED_ORDER_SHUFFLED",
+            "search_scope": "SAME_LOCAL_ALIGNMENT_SEARCH_FOR_OBSERVED_AND_CONTROLS",
+            "alignment_witness": {
+              "query_span": [
+                0,
+                17
+              ],
+              "reference_span": [
+                0,
+                17
+              ],
+              "coordinate_system": "ZERO_BASED_HALF_OPEN_COMPARED_SEQUENCE",
+              "positive_pairs": 17,
+              "substitution_pairs": 0,
+              "gap_steps": 0
+            },
+            "query_pitch_events": 18,
+            "reference_pitch_events": 18,
+            "query_intervals_compared": 17,
+            "reference_intervals_compared": 17,
+            "input_truncated": false,
+            "query_path_sha256": "07d4390bdbd743f7c024b8b3d637ded638b87afa7fa3c272cc3e5c8c13d22d7c",
+            "reference_path_sha256": "07d4390bdbd743f7c024b8b3d637ded638b87afa7fa3c272cc3e5c8c13d22d7c"
+          },
+          "fallback": {
+            "method_version": "harry-aligned-soft-interval-trajectory/0.3.0-tiled-research",
+            "status": "COMPLETED_RESEARCH_ONLY",
+            "signal_percent": 100.0,
+            "fit_agreement": 1.0,
+            "verification_agreement": 1.0,
+            "temporal_control95": 0.14631416039203804,
+            "alignment": [
+              0.0,
+              1.0,
+              1.0
+            ],
+            "alignment_candidates": 29,
+            "control_count": 63,
+            "reversed_search_direction": false,
+            "calibrated_probability": false,
+            "independent_corroboration": false,
+            "execution": {
+              "strategy": "EXACT_TILED_ALL_ALIGNMENTS",
+              "maximum_tile_candidates": 128,
+              "observed_peak_tile_candidates": 29,
+              "alignment_candidate_budget": 16384,
+              "legacy_matrix_limit": 4096
+            }
+          },
+          "route": "PRESERVED_NUMERIC_IPS",
+          "input_sufficiency": {
+            "query": {
+              "status": "SUFFICIENT",
+              "reason_codes": [],
+              "diagnostics": {
+                "frame_count": 82,
+                "active_chroma_frames": 82,
+                "active_chroma_frame_ratio": 1.0,
+                "usable_dominant_pitch_frames": 82,
+                "mean_normalized_chroma_entropy": 0.31033,
+                "near_uniform_chroma_frame_ratio": 0.0,
+                "mean_temporal_chroma_deviation": 0.911796,
+                "dominant_pitch_class_count": 11,
+                "spectral_flatness_available": true,
+                "spectrally_flat_frame_ratio": 0.0
+              }
+            },
+            "reference": {
+              "status": "SUFFICIENT",
+              "reason_codes": [],
+              "diagnostics": {
+                "frame_count": 82,
+                "active_chroma_frames": 82,
+                "active_chroma_frame_ratio": 1.0,
+                "usable_dominant_pitch_frames": 82,
+                "mean_normalized_chroma_entropy": 0.31033,
+                "near_uniform_chroma_frame_ratio": 0.0,
+                "mean_temporal_chroma_deviation": 0.911796,
+                "dominant_pitch_class_count": 11,
+                "spectral_flatness_available": true,
+                "spectrally_flat_frame_ratio": 0.0
+              }
+            }
+          },
+          "calibration_cutoff": 16.0,
+          "trigger": true,
+          "production_integrated": false,
+          "calibrated_probability": false
+        },
+        "harmonic_recovery": null,
+        "verification_evidence": null,
+        "physical_origin": "SAME_QUERY_AND_REFERENCE_AUDIO"
+      },
+      "frozen_projection": {
+        "method_version": "harry-verified-interval-runtime/0.2.0-research",
+        "interval_signal_percent": 100.0,
+        "verification_cutoff": 23,
+        "production_integrated": false,
+        "calibrated_probability": false,
+        "independent_corroboration": false,
+        "trigger": true,
+        "route": "STRONG_INTERVAL",
+        "r6_evidence": {
+          "method_version": "harry-r6-evidence-runtime/0.1.1-research",
+          "status": "COMPLETED_RESEARCH_ONLY",
+          "signal_percent": 100.0,
+          "baseline": {
+            "method_version": "harry-interval-path-specificity/1.0.0-research",
+            "status": "COMPLETED_RESEARCH_ONLY",
+            "signal_percent": 100.0,
+            "observed_alignment_percent": 100.0,
+            "control_q95_percent": 40.5882,
+            "counterfactual_count": 63,
+            "probability_calibrated": false,
+            "control_scope": "REFERENCE_MULTISET_PRESERVED_ORDER_SHUFFLED",
+            "search_scope": "SAME_LOCAL_ALIGNMENT_SEARCH_FOR_OBSERVED_AND_CONTROLS",
+            "alignment_witness": {
+              "query_span": [
+                0,
+                17
+              ],
+              "reference_span": [
+                0,
+                17
+              ],
+              "coordinate_system": "ZERO_BASED_HALF_OPEN_COMPARED_SEQUENCE",
+              "positive_pairs": 17,
+              "substitution_pairs": 0,
+              "gap_steps": 0
+            },
+            "query_pitch_events": 18,
+            "reference_pitch_events": 18,
+            "query_intervals_compared": 17,
+            "reference_intervals_compared": 17,
+            "input_truncated": false,
+            "query_path_sha256": "07d4390bdbd743f7c024b8b3d637ded638b87afa7fa3c272cc3e5c8c13d22d7c",
+            "reference_path_sha256": "07d4390bdbd743f7c024b8b3d637ded638b87afa7fa3c272cc3e5c8c13d22d7c"
+          },
+          "fallback": {
+            "method_version": "harry-aligned-soft-interval-trajectory/0.2.0-calibration-only",
+            "status": "COMPLETED_RESEARCH_ONLY",
+            "signal_percent": 100.0,
+            "fit_agreement": 1.0,
+            "verification_agreement": 1.0,
+            "temporal_control95": 0.14631416039203804,
+            "alignment": [
+              0.0,
+              1.0,
+              1.0
+            ],
+            "alignment_candidates": 29,
+            "control_count": 63,
+            "reversed_search_direction": false,
+            "calibrated_probability": false,
+            "independent_corroboration": false
+          },
+          "route": "PRESERVED_NUMERIC_IPS",
+          "input_sufficiency": {
+            "query": {
+              "status": "SUFFICIENT",
+              "reason_codes": [],
+              "diagnostics": {
+                "frame_count": 82,
+                "active_chroma_frames": 82,
+                "active_chroma_frame_ratio": 1.0,
+                "usable_dominant_pitch_frames": 82,
+                "mean_normalized_chroma_entropy": 0.31033,
+                "near_uniform_chroma_frame_ratio": 0.0,
+                "mean_temporal_chroma_deviation": 0.911796,
+                "dominant_pitch_class_count": 11,
+                "spectral_flatness_available": true,
+                "spectrally_flat_frame_ratio": 0.0
+              }
+            },
+            "reference": {
+              "status": "SUFFICIENT",
+              "reason_codes": [],
+              "diagnostics": {
+                "frame_count": 82,
+                "active_chroma_frames": 82,
+                "active_chroma_frame_ratio": 1.0,
+                "usable_dominant_pitch_frames": 82,
+                "mean_normalized_chroma_entropy": 0.31033,
+                "near_uniform_chroma_frame_ratio": 0.0,
+                "mean_temporal_chroma_deviation": 0.911796,
+                "dominant_pitch_class_count": 11,
+                "spectral_flatness_available": true,
+                "spectrally_flat_frame_ratio": 0.0
+              }
+            }
+          },
+          "calibration_cutoff": 16.0,
+          "trigger": true,
+          "production_integrated": false,
+          "calibrated_probability": false
+        },
+        "harmonic_recovery": null,
+        "verification_evidence": null,
+        "physical_origin": "SAME_QUERY_AND_REFERENCE_AUDIO"
+      }
+    },
+    {
+      "current": {
+        "method_version": "harry-verified-interval-runtime/0.2.0-research",
+        "interval_signal_percent": 100.0,
+        "verification_cutoff": 23,
+        "production_integrated": false,
+        "calibrated_probability": false,
+        "independent_corroboration": false,
+        "trigger": true,
+        "route": "STRONG_INTERVAL",
+        "r6_evidence": {
+          "method_version": "harry-r6-evidence-runtime/0.1.1-research",
+          "status": "COMPLETED_RESEARCH_ONLY",
+          "signal_percent": 100.0,
+          "baseline": {
+            "method_version": "harry-interval-path-specificity/1.0.0-research",
+            "status": "COMPLETED_RESEARCH_ONLY",
+            "signal_percent": 100.0,
+            "observed_alignment_percent": 100.0,
+            "control_q95_percent": 40.5882,
+            "counterfactual_count": 63,
+            "probability_calibrated": false,
+            "control_scope": "REFERENCE_MULTISET_PRESERVED_ORDER_SHUFFLED",
+            "search_scope": "SAME_LOCAL_ALIGNMENT_SEARCH_FOR_OBSERVED_AND_CONTROLS",
+            "alignment_witness": {
+              "query_span": [
+                0,
+                17
+              ],
+              "reference_span": [
+                0,
+                17
+              ],
+              "coordinate_system": "ZERO_BASED_HALF_OPEN_COMPARED_SEQUENCE",
+              "positive_pairs": 17,
+              "substitution_pairs": 0,
+              "gap_steps": 0
+            },
+            "query_pitch_events": 18,
+            "reference_pitch_events": 18,
+            "query_intervals_compared": 17,
+            "reference_intervals_compared": 17,
+            "input_truncated": false,
+            "query_path_sha256": "07d4390bdbd743f7c024b8b3d637ded638b87afa7fa3c272cc3e5c8c13d22d7c",
+            "reference_path_sha256": "07d4390bdbd743f7c024b8b3d637ded638b87afa7fa3c272cc3e5c8c13d22d7c"
+          },
+          "fallback": {
+            "method_version": "harry-aligned-soft-interval-trajectory/0.3.0-tiled-research",
+            "status": "COMPLETED_RESEARCH_ONLY",
+            "signal_percent": 95.44159,
+            "fit_agreement": 0.9556189643694796,
+            "verification_agreement": 0.9610393903653498,
+            "temporal_control95": 0.14530271469148787,
+            "alignment": [
+              0.0,
+              1.0,
+              1.0
+            ],
+            "alignment_candidates": 29,
+            "control_count": 63,
+            "reversed_search_direction": false,
+            "calibrated_probability": false,
+            "independent_corroboration": false,
+            "execution": {
+              "strategy": "EXACT_TILED_ALL_ALIGNMENTS",
+              "maximum_tile_candidates": 128,
+              "observed_peak_tile_candidates": 29,
+              "alignment_candidate_budget": 16384,
+              "legacy_matrix_limit": 4096
+            }
+          },
+          "route": "PRESERVED_NUMERIC_IPS",
+          "input_sufficiency": {
+            "query": {
+              "status": "SUFFICIENT",
+              "reason_codes": [],
+              "diagnostics": {
+                "frame_count": 82,
+                "active_chroma_frames": 82,
+                "active_chroma_frame_ratio": 1.0,
+                "usable_dominant_pitch_frames": 82,
+                "mean_normalized_chroma_entropy": 0.31033,
+                "near_uniform_chroma_frame_ratio": 0.0,
+                "mean_temporal_chroma_deviation": 0.911796,
+                "dominant_pitch_class_count": 11,
+                "spectral_flatness_available": true,
+                "spectrally_flat_frame_ratio": 0.0
+              }
+            },
+            "reference": {
+              "status": "SUFFICIENT",
+              "reason_codes": [],
+              "diagnostics": {
+                "frame_count": 82,
+                "active_chroma_frames": 82,
+                "active_chroma_frame_ratio": 1.0,
+                "usable_dominant_pitch_frames": 82,
+                "mean_normalized_chroma_entropy": 0.201467,
+                "near_uniform_chroma_frame_ratio": 0.0,
+                "mean_temporal_chroma_deviation": 0.929106,
+                "dominant_pitch_class_count": 11,
+                "spectral_flatness_available": true,
+                "spectrally_flat_frame_ratio": 0.0
+              }
+            }
+          },
+          "calibration_cutoff": 16.0,
+          "trigger": true,
+          "production_integrated": false,
+          "calibrated_probability": false
+        },
+        "harmonic_recovery": null,
+        "verification_evidence": null,
+        "physical_origin": "SAME_QUERY_AND_REFERENCE_AUDIO"
+      },
+      "frozen_projection": {
+        "method_version": "harry-verified-interval-runtime/0.2.0-research",
+        "interval_signal_percent": 100.0,
+        "verification_cutoff": 23,
+        "production_integrated": false,
+        "calibrated_probability": false,
+        "independent_corroboration": false,
+        "trigger": true,
+        "route": "STRONG_INTERVAL",
+        "r6_evidence": {
+          "method_version": "harry-r6-evidence-runtime/0.1.1-research",
+          "status": "COMPLETED_RESEARCH_ONLY",
+          "signal_percent": 100.0,
+          "baseline": {
+            "method_version": "harry-interval-path-specificity/1.0.0-research",
+            "status": "COMPLETED_RESEARCH_ONLY",
+            "signal_percent": 100.0,
+            "observed_alignment_percent": 100.0,
+            "control_q95_percent": 40.5882,
+            "counterfactual_count": 63,
+            "probability_calibrated": false,
+            "control_scope": "REFERENCE_MULTISET_PRESERVED_ORDER_SHUFFLED",
+            "search_scope": "SAME_LOCAL_ALIGNMENT_SEARCH_FOR_OBSERVED_AND_CONTROLS",
+            "alignment_witness": {
+              "query_span": [
+                0,
+                17
+              ],
+              "reference_span": [
+                0,
+                17
+              ],
+              "coordinate_system": "ZERO_BASED_HALF_OPEN_COMPARED_SEQUENCE",
+              "positive_pairs": 17,
+              "substitution_pairs": 0,
+              "gap_steps": 0
+            },
+            "query_pitch_events": 18,
+            "reference_pitch_events": 18,
+            "query_intervals_compared": 17,
+            "reference_intervals_compared": 17,
+            "input_truncated": false,
+            "query_path_sha256": "07d4390bdbd743f7c024b8b3d637ded638b87afa7fa3c272cc3e5c8c13d22d7c",
+            "reference_path_sha256": "07d4390bdbd743f7c024b8b3d637ded638b87afa7fa3c272cc3e5c8c13d22d7c"
+          },
+          "fallback": {
+            "method_version": "harry-aligned-soft-interval-trajectory/0.2.0-calibration-only",
+            "status": "COMPLETED_RESEARCH_ONLY",
+            "signal_percent": 95.44159,
+            "fit_agreement": 0.9556189643694796,
+            "verification_agreement": 0.9610393903653498,
+            "temporal_control95": 0.14530271469148787,
+            "alignment": [
+              0.0,
+              1.0,
+              1.0
+            ],
+            "alignment_candidates": 29,
+            "control_count": 63,
+            "reversed_search_direction": false,
+            "calibrated_probability": false,
+            "independent_corroboration": false
+          },
+          "route": "PRESERVED_NUMERIC_IPS",
+          "input_sufficiency": {
+            "query": {
+              "status": "SUFFICIENT",
+              "reason_codes": [],
+              "diagnostics": {
+                "frame_count": 82,
+                "active_chroma_frames": 82,
+                "active_chroma_frame_ratio": 1.0,
+                "usable_dominant_pitch_frames": 82,
+                "mean_normalized_chroma_entropy": 0.31033,
+                "near_uniform_chroma_frame_ratio": 0.0,
+                "mean_temporal_chroma_deviation": 0.911796,
+                "dominant_pitch_class_count": 11,
+                "spectral_flatness_available": true,
+                "spectrally_flat_frame_ratio": 0.0
+              }
+            },
+            "reference": {
+              "status": "SUFFICIENT",
+              "reason_codes": [],
+              "diagnostics": {
+                "frame_count": 82,
+                "active_chroma_frames": 82,
+                "active_chroma_frame_ratio": 1.0,
+                "usable_dominant_pitch_frames": 82,
+                "mean_normalized_chroma_entropy": 0.201467,
+                "near_uniform_chroma_frame_ratio": 0.0,
+                "mean_temporal_chroma_deviation": 0.929106,
+                "dominant_pitch_class_count": 11,
+                "spectral_flatness_available": true,
+                "spectrally_flat_frame_ratio": 0.0
+              }
+            }
+          },
+          "calibration_cutoff": 16.0,
+          "trigger": true,
+          "production_integrated": false,
+          "calibrated_probability": false
+        },
+        "harmonic_recovery": null,
+        "verification_evidence": null,
+        "physical_origin": "SAME_QUERY_AND_REFERENCE_AUDIO"
+      }
+    },
+    {
+      "current": {
+        "method_version": "harry-verified-interval-runtime/0.2.0-research",
+        "interval_signal_percent": 6.0345,
+        "verification_cutoff": 23,
+        "production_integrated": false,
+        "calibrated_probability": false,
+        "independent_corroboration": false,
+        "trigger": false,
+        "route": "BELOW_INTERVAL_FLOOR",
+        "r6_evidence": {
+          "method_version": "harry-r6-evidence-runtime/0.1.1-research",
+          "status": "COMPLETED_RESEARCH_ONLY",
+          "signal_percent": 6.0345,
+          "baseline": {
+            "method_version": "harry-interval-path-specificity/1.0.0-research",
+            "status": "COMPLETED_RESEARCH_ONLY",
+            "signal_percent": 6.0345,
+            "observed_alignment_percent": 35.8824,
+            "control_q95_percent": 31.7647,
+            "counterfactual_count": 63,
+            "probability_calibrated": false,
+            "control_scope": "REFERENCE_MULTISET_PRESERVED_ORDER_SHUFFLED",
+            "search_scope": "SAME_LOCAL_ALIGNMENT_SEARCH_FOR_OBSERVED_AND_CONTROLS",
+            "alignment_witness": {
+              "query_span": [
+                1,
+                12
+              ],
+              "reference_span": [
+                5,
+                16
+              ],
+              "coordinate_system": "ZERO_BASED_HALF_OPEN_COMPARED_SEQUENCE",
+              "positive_pairs": 8,
+              "substitution_pairs": 1,
+              "gap_steps": 4
+            },
+            "query_pitch_events": 18,
+            "reference_pitch_events": 18,
+            "query_intervals_compared": 17,
+            "reference_intervals_compared": 17,
+            "input_truncated": false,
+            "query_path_sha256": "07d4390bdbd743f7c024b8b3d637ded638b87afa7fa3c272cc3e5c8c13d22d7c",
+            "reference_path_sha256": "ed4ed8b45f6ff0fbbc035554e77897e4ae9580f00fd23c30cc4297eea798b0c6"
+          },
+          "fallback": {
+            "method_version": "harry-aligned-soft-interval-trajectory/0.3.0-tiled-research",
+            "status": "COMPLETED_RESEARCH_ONLY",
+            "signal_percent": 17.430869,
+            "fit_agreement": 0.17430869264260027,
+            "verification_agreement": 0.21469383755472282,
+            "temporal_control95": 0.0191070305877576,
+            "alignment": [
+              0.0,
+              1.0,
+              1.0
+            ],
+            "alignment_candidates": 29,
+            "control_count": 63,
+            "reversed_search_direction": false,
+            "calibrated_probability": false,
+            "independent_corroboration": false,
+            "execution": {
+              "strategy": "EXACT_TILED_ALL_ALIGNMENTS",
+              "maximum_tile_candidates": 128,
+              "observed_peak_tile_candidates": 29,
+              "alignment_candidate_budget": 16384,
+              "legacy_matrix_limit": 4096
+            }
+          },
+          "route": "PRESERVED_NUMERIC_IPS",
+          "input_sufficiency": {
+            "query": {
+              "status": "SUFFICIENT",
+              "reason_codes": [],
+              "diagnostics": {
+                "frame_count": 82,
+                "active_chroma_frames": 82,
+                "active_chroma_frame_ratio": 1.0,
+                "usable_dominant_pitch_frames": 82,
+                "mean_normalized_chroma_entropy": 0.31033,
+                "near_uniform_chroma_frame_ratio": 0.0,
+                "mean_temporal_chroma_deviation": 0.911796,
+                "dominant_pitch_class_count": 11,
+                "spectral_flatness_available": true,
+                "spectrally_flat_frame_ratio": 0.0
+              }
+            },
+            "reference": {
+              "status": "SUFFICIENT",
+              "reason_codes": [],
+              "diagnostics": {
+                "frame_count": 82,
+                "active_chroma_frames": 82,
+                "active_chroma_frame_ratio": 1.0,
+                "usable_dominant_pitch_frames": 82,
+                "mean_normalized_chroma_entropy": 0.310602,
+                "near_uniform_chroma_frame_ratio": 0.0,
+                "mean_temporal_chroma_deviation": 0.911419,
+                "dominant_pitch_class_count": 11,
+                "spectral_flatness_available": true,
+                "spectrally_flat_frame_ratio": 0.0
+              }
+            }
+          },
+          "calibration_cutoff": 16.0,
+          "trigger": false,
+          "production_integrated": false,
+          "calibrated_probability": false
+        },
+        "harmonic_recovery": null,
+        "verification_evidence": null,
+        "physical_origin": "SAME_QUERY_AND_REFERENCE_AUDIO"
+      },
+      "frozen_projection": {
+        "method_version": "harry-verified-interval-runtime/0.2.0-research",
+        "interval_signal_percent": 6.0345,
+        "verification_cutoff": 23,
+        "production_integrated": false,
+        "calibrated_probability": false,
+        "independent_corroboration": false,
+        "trigger": false,
+        "route": "BELOW_INTERVAL_FLOOR",
+        "r6_evidence": {
+          "method_version": "harry-r6-evidence-runtime/0.1.1-research",
+          "status": "COMPLETED_RESEARCH_ONLY",
+          "signal_percent": 6.0345,
+          "baseline": {
+            "method_version": "harry-interval-path-specificity/1.0.0-research",
+            "status": "COMPLETED_RESEARCH_ONLY",
+            "signal_percent": 6.0345,
+            "observed_alignment_percent": 35.8824,
+            "control_q95_percent": 31.7647,
+            "counterfactual_count": 63,
+            "probability_calibrated": false,
+            "control_scope": "REFERENCE_MULTISET_PRESERVED_ORDER_SHUFFLED",
+            "search_scope": "SAME_LOCAL_ALIGNMENT_SEARCH_FOR_OBSERVED_AND_CONTROLS",
+            "alignment_witness": {
+              "query_span": [
+                1,
+                12
+              ],
+              "reference_span": [
+                5,
+                16
+              ],
+              "coordinate_system": "ZERO_BASED_HALF_OPEN_COMPARED_SEQUENCE",
+              "positive_pairs": 8,
+              "substitution_pairs": 1,
+              "gap_steps": 4
+            },
+            "query_pitch_events": 18,
+            "reference_pitch_events": 18,
+            "query_intervals_compared": 17,
+            "reference_intervals_compared": 17,
+            "input_truncated": false,
+            "query_path_sha256": "07d4390bdbd743f7c024b8b3d637ded638b87afa7fa3c272cc3e5c8c13d22d7c",
+            "reference_path_sha256": "ed4ed8b45f6ff0fbbc035554e77897e4ae9580f00fd23c30cc4297eea798b0c6"
+          },
+          "fallback": {
+            "method_version": "harry-aligned-soft-interval-trajectory/0.2.0-calibration-only",
+            "status": "COMPLETED_RESEARCH_ONLY",
+            "signal_percent": 17.430869,
+            "fit_agreement": 0.17430869264260027,
+            "verification_agreement": 0.21469383755472282,
+            "temporal_control95": 0.0191070305877576,
+            "alignment": [
+              0.0,
+              1.0,
+              1.0
+            ],
+            "alignment_candidates": 29,
+            "control_count": 63,
+            "reversed_search_direction": false,
+            "calibrated_probability": false,
+            "independent_corroboration": false
+          },
+          "route": "PRESERVED_NUMERIC_IPS",
+          "input_sufficiency": {
+            "query": {
+              "status": "SUFFICIENT",
+              "reason_codes": [],
+              "diagnostics": {
+                "frame_count": 82,
+                "active_chroma_frames": 82,
+                "active_chroma_frame_ratio": 1.0,
+                "usable_dominant_pitch_frames": 82,
+                "mean_normalized_chroma_entropy": 0.31033,
+                "near_uniform_chroma_frame_ratio": 0.0,
+                "mean_temporal_chroma_deviation": 0.911796,
+                "dominant_pitch_class_count": 11,
+                "spectral_flatness_available": true,
+                "spectrally_flat_frame_ratio": 0.0
+              }
+            },
+            "reference": {
+              "status": "SUFFICIENT",
+              "reason_codes": [],
+              "diagnostics": {
+                "frame_count": 82,
+                "active_chroma_frames": 82,
+                "active_chroma_frame_ratio": 1.0,
+                "usable_dominant_pitch_frames": 82,
+                "mean_normalized_chroma_entropy": 0.310602,
+                "near_uniform_chroma_frame_ratio": 0.0,
+                "mean_temporal_chroma_deviation": 0.911419,
+                "dominant_pitch_class_count": 11,
+                "spectral_flatness_available": true,
+                "spectrally_flat_frame_ratio": 0.0
+              }
+            }
+          },
+          "calibration_cutoff": 16.0,
+          "trigger": false,
+          "production_integrated": false,
+          "calibrated_probability": false
+        },
+        "harmonic_recovery": null,
+        "verification_evidence": null,
+        "physical_origin": "SAME_QUERY_AND_REFERENCE_AUDIO"
+      }
+    }
+  ],
+  "source_hashes": {
+    "beta_release.py": "872ff36dfde2ee50515855727c5e4bb7bcc3e49f8fe46474962ca8e899ef2f03",
+    "beta_interval.py": "2d5f98b1fdf5ccbce6c84f29d26a8da269c840589b8436dc85410f5077733e74",
+    "tests/test_beta_runtime.py": "fbc41d2b4e425c3e76253642990c1eb1a441849a480737461f29e9c28eb57c27"
+  }
+}
