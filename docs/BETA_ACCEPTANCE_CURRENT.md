@@ -1,10 +1,15 @@
 # Current beta acceptance register
 
 The single canonical register is maintained in the private API repository:
-[docs/BETA_ACCEPTANCE_CURRENT.json](https://github.com/lukasdamion91/sonic-check-api/blob/beta/hoel-value-retrieval-acceptance-20260927/docs/BETA_ACCEPTANCE_CURRENT.json).
-API preparation is [PR 90](https://github.com/lukasdamion91/sonic-check-api/pull/90).
-Use the canonical register on main after that candidate is merged.
+[docs/BETA_ACCEPTANCE_CURRENT.json](https://github.com/lukasdamion91/sonic-check-api/blob/main/docs/BETA_ACCEPTANCE_CURRENT.json).
+Use the canonical register on main; the former PR 90 pointer was dated preparation evidence.
 This page is a routing pointer, not a second acceptance register.
+
+**MetaBrainz update — 2 October 2026:** commercial approval is confirmed,
+Commercial / Bronze / Active, with Live Data Feed entitlement enabled.
+[Approval and scope](METABRAINZ_COMMERCIAL_APPROVAL_2026-10-02.md).
+The MetaBrainz licensing portion is complete; remaining integration and
+other-provider acceptance must not describe it as pending or unverified.
 
 Current deployed scope: controlled private beta at https://soniccheck.io,
 API https://api.soniccheck.io, and catalogue

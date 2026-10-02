@@ -1,5 +1,7 @@
 # SonicCheck — Product Requirements Document
 
+> **Licensing update — 2 October 2026:** SONIC CHECK is MetaBrainz Commercial / Bronze / Active. Commercial data-use permission and Live Data Feed entitlement are confirmed. Earlier LIMITED, pending, unverified-upgrade or feed-excluded project descriptions are dated evidence and are superseded for current licensing decisions. See [the current approval record](../docs/METABRAINZ_COMMERCIAL_APPROVAL_2026-10-02.md). Other historical results retain their original dates.
+
 ## Original Problem Statement
 > "I want to create a software program that combines the functionality of Turnitin, Shazam and the database of YouTube music and Spotify so recording artists and music producers can upload their work and check what percentage of it is plagiarised. It would virtually eliminate artists suing other artists, but it would need to respect the jurisdiction and regulatory requirements per region in regards to copyrighting and plagiarised material — as I assume that legally speaking a certain percentage of work is permitted to be as it's simply too difficult to be 100% original with music and lyrics. I want to market it exclusively to music industry and students of the industry."
 
