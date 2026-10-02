@@ -1,70 +1,69 @@
+import { useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { LogOut } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import { Button } from "@/components/ui/button";
 import { NAV } from "@/constants/testIds";
+import "@/pages/Resonance.css";
 
 const asset = (path) => `${process.env.PUBLIC_URL || ""}${path}`;
 
 export default function Navbar() {
-  const { user, clerkUser, isSignedIn, loading, logout } = useAuth();
+  const { user, clerkUser, isSignedIn, logout } = useAuth();
   const navigate = useNavigate();
-  const { pathname } = useLocation();
+  const { pathname, hash } = useLocation();
+  const menuRef = useRef(null);
+
+  useEffect(() => {
+    if (menuRef.current) menuRef.current.open = false;
+  }, [pathname, hash]);
 
   const handleLogout = async () => {
     await logout();
     navigate("/");
   };
-  const active = (path) =>
-    `text-sm transition-colors ${pathname === path ? "text-[#F0E9D6]" : "text-[#F0E9D6]/60 hover:text-[#F0E9D6]"}`;
+  const closeMenu = () => { if (menuRef.current) menuRef.current.open = false; };
+  const publicLinks = (
+    <>
+      <a href={`${process.env.PUBLIC_URL || ""}/#sc4-about`} onClick={closeMenu}>About</a>
+      <a href={`${process.env.PUBLIC_URL || ""}/#method`} onClick={closeMenu}>The science</a>
+      <a href={`${process.env.PUBLIC_URL || ""}/#catalogue`} onClick={closeMenu}>Catalogue</a>
+      <a href={`${process.env.PUBLIC_URL || ""}/#pricing`} onClick={closeMenu}>Pricing</a>
+    </>
+  );
+  const accountLinks = (
+    <>
+      <Link to="/app" data-testid={NAV.dashboardLink} aria-current={pathname === "/app" ? "page" : undefined}>Dashboard</Link>
+      <Link to="/app/scan/new" data-testid={NAV.newScanLink} aria-current={pathname === "/app/scan/new" ? "page" : undefined}>New screen</Link>
+      <Link to="/app/library" aria-current={pathname === "/app/library" ? "page" : undefined}>Library</Link>
+      <Link to="/app/billing" data-testid={NAV.pricingLink} aria-current={pathname === "/app/billing" ? "page" : undefined}>Plan &amp; billing</Link>
+    </>
+  );
 
   return (
-    <header className="sticky top-0 z-50 border-b border-white/10 bg-[#111116]/90 backdrop-blur-xl">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5 sm:px-6">
-        <Link to={isSignedIn ? "/app" : "/"} data-testid={NAV.logo} className="flex items-center gap-3">
-          <img src={asset("/brand/logo-icon.png")} alt="" className="h-9 w-9 object-contain" />
-          <img src={asset("/brand/logo-wordmark.png")} alt="SonicCheck" className="h-5 w-auto object-contain" />
+    <header className="sc-site-header">
+      <a className="sc-skip-link" href="#main-content">Skip to content</a>
+      <div className="sc-site-nav">
+        <Link to="/" data-testid={NAV.logo} className="sc-site-brand" aria-label="SONIC CHECK home">
+          <img src={asset("/brand/logo-icon.png")} alt="" width="159" height="159" className="sc-site-icon" />
+          <img src={asset("/brand/logo-wordmark.png")} alt="SONIC CHECK" width="1102" height="222" className="sc-site-wordmark" />
         </Link>
-
-        <nav className="hidden items-center gap-7 lg:flex" aria-label="Primary navigation">
+        <nav className="sc-site-desktop-links" aria-label="Primary navigation">{isSignedIn ? accountLinks : publicLinks}</nav>
+        <div className="sc-site-account">
           {isSignedIn ? (
             <>
-              <Link to="/app" data-testid={NAV.dashboardLink} className={active("/app")}>Dashboard</Link>
-              <Link to="/app/scan/new" data-testid={NAV.newScanLink} className={active("/app/scan/new")}>New screen</Link>
-              <Link to="/app/library" className={active("/app/library")}>Library</Link>
-              <Link to="/app/billing" data-testid={NAV.pricingLink} className={active("/app/billing")}>Plan &amp; billing</Link>
+              <span className="sc-site-user" title={user?.email || clerkUser?.primaryEmailAddress?.emailAddress || "Signed in"}>{user?.email || clerkUser?.primaryEmailAddress?.emailAddress || "Signed in"}</span>
+              <button onClick={handleLogout} data-testid={NAV.logoutBtn}>Log out</button>
             </>
-          ) : (
-            <>
-              <a href={`${process.env.PUBLIC_URL || ""}/#method`} className="text-sm text-[#F0E9D6]/60 hover:text-[#F0E9D6]">Method</a>
-              <a href={`${process.env.PUBLIC_URL || ""}/#catalogue`} className="text-sm text-[#F0E9D6]/60 hover:text-[#F0E9D6]">Catalogue</a>
-              <a href={`${process.env.PUBLIC_URL || ""}/#pricing`} className="text-sm text-[#F0E9D6]/60 hover:text-[#F0E9D6]">Pricing</a>
-            </>
-          )}
-        </nav>
-
-        <div className="flex items-center gap-2 sm:gap-3">
-          {isSignedIn ? (
-            <>
-              <span className="hidden max-w-48 truncate text-xs text-[#F0E9D6]/55 md:inline font-mono-data">
-                {user?.email || clerkUser?.primaryEmailAddress?.emailAddress || "Signed in"}
-              </span>
-              <Button data-testid={NAV.logoutBtn} onClick={handleLogout} variant="ghost" className="text-[#F0E9D6]/80 hover:bg-white/10 hover:text-[#F0E9D6]">
-                <LogOut className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">Log out</span>
-              </Button>
-            </>
-          ) : (
-            <>
-              <Link to="/login" data-testid={NAV.loginLink}>
-                <Button variant="ghost" disabled={loading} className="text-[#F0E9D6]/85 hover:bg-white/10">Log in</Button>
-              </Link>
-              <Link to="/join" data-testid={NAV.signupLink}>
-                <Button disabled={loading} className="bg-[#D4FF00] text-[#1C1C22] hover:bg-[#D4FF00]/85">Join</Button>
-              </Link>
-            </>
-          )}
+          ) : <>
+            <Link to="/login" data-testid={NAV.loginLink}>Log in</Link>
+            <Link to="/join" className="sc-site-join" data-testid={NAV.signupLink}>Join</Link>
+          </>}
         </div>
+        <details className="sc-site-mobile-menu" ref={menuRef} onKeyDown={event => {
+          if (event.key === "Escape") { closeMenu(); event.currentTarget.querySelector("summary").focus(); }
+        }}>
+          <summary>Menu</summary>
+          <nav aria-label="Mobile navigation">{isSignedIn ? accountLinks : publicLinks}</nav>
+        </details>
       </div>
     </header>
   );

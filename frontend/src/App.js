@@ -35,6 +35,7 @@ function App() {
       <AuthProvider>
         <BrowserRouter basename={baseName}>
           <Navbar />
+          <div id="main-content" tabIndex={-1}>
           <Routes>
             <Route path="/" element={<Landing />} />
             <Route path="/login" element={<Login />} />
@@ -61,6 +62,7 @@ function App() {
             <Route path="/payment-success" element={<Navigate to="/app/payment-success" replace />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
+          </div>
           <Toaster theme="dark" position="top-right" />
         </BrowserRouter>
       </AuthProvider>
