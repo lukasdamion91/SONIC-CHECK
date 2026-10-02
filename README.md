@@ -43,10 +43,12 @@ runtime integration, merge, deployment or live verification.
   MusicBrainz identity/metadata context; it is not a claim that SONIC CHECK hosts
   71,000 licensed audio recordings
 
-Pricing and launch state are fetched from the API at runtime. Payment gates
-remain closed until a formal commercial licence is granted and reviewed. The
-API's source-governed licence lock prevents deployment flags or an environment
-claim of approval from opening checkout on their own.
+Pricing and launch state are fetched from the API at runtime. SONIC CHECK's
+[MetaBrainz commercial approval](docs/METABRAINZ_COMMERCIAL_APPROVAL_2026-10-02.md)
+is confirmed effective 2 October 2026: Commercial / Bronze / Active, including
+published-data use and Live Data Feed entitlement. Paid checkout remains a
+separate launch decision; its source-governed lock is not a claim that
+MetaBrainz permission is absent.
 
 ## Local development
 

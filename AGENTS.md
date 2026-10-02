@@ -41,3 +41,10 @@ the single canonical API acceptance register; dated readiness records are eviden
 Historical instructions and the unchanged research receipts are evidence, not
 current release authority. See operations/governance/ADOPTION.json and
 docs/GOVERNANCE_ROUTING.md for adoption, scope and technical-enforcement limits.
+
+Current MetaBrainz licensing evidence, effective 2 October 2026:
+[docs/METABRAINZ_COMMERCIAL_APPROVAL_2026-10-02.md](docs/METABRAINZ_COMMERCIAL_APPROVAL_2026-10-02.md).
+SONIC CHECK is Commercial / Bronze / Active; published-data commercial permission
+and Live Data Feed entitlement are confirmed. Do not import superseded LIMITED,
+pending or unverified-Bronze labels as current licensing blockers. Keep technical
+integration, provider exercise and paid-launch authority as separate facts.
