@@ -326,7 +326,7 @@ test("scanner markup exposes progress and reduced-motion accessibility", async (
   assert.match(analyzer, /data-testid=\{SCAN\.progressDetail\}/);
   assert.match(analyzer, /percentage reports browser-to-server upload only/);
   assert.match(analyzer, /completed pipeline milestones—not elapsed time, an ETA, confidence or accuracy/);
-  assert.match(landing, /<ChromaticText>checked through evidence\.<\/ChromaticText>/);
+  assert.match(landing, /Originality,[\s\S]*<span>Verified\.<\/span>/);
   assert.match(styles, /@media \(prefers-reduced-motion: reduce\)/);
   assert.match(styles, /\.chromatic-text,/);
 });

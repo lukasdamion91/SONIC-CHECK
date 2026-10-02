@@ -89,7 +89,7 @@ test("public and account pages surface the API commercial-licence gate", async (
   for (const page of [landing, pricing, register]) {
     assert.match(page, /<CommercialLicenseNotice contract=\{contract\}/);
   }
-  assert.match(landing, /api\.get\("\/product-contract"\)/);
+  assert.match(landing, /api\.get\("\/product-contract", \{ signal: controller\.signal \}\)/);
   assert.match(pricing, /api\.get\("\/product-contract"\)/);
   assert.match(pricing, /nextContract\?\.pricing\?\.plans/);
   assert.match(pricing, /licenseState\.checkoutOpen && plans\.some/);
