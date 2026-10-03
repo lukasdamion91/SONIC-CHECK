@@ -6,8 +6,14 @@
 **Status:** **FOUNDER APPROVED — CONTROLLING PROJECT GOVERNANCE**
 **Effective date:** 23 September 2026 — direct Founder amendment to the 12 September installation
 **Project:** SONIC CHECK / HARRY
-**Founder authority:** Luke Damion
+**Founder authority:** Damion Lukas
 **Document character:** Controlling project governance under explicit Founder approval
+
+**Professional name update, 3 October 2026:** The Founder directs use of
+**Damion Lukas** for all work-related branding and signatory requirements.
+See [docs/PROFESSIONAL_IDENTITY.md](docs/PROFESSIONAL_IDENTITY.md). Earlier
+references to Luke Damion identify the same Founder; this naming update does
+not change delegated authority, reserved decisions or historical evidence.
 
 **Current direct-founder amendment, 22 September 2026:** Independent adjudication
 is abolished and banned as a mandatory SONIC CHECK threshold, evidence or launch

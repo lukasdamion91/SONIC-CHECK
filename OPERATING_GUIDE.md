@@ -2,7 +2,9 @@
 
 Status: **current operational guideline subordinate to GOVERNANCE.md**.
 Governance revision: **SC-FOUNDER-GOV/2026-09-23.1**.
-Product authority: **Luke Damion, Architect, Founder and Global Director**.
+Product authority: **Damion Lukas, Architect, Founder and Global Director**.
+Professional branding and signature name: **Damion Lukas**, effective
+3 October 2026; see [the naming standard](docs/PROFESSIONAL_IDENTITY.md).
 
 Apply [the current acceptance standard](docs/ACCEPTANCE_STANDARD.md): mandatory
 independent adjudication is banned. Do not count absent independent reviews,
