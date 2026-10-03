@@ -10,6 +10,7 @@ const deployedFiles = [
   "src/components/FeatureInventory.jsx",
   "src/components/Navbar.jsx",
   "src/components/ProtectedRoute.jsx",
+  "src/components/RelationshipsBanner.jsx",
   "src/lib/accessPolicy.mjs",
   "src/lib/featureInventoryPresentation.mjs",
   "src/lib/productContract.mjs",

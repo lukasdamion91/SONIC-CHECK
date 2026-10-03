@@ -1,0 +1,163 @@
+#sc-resonance-positioning .sc-relationships {
+  position: relative;
+  padding: 16px 0 18px;
+  border-block: 1px solid #b7b9bf57;
+  background: linear-gradient(108deg, #37393e 0%, #282a2e 26%, #191b20 63%, #36383d 100%);
+  box-shadow: inset 0 1px #ffffff16, inset 0 -1px #00000090;
+}
+
+#sc-resonance-positioning .sc-relationships::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: .2;
+  background: repeating-linear-gradient(0deg, transparent 0 2px, #dee2eb08 2px 3px);
+}
+
+#sc-resonance-positioning .sc-relationships-heading {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+}
+
+#sc-resonance-positioning .sc-relationships-title {
+  color: #cae8e0;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.6;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+}
+
+#sc-resonance-positioning .sc-relationships-controls {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 7px;
+}
+
+#sc-resonance-positioning .sc-relationships-button {
+  min-height: 30px;
+  padding: 5px 11px;
+  border: 1px solid #d0d0da3b;
+  border-radius: 20px;
+  background: #222429;
+  color: #f3ecdf;
+  font-family: Arial, sans-serif;
+  font-size: 11px;
+  line-height: 1.25;
+  letter-spacing: normal;
+  white-space: nowrap;
+}
+
+#sc-resonance-positioning .sc-relationships-button:hover {
+  background: #3b3d43;
+  border-color: #d4cfbf8a;
+}
+
+#sc-resonance-positioning .sc-relationships-step-symbol { display: none; }
+
+#sc-resonance-positioning .sc-relationships-clip {
+  overflow: hidden;
+  margin-top: 17px;
+  touch-action: pan-y;
+  mask-image: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent);
+}
+
+#sc-resonance-positioning .sc-relationships-track {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+}
+
+#sc-resonance-positioning .sc-relationships-group {
+  display: flex;
+  width: max-content;
+  flex-shrink: 0;
+  align-items: center;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+#sc-resonance-positioning .sc-relationships-name {
+  position: relative;
+  padding-inline: 26px;
+  color: #eee9df;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 26px;
+  font-weight: 500;
+  line-height: 1.55;
+  letter-spacing: -.8px;
+  white-space: nowrap;
+}
+
+#sc-resonance-positioning .sc-relationships-name::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 50%;
+  width: 1px;
+  height: 23px;
+  transform: translateY(-50%);
+  background: #ffffff26;
+}
+
+#sc-resonance-positioning .sc-relationships-name small {
+  margin-left: 4px;
+  font-size: 11px;
+  letter-spacing: 1.2px;
+}
+
+#sc-resonance-positioning .sc-relationships-announcement {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+@media (max-width: 520px) {
+  #sc-resonance-positioning .sc-relationships { padding-block: 17px 18px; }
+  #sc-resonance-positioning .sc-relationships-heading { gap: 12px; }
+  #sc-resonance-positioning .sc-relationships-title { max-width: 125px; letter-spacing: 1px; }
+  #sc-resonance-positioning .sc-relationships-controls { gap: 5px; }
+  #sc-resonance-positioning .sc-relationships-button { min-width: 36px; min-height: 44px; padding: 7px 9px; }
+  #sc-resonance-positioning .sc-relationships-step { padding-inline: 5px; }
+  #sc-resonance-positioning .sc-relationships-step-word { display: none; }
+  #sc-resonance-positioning .sc-relationships-step-symbol { display: inline; font-size: 23px; }
+  #sc-resonance-positioning .sc-relationships-name { padding-inline: 24px; font-size: 23px; }
+  #sc-resonance-positioning .sc-relationships-clip { margin-top: 19px; }
+}
+
+@media (pointer: coarse) {
+  #sc-resonance-positioning .sc-relationships-button { min-height: 44px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #sc-resonance-positioning .sc-relationships-track { will-change: auto; }
+}
+
+@media (forced-colors: active) {
+  #sc-resonance-positioning .sc-relationships { background: Canvas; color: CanvasText; border-color: CanvasText; }
+  #sc-resonance-positioning .sc-relationships::before { display: none; }
+  #sc-resonance-positioning .sc-relationships-name,
+  #sc-resonance-positioning .sc-relationships-title { color: CanvasText; }
+  #sc-resonance-positioning .sc-relationships-button { color: ButtonText; background: ButtonFace; border-color: ButtonText; }
+  #sc-resonance-positioning .sc-relationships-name::after { background: CanvasText; }
+  #sc-resonance-positioning .sc-relationships-clip { mask-image: none; }
+}
+
+@media print {
+  #sc-resonance-positioning .sc-relationships-controls,
+  #sc-resonance-positioning .sc-relationships-group[aria-hidden="true"] { display: none; }
+  #sc-resonance-positioning .sc-relationships-clip { mask-image: none; overflow: visible; }
+  #sc-resonance-positioning .sc-relationships-track { transform: none !important; width: auto; }
+  #sc-resonance-positioning .sc-relationships-group { flex-wrap: wrap; width: auto; }
+}
