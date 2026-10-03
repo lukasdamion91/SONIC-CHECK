@@ -1,5 +1,10 @@
 # SONIC CHECK collaborator instructions
 
+Professional name: **Damion Lukas**, per direct instruction on 3 October 2026.
+Use this name for work-related branding, founder credits, bylines,
+correspondence and signature/signatory blocks. See
+[docs/PROFESSIONAL_IDENTITY.md](docs/PROFESSIONAL_IDENTITY.md).
+
 Controlling project governance: **SC-FOUNDER-GOV/2026-09-23.1**.
 Current direct-founder acceptance amendment: read
 [docs/ACCEPTANCE_STANDARD.md](docs/ACCEPTANCE_STANDARD.md).

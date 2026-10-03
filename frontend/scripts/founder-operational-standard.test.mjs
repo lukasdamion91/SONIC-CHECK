@@ -25,7 +25,7 @@ test("living founder operating standard is present and linked", async () => {
     assert.match(document, /PRODUCTION_VERIFIED/u);
     assert.match(document, /RESEARCH_CLOSED_NOT_RUNTIME_INTEGRATED/u);
   }
-  assert.match(guide, /Luke Damion, Architect, Founder and Global Director/u);
+  assert.match(guide, /Damion Lukas, Architect, Founder and Global Director/u);
   assert.match(guide, /AUTHORIZED.*CONFIGURED.*EXERCISED.*PRODUCTION_INTEGRATED/us);
   assert.match(guide, /payment authorization are independent gates/iu);
   assert.match(guide, /deployment images/iu);
