@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { LANDING } from "@/constants/testIds";
 import CommercialLicenseNotice from "@/components/CommercialLicenseNotice";
+import RelationshipsBanner from "@/components/RelationshipsBanner";
 import { api } from "@/lib/api";
 import { commercialLicenseState } from "@/lib/productContract.mjs";
 import { mountResonanceEffects } from "@/lib/resonanceEffects";
@@ -101,6 +102,8 @@ export default function Landing() {
 </details>
 </div>
 </section>
+
+<RelationshipsBanner />
 
 <section className="sc-chapter sc-light" id="sc4-about" aria-labelledby="sc4-about-title"><div className="sc-wrap">
 <div className="sc-chapter-head"><p className="sc-overline">01 / About SONIC CHECK</p><h2 id="sc4-about-title"><span className="sc-chromatic">Built for creators.<br />Before the release.</span></h2></div>
