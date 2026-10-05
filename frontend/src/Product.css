@@ -58,7 +58,12 @@
 .sc-product .scanner-console-meta { flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: space-between; }
 .sc-product .scanner-analyzer-mark { font-size: 11px; line-height: 1.5; }
 .sc-product .scanner-counter { color: var(--sc-paper); font-size: 2rem; }
-.sc-product .scanner-status-dot { animation: none; }
+.sc-product ::selection { background: var(--sc-gold); color: var(--sc-ink); }
+.sc-product .scanner-status-chip { font-family: SCAdvent, Arial, sans-serif; font-size: 12px; color: var(--sc-muted); max-width: none; }
+.sc-product .scanner-status-dot { animation: none; box-shadow: none; }
+.sc-product .scanner-console[data-phase="complete"] .scanner-status-dot { background: var(--sc-mint); box-shadow: none; }
+.sc-product .scanner-stage[data-complete="true"] { color: var(--sc-muted); border-color: #647988; }
+.sc-product .scanner-stage[data-complete="true"] .scanner-stage-number { color: var(--sc-mint); border-color: #647988; }
 .sc-product .scanner-upload-fill { background: var(--sc-mint); box-shadow: none; }
 .sc-product .scanner-server-fill { background: var(--sc-gold); }
 .sc-product .scanner-stage { letter-spacing: .04em; font-size: 11px; }
