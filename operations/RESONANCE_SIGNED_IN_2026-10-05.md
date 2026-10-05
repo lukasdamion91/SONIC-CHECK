@@ -50,3 +50,22 @@ checks; it is not a claim of complete beta acceptance.
 17. **Authority:** Luke's 5 October 2026 brand-continuity instruction and
     SC-FOUNDER-GOV/2026-09-23.1 in-scope branch/PR/merge/deploy delegation.
     No reserved spending, rights, access or commercial-launch decision taken.
+
+## Candidate checks and release binding update
+
+Frontend candidate 97fcc8ec253fb291efca2e3b2af10e1e3bc523af passed 311 tests,
+public claims, compilation, exact stamped routing verification and deployment
+privacy locally. Hosted build also passed. Landing.jsx, Resonance.css,
+resonanceEffects.js and the sculpture bytes have no diff from the starting main.
+
+The hosted API gate correctly failed because the previous frontend still pinned
+b0460286059c80a664e15eec7b193f6f9d574c91. The live retained image reports source
+5d5352cb66369a9f4d6c9a0f6d0c70d6c1b88c36. Its application projection was checked
+against the retained image's verified artifact and matches exactly. This update
+binds the frontend to that already reviewed, deployed release without changing
+any verifier predicate. This is not approval for the new telemetry backend.
+
+Private design review source is 35c3e75591ff8d766274275f6dd168bf2a3b95d6,
+matching the 97fcc8e UI snapshot with synthetic fixtures. Later binding changes
+affect the release gate only. Browser visual/mobile/reduced-motion checks remain
+NOT RUN due to the private review sign-in requirement.
