@@ -1,0 +1,467 @@
+{
+  "schema": "soniccheck-repository-cleanup-result/1.0.0",
+  "recorded_at": "2026-10-05T22:51:17.135Z",
+  "repository": "lukasdamion91/SONIC-CHECK",
+  "authority": "Founder explicitly authorized repository cleanup after the 5 October audit.",
+  "original_merged_branch_refs_removed": [
+    {
+      "branch": "acrcloud-commercial-shadow-release-20260912",
+      "head": "0f056b8b159b8dc2678f691f2dec456995cf116d",
+      "pr": 47,
+      "merged_sha": "2477484c0a47867b08928fad0a5a02134e73622c",
+      "merged_at": "2026-09-12T05:39:15Z"
+    },
+    {
+      "branch": "audit/api-release-binding-d3f4f287-20260927",
+      "head": "a1dd1f4578233757bbd28e201815e1d7e847be09",
+      "pr": 61,
+      "merged_sha": "731de52466ae0568d495629b50cb9f34f022f64b",
+      "merged_at": "2026-09-27T21:30:58Z"
+    },
+    {
+      "branch": "beta/hoel-values-acceptance-20260927",
+      "head": "46126c0838055e85c44dfd214644ad70b0914def",
+      "pr": 59,
+      "merged_sha": "bc0d0613356dcd692715e5504dfa261e93b6bbf3",
+      "merged_at": "2026-09-26T23:39:55Z"
+    },
+    {
+      "branch": "beta/payment-copy-resolution-20260927",
+      "head": "a9382cb2a1b9472f7c7d86572e71ff4e472cc91f",
+      "pr": 60,
+      "merged_sha": "30fa37280cad4553a117b4a1037cd9733f3cb14f",
+      "merged_at": "2026-09-27T01:39:47Z"
+    },
+    {
+      "branch": "beta/release-binding-20260925",
+      "head": "bd123a328ceb0abc7e8f065ab12487a4f91ebe9b",
+      "pr": 57,
+      "merged_sha": "0783a1d411b0f7c1e554020828f1413c678965ac",
+      "merged_at": "2026-09-25T12:39:21Z"
+    },
+    {
+      "branch": "codex/harry-benchmark-release-20260921",
+      "head": "61563242a482bba2b42376d0bdd5487fb1094870",
+      "pr": 51,
+      "merged_sha": "3c1e3b1bb7dc992de741d515f33fd365557e266f",
+      "merged_at": "2026-09-26T23:54:21Z"
+    },
+    {
+      "branch": "codex/implement-sonic-check-v25-operational-unification",
+      "head": "1c9942b6c410877b70ccc33be675d9fb6ed17d6a",
+      "pr": 18,
+      "merged_sha": "6fcce890400ab1cbd589b9355ba1b36571cf427d",
+      "merged_at": "2026-08-22T12:40:07Z"
+    },
+    {
+      "branch": "codex/resonance-landing-20261002",
+      "head": "d0efc19f7da046590e85da8d55ad949a9be1d64a",
+      "pr": 67,
+      "merged_sha": "d23129acbc1e5c79acbe2491cc30ec2e8d3c01bb",
+      "merged_at": "2026-10-02T08:50:27Z"
+    },
+    {
+      "branch": "codex/v27-retire-obsolete-backend",
+      "head": "30d309d54fbd2b8462c128993803380ee5394dc1",
+      "pr": 25,
+      "merged_sha": "c45656b3fab29ad03433a3344a01998117715574",
+      "merged_at": "2026-08-26T17:59:34Z"
+    },
+    {
+      "branch": "design/approved-metallic-charcoal",
+      "head": "268800ab595b17a03c0fc2d7484ff33e8a8235e6",
+      "pr": 52,
+      "merged_sha": "d0170fb0065dcef429834488229f1c5a0585b944",
+      "merged_at": "2026-09-22T03:59:08Z"
+    },
+    {
+      "branch": "docs/formal-license-payment-lock",
+      "head": "496210f0c45b397e1b781d90f6dc22b15f50eb94",
+      "pr": 28,
+      "merged_sha": "3a91bb6e272c955c99349e3424924d47c7f5e2dd",
+      "merged_at": "2026-09-01T01:00:44Z"
+    },
+    {
+      "branch": "docs/metabrainz-commercial-approval-20261002",
+      "head": "18bf71220aca0d84eb6635de902bb1ee61a4e545",
+      "pr": 68,
+      "merged_sha": "6836b46de78b8fe3bca8980f29462d3176ebba3d",
+      "merged_at": "2026-10-02T11:02:04Z"
+    },
+    {
+      "branch": "feat/brushed-chrome-relationships-banner",
+      "head": "c8b368afb4999e37527944620e116fe5355bf8e4",
+      "pr": 69,
+      "merged_sha": "b079905c79a6c2255179b8b905cb9a3f35425f95",
+      "merged_at": "2026-10-03T00:28:49Z"
+    },
+    {
+      "branch": "feature/acoustid-api-release-binding-20260907",
+      "head": "77149a74cfa0e0e7a1ba4ded4b8d051a6c897b5f",
+      "pr": 39,
+      "merged_sha": "dace8f1640b4821b2db38680a0ea6f842c7544b4",
+      "merged_at": "2026-09-07T05:32:09Z"
+    },
+    {
+      "branch": "feature/acoustid-identity-screening-20260906",
+      "head": "c9f728a42f0529c7cefe633ea96483d37ff7b612",
+      "pr": 38,
+      "merged_sha": "9e2687583db8e57c1b1f74953d8f6954aba8b8e0",
+      "merged_at": "2026-09-07T05:16:01Z"
+    },
+    {
+      "branch": "feature/composition-profile-compatibility-20260908",
+      "head": "8f0ed07c802e84584e3652a07fa13f1ea013ca05",
+      "pr": 42,
+      "merged_sha": "dd82f13362aee35ee32300e1dfedc5048beaf275",
+      "merged_at": "2026-09-08T03:14:13Z"
+    },
+    {
+      "branch": "feature/composition-screening-20260908",
+      "head": "64395217483bc6f882204d5dc40bccb5ff156842",
+      "pr": 41,
+      "merged_sha": "6f25fdf05096cbdf893a66b483c6289aee9cfcc4",
+      "merged_at": "2026-09-08T02:25:59Z"
+    },
+    {
+      "branch": "feature/harry-relational-specificity-10",
+      "head": "207756aa2d51a1b275254800378f10ef0de6f63b",
+      "pr": 49,
+      "merged_sha": "38102665d9717339d13eadc1e1f5de979f9b9863",
+      "merged_at": "2026-09-20T23:37:12Z"
+    },
+    {
+      "branch": "feature/harry-six-functions",
+      "head": "6fa2c5749875c2c9582607fda3fe5b79de0b4ce9",
+      "pr": 50,
+      "merged_sha": "7629e7bc522adf40696b6d9eb3b2640ec2ccb181",
+      "merged_at": "2026-09-21T01:29:29Z"
+    },
+    {
+      "branch": "feature/scan-inventory-20260908",
+      "head": "dac6b705e38442290281102dfefbe3430592f325",
+      "pr": 43,
+      "merged_sha": "1262b6dfe2343d81bca7ea609dcfa53a7c3530cf",
+      "merged_at": "2026-09-09T01:32:30Z"
+    },
+    {
+      "branch": "fix/audio-acceptance-release-gate-20260909",
+      "head": "e3733a0144ee569b880bb7176e4c2a823ca4bc42",
+      "pr": 44,
+      "merged_sha": "c1aa7dfa749564ad57ddbb6d6ea11df749705a1f",
+      "merged_at": "2026-09-09T03:10:05Z"
+    },
+    {
+      "branch": "fix/beta-retry-release-binding-20260926",
+      "head": "5f95ac832a8aad35b2b8e74129c9b4fd45f9b912",
+      "pr": 58,
+      "merged_sha": "55b7985caef6411d0881e7faf0cd85e14bb83c8b",
+      "merged_at": "2026-09-26T11:37:04Z"
+    },
+    {
+      "branch": "fix/damion-lukas-professional-name",
+      "head": "9d3c2015c5dc8b3558c4c9100df2f0098739ef9c",
+      "pr": 70,
+      "merged_sha": "a975522613d4dc8a7ce5c774267e92becf634173",
+      "merged_at": "2026-10-03T00:43:12Z"
+    },
+    {
+      "branch": "fix/enforce-api-before-pages-20260909",
+      "head": "57a7f05ec32b1eac150c2c79dac351cd5b674329",
+      "pr": 45,
+      "merged_sha": "9844dadd65c9c5e03bfd28c4467996f20d45d6bc",
+      "merged_at": "2026-09-09T05:32:13Z"
+    },
+    {
+      "branch": "fix/lyric-release-binding-20260929",
+      "head": "ba42e24fb22bb36c2aef71c07b7c5469ec4a93ea",
+      "pr": 62,
+      "merged_sha": "013320cc268170b2e1232cffc92b9bf9ceabf2b9",
+      "merged_at": "2026-09-29T04:12:22Z"
+    },
+    {
+      "branch": "fix/report-download-recovery-20260924",
+      "head": "dcde0ed4e6f1771f3ef31874c80df8ebd953bf8d",
+      "pr": 56,
+      "merged_sha": "45f92a7436bbb350efbf3f3e6b04d35e36c85c7f",
+      "merged_at": "2026-09-24T08:05:48Z"
+    },
+    {
+      "branch": "fix/v36-zero-score-projection",
+      "head": "43f5cc4c43b27ab9d0281e9da57f2b41559e9384",
+      "pr": 40,
+      "merged_sha": "6e398b5e397f39fd54036cf0b317d2857add0629",
+      "merged_at": "2026-09-07T16:16:08Z"
+    },
+    {
+      "branch": "fix/2026-09-30-beta-evidence-digest",
+      "head": "4d52d450b4b41af525201edb850677389dc0abc0",
+      "pr": 65,
+      "merged_sha": "0296eca4653984addc3b3b6708e073487845840c",
+      "merged_at": "2026-09-30T05:40:37Z"
+    },
+    {
+      "branch": "fix/2026-09-30-native-security-api-binding",
+      "head": "1a017640fa1601e7cacb859fdb4f4d2bfa3c36da",
+      "pr": 66,
+      "merged_sha": "0b262d0acd1a075a568ec73271c0872934b46b8d",
+      "merged_at": "2026-09-30T06:33:47Z"
+    },
+    {
+      "branch": "governance/founder-launch-autonomy-20260923",
+      "head": "635ed17c86d88b22450d77c97761abfe34029a55",
+      "pr": 55,
+      "merged_sha": "5aa37ccdca32e6412f1464588dbbef6bc968042a",
+      "merged_at": "2026-09-23T08:06:57Z"
+    },
+    {
+      "branch": "harry-v36-analyzer-branding-20260905",
+      "head": "4f810322a802fd8a6c29e9c7f37cca61c1555347",
+      "pr": 32,
+      "merged_sha": "8004e386b73e6511d17e46ac5f6833355310c5a0",
+      "merged_at": "2026-09-05T04:20:49Z"
+    },
+    {
+      "branch": "merge/scanner-experience-ready",
+      "head": "b7a45ffbcb36bd6fa476d657348bc4eb9ce275f4",
+      "pr": 27,
+      "merged_sha": "85978b05d1ccb327261e30b68bb0bf4807ed22b5",
+      "merged_at": "2026-08-31T05:33:29Z"
+    },
+    {
+      "branch": "prepared/frontend-s5p-20260923",
+      "head": "e1150ce5676d52169567f9953180d804f3c7a984",
+      "pr": 54,
+      "merged_sha": "29ec48a72da7833c50f31e2b0cdf6566b5cc33de",
+      "merged_at": "2026-09-23T02:28:06Z"
+    },
+    {
+      "branch": "rc0-cloudflare-auth-diagnostics",
+      "head": "f2be25b3c37fa19974644bf7e7f3a670dec6eeb1",
+      "pr": 6,
+      "merged_sha": "f445aa33e83873046ded36d53da5d8732dcca859",
+      "merged_at": "2026-08-20T23:15:21Z"
+    },
+    {
+      "branch": "rc0-cloudflare-inventory-key-rotation",
+      "head": "6ea7d4df48cdb70503ca7de55dbeb91c414d4e51",
+      "pr": 7,
+      "merged_sha": "b65bd9631f1eafe75c5db98b4ebcabdc6422f1dd",
+      "merged_at": "2026-08-21T01:16:56Z"
+    },
+    {
+      "branch": "rc0-cloudflare-readonly-inventory",
+      "head": "d38761576f73f6407a86fd0f874266282d5b13cd",
+      "pr": 4,
+      "merged_sha": "b5cbe94567ca4bd0d36e3e67940819acb0ecfaa2",
+      "merged_at": "2026-08-20T13:01:52Z"
+    },
+    {
+      "branch": "rc0-cloudflare-token-normalization",
+      "head": "6a8b065d4359310babc3fe53c2d633cb01287fd3",
+      "pr": 5,
+      "merged_sha": "267a016779ed6d475983b4b3422573bc9686effd",
+      "merged_at": "2026-08-20T13:47:06Z"
+    },
+    {
+      "branch": "rc0-operational-convergence",
+      "head": "07f845b0f2eff23f6b67c4402d676d7882bfe999",
+      "pr": 1,
+      "merged_sha": "e5079293cc437072603c99a0212ca1ef477ff5e7",
+      "merged_at": "2026-08-20T09:59:45Z"
+    },
+    {
+      "branch": "rc0-pages-enablement",
+      "head": "40641463c854f4e66423e7a5c865f741356b5ba2",
+      "pr": 2,
+      "merged_sha": "1da567dcf18211c1309fe8bc1cd9f562bdac355b",
+      "merged_at": "2026-08-20T10:03:41Z"
+    },
+    {
+      "branch": "rc0-production-domain-cutover",
+      "head": "30747809464db74cc3237564bdd9a1b2ba68845b",
+      "pr": 3,
+      "merged_sha": "df61cfb7a90996134fcf56850d4614d8821e8ae8",
+      "merged_at": "2026-08-20T11:47:46Z"
+    },
+    {
+      "branch": "release/harry-v36-web-integration-20260905",
+      "head": "f4afebdd827ff996248c8053d6ecbdf4282ae2f3",
+      "pr": 33,
+      "merged_sha": "e026c08310b52c85b0fafb7476c48e7727b05003",
+      "merged_at": "2026-09-06T01:37:06Z"
+    },
+    {
+      "branch": "release/harry-v37-approved-20260912",
+      "head": "c365bd7cbb087de33993f199f421260c72132f4b",
+      "pr": 46,
+      "merged_sha": "590052f378b15739de3d1463f472ad707190be1b",
+      "merged_at": "2026-09-12T04:33:12Z"
+    },
+    {
+      "branch": "release/2026-09-30-api-100mb-binding",
+      "head": "9b98561e112901fde08427bcb59238230a8cd652",
+      "pr": 64,
+      "merged_sha": "582cbd582ae84004d1778532cf2ac8993e75583c",
+      "merged_at": "2026-09-30T05:21:24Z"
+    },
+    {
+      "branch": "v17-routing-deployment-truth",
+      "head": "18cca2ea4892568be1c3115c65879b414309c797",
+      "pr": 8,
+      "merged_sha": "21a5906f706bfd3959a987490c11701a9d7e6164",
+      "merged_at": "2026-08-21T03:34:38Z"
+    },
+    {
+      "branch": "v17-v20-clean-improvements-20260901",
+      "head": "f2ab418e311ae9058e5d7e574d596937bd334b2e",
+      "pr": 29,
+      "merged_sha": "f2ab418e311ae9058e5d7e574d596937bd334b2e",
+      "merged_at": "2026-09-04T05:42:57Z"
+    },
+    {
+      "branch": "v21-billing-auth-convergence",
+      "head": "95c137a26d8ac6646532aeef45f874a6f7ba686f",
+      "pr": 9,
+      "merged_sha": "98558da6f8aad2c713446a0981920ea9e710a9ba",
+      "merged_at": "2026-08-21T05:28:13Z"
+    },
+    {
+      "branch": "v21-canonical-cutover",
+      "head": "28c301ff8cab5985c7c370baf5c981a3a2cffb5d",
+      "pr": 14,
+      "merged_sha": "c7a454aeeb9f9d7b22f8cf271d28235d4c91af78",
+      "merged_at": "2026-08-22T00:28:01Z"
+    },
+    {
+      "branch": "v21-cloudflare-edit-token",
+      "head": "1373ee9815f99150f764897d1ac6e39ff06ef3fe",
+      "pr": 15,
+      "merged_sha": "05ca50de920cb2f02b188f2c474b832eae83fbbf",
+      "merged_at": "2026-08-22T02:12:33Z"
+    },
+    {
+      "branch": "v21-cloudflare-spa-rewrite",
+      "head": "e78935a6252b0ebea846aeb7fa3d88e1c4b42131",
+      "pr": 16,
+      "merged_sha": "68cf85c0f56e48a771b692bf3ea3b1fdc8f7be85",
+      "merged_at": "2026-08-22T02:25:32Z"
+    },
+    {
+      "branch": "v21-v25-research-upgrades-20260901",
+      "head": "6a64913796e326fc3f9293f53cffc7f6ba964215",
+      "pr": 31,
+      "merged_sha": "cc758968a3c33e97ab702af87330818f1d917285",
+      "merged_at": "2026-09-04T05:42:55Z"
+    },
+    {
+      "branch": "v22-cutover-runbook-final",
+      "head": "f9a070d3d7d5fb32245f58d4d717f78757aa0051",
+      "pr": 13,
+      "merged_sha": "3c84a88790f42271002f6fb018a69cdd3182f0a8",
+      "merged_at": "2026-08-21T07:09:32Z"
+    },
+    {
+      "branch": "v22-edge-cutover-settings",
+      "head": "ea66875543d38d61b52be0b0e1d7f9208526a06c",
+      "pr": 12,
+      "merged_sha": "1a0284da2112cf7da228e3ddf5202b1082f5129d",
+      "merged_at": "2026-08-21T07:04:17Z"
+    },
+    {
+      "branch": "v22-public-dns-cutover-diagnostics",
+      "head": "b7f33da6554976f5cfc8892996878250aa23227e",
+      "pr": 10,
+      "merged_sha": "2eb10ab8fdb9ddc2ff8f0c90b5842c7fd1c185bf",
+      "merged_at": "2026-08-21T06:54:16Z"
+    },
+    {
+      "branch": "v22-public-dns-cutover-diagnostics-2",
+      "head": "326d246c880eabb05fb7924e7519fc536bd1875c",
+      "pr": 11,
+      "merged_sha": "b1c509ea1f871d3c93d0146e2f262021632f33e7",
+      "merged_at": "2026-08-21T06:59:23Z"
+    },
+    {
+      "branch": "v24-production-verification-repair",
+      "head": "56caf076c0804a765d1d531016233763cb831a70",
+      "pr": 17,
+      "merged_sha": "f4a0bd65637827c779a0357c27cb668f95a304b3",
+      "merged_at": "2026-08-22T11:08:07Z"
+    },
+    {
+      "branch": "v25-google-oauth-customer-login",
+      "head": "974e976b7302a0769aef3926ee622c491a880ade",
+      "pr": 23,
+      "merged_sha": "c83ab2431a933a1e1c9ecb7b583a803e87c1034f",
+      "merged_at": "2026-08-26T09:23:16Z"
+    },
+    {
+      "branch": "v25-google-oauth-static-policy-routes",
+      "head": "71f370a4b0d36a0328e711c5c5f4be8322a2d973",
+      "pr": 24,
+      "merged_sha": "1e5871d6b76ccaa46a79179f1b261a6f87bad7ab",
+      "merged_at": "2026-08-26T09:39:29Z"
+    },
+    {
+      "branch": "v25.2-production-verifier-user-agent",
+      "head": "08dfeefa7c79c7a166aaf095cdc96df3bb5031bc",
+      "pr": 19,
+      "merged_sha": "59d75c50e449577462e9fa2e96029727a05d5269",
+      "merged_at": "2026-08-23T06:17:30Z"
+    },
+    {
+      "branch": "v25.3-auth-callback-loop",
+      "head": "5056b391a678143b96d7d605bea359003422ede1",
+      "pr": 22,
+      "merged_sha": "cb5bdef20421b292b1cc08e30720de920106cc28",
+      "merged_at": "2026-08-24T00:08:33Z"
+    },
+    {
+      "branch": "v25.3-clerk-oauth-transfer",
+      "head": "86927e63e2f2e6e380009252ecdd9e7fe58fa3aa",
+      "pr": 20,
+      "merged_sha": "b5d59d9b0d3e54d9e5060b362b4e423c8ed1ffac",
+      "merged_at": "2026-08-23T06:36:18Z"
+    },
+    {
+      "branch": "v25.3-clerk-sign-in-or-up",
+      "head": "5e8f6cc920287cda96754da291c88bfd7516aaa5",
+      "pr": 21,
+      "merged_sha": "2386dcca11d9cdd5a46b99f2b3b75bd5a01c3a53",
+      "merged_at": "2026-08-23T07:11:08Z"
+    },
+    {
+      "branch": "v26/scanner-experience-20260827",
+      "head": "b7a45ffbcb36bd6fa476d657348bc4eb9ce275f4",
+      "pr": 26,
+      "merged_sha": "85978b05d1ccb327261e30b68bb0bf4807ed22b5",
+      "merged_at": "2026-08-31T05:33:31Z"
+    }
+  ],
+  "retained_branch_verification": "All pre-existing retained branches remain at the manifest's original head SHAs; no unexpected branch removal.",
+  "recovery_archive_commit": "6cd492b104561c5bd47bf9a5afe79c1be195d673",
+  "merged_branch_heads_preserved": 66,
+  "default_branch_changed": false,
+  "automatic_branch_deletion": "Enabled; GitHub retains normal branch restoration.",
+  "pull_requests": {
+    "active": [
+      71
+    ],
+    "cleanup_pr": 72,
+    "cleanup_pr_disposition": "CI passed; merge rejected by automatic approval review because the production deployment side effect requires explicit authorization."
+  },
+  "ci": {
+    "run": 37383831319,
+    "build": "PASS",
+    "verify_api": "PASS",
+    "deploy": "SKIPPED for PR",
+    "production_verification": "SKIPPED for PR"
+  },
+  "limitations": [
+    "Main-branch protection is not enabled: GitHub requires fresh account verification.",
+    "No feature PR was merged and no production deployment was performed.",
+    "Scientific and product acceptance gaps remain unchanged."
+  ],
+  "rollback": "Recreate removed branches at their exact original head SHAs in the recovery manifest. Preserve the archive. Closed PRs can be reopened if work resumes."
+}
