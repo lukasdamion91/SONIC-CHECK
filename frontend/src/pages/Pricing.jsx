@@ -92,11 +92,11 @@ export default function Pricing() {
       <div className="flex flex-wrap items-end justify-between gap-7">
         <div>
           <div className="eyebrow">Plan &amp; billing</div>
-          <h1 className="mt-4 font-display text-5xl text-[#F0E9D6] sm:text-6xl">AUD entitlements.</h1>
-          <p className="mt-5 max-w-2xl leading-7 text-[#F0E9D6]/62">Pricing is loaded directly from the production API. Your app functionality follows the entitlement stored against this account.</p>
+          <h1 className="mt-4 font-display text-5xl text-[#f3f2eb] sm:text-6xl">Your plan. Your workspace.</h1>
+          <p className="mt-5 max-w-2xl leading-7 text-[#f3f2eb]/70">Review your current access, available plans and report credits. All prices are in Australian dollars.</p>
         </div>
         {hasSubscription && (
-          <Button onClick={openPortal} disabled={portalLoading} variant="outline" className="border-white/15 bg-transparent text-[#F0E9D6] hover:bg-white/10">
+          <Button onClick={openPortal} disabled={portalLoading} variant="outline" className="border-white/15 bg-transparent text-[#f3f2eb] hover:bg-white/10">
             {portalLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CreditCard className="mr-2 h-4 w-4" />}
             Manage subscription
           </Button>
@@ -104,19 +104,19 @@ export default function Pricing() {
       </div>
 
       {params.get("reason") === "entitlement" && (
-        <div className="mt-8 flex gap-3 rounded-xl border border-[#D4FF00]/25 bg-[#D4FF00]/5 p-4 text-sm text-[#F0E9D6]/72">
-          <LockKeyhole className="h-5 w-5 shrink-0 text-[#D4FF00]" />
+        <div className="mt-8 flex gap-3 rounded-xl border border-[#bcebd8]/25 bg-[#bcebd8]/5 p-4 text-sm text-[#f3f2eb]/72">
+          <LockKeyhole className="h-5 w-5 shrink-0 text-[#bcebd8]" />
           This account cannot create a new evidence screen. Historical owner-scoped records remain available; current access and checkout gates are shown below.
         </div>
       )}
 
-      <div className="mt-6 rounded-xl border border-white/10 bg-[#202027] px-5 py-4">
+      <div className="mt-6 rounded-xl border border-white/10 bg-[#122b40] px-5 py-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <div className="text-[10px] uppercase tracking-widest text-[#F0E9D6]/40 font-mono-data">Current account</div>
-            <div className="mt-1 text-sm text-[#F0E9D6]">{user?.email} · {user?.plan || "account"}</div>
+            <div className="text-[10px] uppercase tracking-widest text-[#f3f2eb]/70 font-mono-data">Current account</div>
+            <div className="mt-1 text-sm text-[#f3f2eb]">{user?.email} · {user?.plan || "account"}</div>
           </div>
-          <div className="text-xs text-[#F0E9D6]/50 font-mono-data">Scan credits: {user?.scan_credits || 0} · Report credits: {user?.report_credits || 0}</div>
+          <div className="text-xs text-[#f3f2eb]/70 font-mono-data">Scan credits: {user?.scan_credits || 0} · Report credits: {user?.report_credits || 0}</div>
         </div>
       </div>
 
@@ -124,21 +124,21 @@ export default function Pricing() {
 
       {error && <div className="mt-8 rounded-xl border border-red-400/20 bg-red-400/5 p-4 text-sm text-red-200">{error}</div>}
       {loading ? (
-        <div className="grid min-h-[320px] place-items-center text-[#F0E9D6]/45"><Loader2 className="h-7 w-7 animate-spin" /></div>
+        <div className="grid min-h-[320px] place-items-center text-[#f3f2eb]/70"><Loader2 className="h-7 w-7 animate-spin" /></div>
       ) : (
         <div className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {plans.map((plan) => {
             const current = user?.plan === plan.id;
             const disabled = !checkoutOpen || !plan.checkout_enabled || Boolean(plan.sales_only) || current;
             return (
-              <article key={plan.id} className={`flex flex-col rounded-xl border p-6 ${current ? "border-[#D4FF00]/35 bg-[#D4FF00]/5" : "border-white/10 bg-[#24242C]"}`}>
-                <div className="text-xs uppercase tracking-[0.16em] text-[#F0E9D6]/45 font-mono-data">{plan.name}</div>
-                <div className="mt-6 text-4xl font-semibold text-[#F0E9D6]">{aud.format(plan.price)}</div>
-                <div className="mt-1 text-xs text-[#F0E9D6]/45">AUD · {cadence(plan)}</div>
+              <article key={plan.id} className={`flex flex-col rounded-xl border p-6 ${current ? "border-[#bcebd8]/35 bg-[#bcebd8]/5" : "border-white/10 bg-[#141e2b]"}`}>
+                <div className="text-xs uppercase tracking-[0.16em] text-[#f3f2eb]/70 font-mono-data">{plan.name}</div>
+                <div className="mt-6 text-4xl font-semibold text-[#f3f2eb]">{aud.format(plan.price)}</div>
+                <div className="mt-1 text-xs text-[#f3f2eb]/70">AUD · {cadence(plan)}</div>
                 {plan.id === "single_scan" && (
                   <label
                     aria-disabled={!checkoutOpen || !plan.checkout_enabled}
-                    className={`mt-5 flex items-center gap-2 rounded-lg border border-white/10 bg-black/10 p-3 text-xs ${checkoutOpen && plan.checkout_enabled ? "text-[#F0E9D6]/65" : "text-[#F0E9D6]/35"}`}
+                    className={`mt-5 flex items-center gap-2 rounded-lg border border-white/10 bg-black/10 p-3 text-xs ${checkoutOpen && plan.checkout_enabled ? "text-[#f3f2eb]/70" : "text-[#f3f2eb]/70"}`}
                   >
                     <Checkbox
                       checked={includeReport}
@@ -148,13 +148,13 @@ export default function Pricing() {
                     Add detailed PDF report ({aud.format(plan.report_addon_price || 5)})
                   </label>
                 )}
-                <ul className="mt-6 flex-1 space-y-3 text-sm leading-5 text-[#F0E9D6]/62">
-                  {plan.features.map((feature) => <li key={feature} className="flex gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-[#D4FF00]" />{feature}</li>)}
+                <ul className="mt-6 flex-1 space-y-3 text-sm leading-5 text-[#f3f2eb]/70">
+                  {plan.features.map((feature) => <li key={feature} className="flex gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-[#bcebd8]" />{feature}</li>)}
                 </ul>
                 <Button
                   onClick={() => beginCheckout(plan)}
                   disabled={disabled || Boolean(starting)}
-                  className="mt-8 w-full bg-[#D4FF00] text-[#1C1C22] hover:bg-[#D4FF00]/85 disabled:bg-white/10 disabled:text-[#F0E9D6]/40"
+                  className="mt-8 w-full bg-[#bcebd8] text-[#101216] hover:bg-[#bcebd8]/85 disabled:bg-white/10 disabled:text-[#f3f2eb]/40"
                 >
                   {starting === plan.id && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   {current ? "Current plan" : !checkoutOpen ? "Paid checkout closed" : plan.sales_only ? "Organisation review required" : plan.checkout_enabled ? "Continue to secure checkout" : "Checkout gated"}
@@ -165,7 +165,7 @@ export default function Pricing() {
         </div>
       )}
 
-      <p className="mt-8 text-xs leading-5 text-[#F0E9D6]/42">
+      <p className="mt-8 text-xs leading-5 text-[#f3f2eb]/70">
         All amounts are Australian dollars. Candidate-evidence screening supports qualified human review and does not provide a legal conclusion or ownership decision.
       </p>
     </main>

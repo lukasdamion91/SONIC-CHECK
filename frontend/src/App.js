@@ -2,6 +2,7 @@ import "@/App.css";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AuthProvider } from "@/context/AuthContext";
 import { Toaster } from "@/components/ui/sonner";
+import ProductSurface from "@/components/ProductSurface";
 import Navbar from "@/components/Navbar";
 import ProtectedRoute, { EntitledRoute } from "@/components/ProtectedRoute";
 import Landing from "@/pages/Landing";
@@ -34,6 +35,7 @@ function App() {
     <div className="App min-h-screen">
       <AuthProvider>
         <BrowserRouter basename={baseName}>
+          <ProductSurface>
           <Navbar />
           <div id="main-content" tabIndex={-1}>
           <Routes>
@@ -64,6 +66,7 @@ function App() {
           </Routes>
           </div>
           <Toaster theme="dark" position="top-right" />
+          </ProductSurface>
         </BrowserRouter>
       </AuthProvider>
     </div>

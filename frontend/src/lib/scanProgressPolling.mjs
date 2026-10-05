@@ -1,3 +1,5 @@
+import { parseComponentActivity } from "./componentActivity.mjs";
+
 export const SCAN_PROGRESS_SCHEMA = "soniccheck-scan-progress/1.0.0";
 export const SCAN_PROGRESS_BASIS = "completed_pipeline_milestones";
 export const SCAN_POST_PENDING_TIMEOUT_MS = 10 * 60_000;
@@ -72,6 +74,7 @@ export function parseScanProgressResponse(data, expectedProgressId) {
     scanId: typeof data.scan_id === "string" ? data.scan_id : null,
     errorCode: typeof data.error_code === "string" ? data.error_code : null,
     retryAfterMs: normaliseRetryDelay(data.retry_after_ms),
+    componentActivity: parseComponentActivity(data.component_activity),
   };
 }
 

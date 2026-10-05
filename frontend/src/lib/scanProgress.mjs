@@ -20,6 +20,8 @@ export const INITIAL_SCAN_PROGRESS = Object.freeze({
   serverProgressPercent: null,
   serverStage: null,
   serverState: null,
+  componentActivity: null,
+  componentTelemetryAvailable: false,
   errorMessage: null,
   failedAt: null,
 });
@@ -68,6 +70,8 @@ export function scanProgressReducer(state = INITIAL_SCAN_PROGRESS, action = {}) 
         serverProgressPercent: null,
         serverStage: null,
         serverState: null,
+        componentActivity: null,
+        componentTelemetryAvailable: false,
         errorMessage: null,
         failedAt: null,
       };
@@ -92,7 +96,11 @@ export function scanProgressReducer(state = INITIAL_SCAN_PROGRESS, action = {}) 
     case "ANALYSIS_STARTED":
       return { ...state, phase: SCAN_PHASE.ANALYSING, uploadPercent: 100 };
 
+    case "COMPONENT_TELEMETRY_UNAVAILABLE":
+      return { ...state, componentTelemetryAvailable: false };
+
     case "SERVER_PROGRESS": {
+      if ([SCAN_PHASE.COMPLETE, SCAN_PHASE.ERROR].includes(state.phase)) return state;
       const reportedPercent = Number.isFinite(action.progressPercent)
         ? clampPercent(action.progressPercent)
         : null;
@@ -109,6 +117,9 @@ export function scanProgressReducer(state = INITIAL_SCAN_PROGRESS, action = {}) 
           : Math.max(previousPercent, reportedPercent),
         serverStage: action.stage ?? state.serverStage,
         serverState: action.state ?? state.serverState,
+        componentActivity: action.componentActivity && (action.componentActivity.revision >= (state.componentActivity?.revision ?? -1))
+          ? action.componentActivity : state.componentActivity,
+        componentTelemetryAvailable: Boolean(action.componentActivity) && action.componentActivity.revision >= (state.componentActivity?.revision ?? -1),
       };
     }
 
@@ -125,7 +136,7 @@ export function scanProgressReducer(state = INITIAL_SCAN_PROGRESS, action = {}) 
       return {
         ...state,
         phase: SCAN_PHASE.ERROR,
-        errorMessage: action.message || "The evidence screen stopped before a result was stored.",
+        errorMessage: action.message || "The evidence screen did not return a confirmed result.",
         failedAt: state.phase,
         serverState: action.state ?? state.serverState ?? "error",
       };
@@ -216,7 +227,7 @@ export function getScanProgressView(progress = INITIAL_SCAN_PROGRESS) {
       return {
         statusLabel: "Screen interrupted",
         headline: "Evidence screen stopped",
-        detail: "No completed result was stored. Review the error shown with the form, then try the evidence screen again.",
+        detail: "The submission did not return a confirmed result. Review the error and check your dashboard before retrying.",
         counter: "STOP",
         counterLabel: uploadPercent >= 100 ? "upload complete" : "transfer stopped",
         meterLabel: uploadPercent >= 100 ? "Secure upload complete" : `Secure upload stopped at ${uploadPercent}%`,
@@ -225,7 +236,7 @@ export function getScanProgressView(progress = INITIAL_SCAN_PROGRESS) {
           : `Secure upload stopped at ${uploadPercent}%`,
         activeStage: stageForPhase(progress.failedAt),
         isActive: false,
-        announcement: `Evidence screen stopped. ${progress.errorMessage || "No completed result was stored."}`,
+        announcement: `Evidence screen stopped. ${progress.errorMessage || "Check your dashboard before retrying."}`,
         announcementKey: SCAN_PHASE.ERROR,
         serverPercent,
       };

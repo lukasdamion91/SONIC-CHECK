@@ -5,12 +5,12 @@ import { Button } from "@/components/ui/button";
 function GateMessage({ title, body, action, onAction }) {
   return (
     <div className="mx-auto grid min-h-[62vh] max-w-2xl place-items-center px-6 py-16 text-center">
-      <div className="w-full rounded-xl border border-white/10 bg-[#24242C] p-10">
+      <div className="w-full rounded-xl border border-white/10 bg-[#141e2b] p-10">
         <div className="mx-auto mb-6 h-1.5 w-24 rounded-full holo-gradient" />
-        <h1 className="font-display text-4xl text-[#F0E9D6]">{title}</h1>
-        <p className="mx-auto mt-4 max-w-lg text-[#F0E9D6]/65">{body}</p>
+        <h1 className="font-display text-4xl text-[#f3f2eb]">{title}</h1>
+        <p className="mx-auto mt-4 max-w-lg text-[#f3f2eb]/70">{body}</p>
         {action && (
-          <Button onClick={onAction} className="mt-7 bg-[#D4FF00] text-[#1C1C22] hover:bg-[#D4FF00]/85">
+          <Button onClick={onAction} className="mt-7 bg-[#bcebd8] text-[#101216] hover:bg-[#bcebd8]/85">
             {action}
           </Button>
         )}
@@ -32,7 +32,7 @@ export default function ProtectedRoute({ children }) {
     );
   }
   if (loading) {
-    return <div className="grid min-h-[60vh] place-items-center font-mono-data text-sm text-[#F0E9D6]/50">Loading account…</div>;
+    return <div className="grid min-h-[60vh] place-items-center font-mono-data text-sm text-[#f3f2eb]/70">Loading account…</div>;
   }
   if (!user && !error) {
     const redirect = `${location.pathname}${location.search}`;

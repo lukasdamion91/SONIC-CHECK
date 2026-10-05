@@ -57,10 +57,10 @@ export default function PaymentSuccess() {
 
   return (
     <main className="mx-auto grid min-h-[65vh] max-w-2xl place-items-center px-6 py-14 text-center">
-      <div className="w-full rounded-2xl border border-white/10 bg-[#202027] p-10 sm:p-12">
-        {status === "polling" && <><Loader2 className="mx-auto h-10 w-10 animate-spin text-[#9DB8F0]" /><h1 className="mt-6 font-display text-4xl text-[#F0E9D6]">Confirming entitlement…</h1><p className="mt-3 text-[#F0E9D6]/58">The app is waiting for Stripe settlement and idempotent fulfilment.</p></>}
-        {status === "paid" && <><CheckCircle2 className="mx-auto h-10 w-10 text-[#D4FF00]" /><h1 className="mt-6 font-display text-4xl text-[#F0E9D6]">Entitlement active.</h1><p className="mt-3 text-[#F0E9D6]/58">Your available application functionality has been updated.</p><Button onClick={() => navigate("/app")} className="mt-8 bg-[#D4FF00] px-6 text-[#1C1C22] hover:bg-[#D4FF00]/85">Open dashboard</Button></>}
-        {["failed", "expired", "pending"].includes(status) && <><AlertCircle className="mx-auto h-10 w-10 text-amber-200" /><h1 className="mt-6 font-display text-4xl text-[#F0E9D6]">Payment {status}.</h1><p className="mt-3 text-[#F0E9D6]/58">No duplicate fulfilment will be applied. Return to billing to review the account state or retry.</p><Button onClick={() => navigate("/app/billing")} className="mt-8 bg-[#D4FF00] px-6 text-[#1C1C22] hover:bg-[#D4FF00]/85">Back to plan &amp; billing</Button></>}
+      <div className="w-full rounded-2xl border border-white/10 bg-[#122b40] p-10 sm:p-12">
+        {status === "polling" && <><Loader2 className="mx-auto h-10 w-10 animate-spin text-[#9DB8F0]" /><h1 className="mt-6 font-display text-4xl text-[#f3f2eb]">Confirming entitlement…</h1><p className="mt-3 text-[#f3f2eb]/70">The app is waiting for Stripe settlement and idempotent fulfilment.</p></>}
+        {status === "paid" && <><CheckCircle2 className="mx-auto h-10 w-10 text-[#bcebd8]" /><h1 className="mt-6 font-display text-4xl text-[#f3f2eb]">Entitlement active.</h1><p className="mt-3 text-[#f3f2eb]/70">Your available application functionality has been updated.</p><Button onClick={() => navigate("/app")} className="mt-8 bg-[#bcebd8] px-6 text-[#101216] hover:bg-[#bcebd8]/85">Open dashboard</Button></>}
+        {["failed", "expired", "pending"].includes(status) && <><AlertCircle className="mx-auto h-10 w-10 text-amber-200" /><h1 className="mt-6 font-display text-4xl text-[#f3f2eb]">Payment {status}.</h1><p className="mt-3 text-[#f3f2eb]/70">No duplicate fulfilment will be applied. Return to billing to review the account state or retry.</p><Button onClick={() => navigate("/app/billing")} className="mt-8 bg-[#bcebd8] px-6 text-[#101216] hover:bg-[#bcebd8]/85">Back to plan &amp; billing</Button></>}
       </div>
     </main>
   );
