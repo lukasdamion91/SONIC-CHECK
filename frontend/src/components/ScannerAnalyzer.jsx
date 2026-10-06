@@ -1,14 +1,9 @@
 import { AudioLines, Check, ShieldCheck } from "lucide-react";
+import HarryActivity from "@/components/HarryActivity";
 import ChromaticText from "@/components/ChromaticText";
 import { ANALYZER_IDENTITY } from "@/constants/analyzerIdentity.mjs";
 import { SCAN } from "@/constants/testIds";
 import { getScanProgressView, SCAN_STAGE_ORDER } from "@/lib/scanProgress.mjs";
-
-const SPECTRUM_HEIGHTS = [
-  22, 38, 56, 42, 68, 82, 60, 44, 74, 92, 70, 52, 86, 64,
-  46, 72, 94, 78, 54, 88, 66, 48, 76, 58, 84, 62, 40, 70,
-];
-const rainbowBarAsset = `${process.env.PUBLIC_URL || ""}/brand/sonic-rainbow-bar.png`;
 
 export default function ScannerAnalyzer({ progress }) {
   const view = getScanProgressView(progress);
@@ -29,8 +24,8 @@ export default function ScannerAnalyzer({ progress }) {
               <AudioLines className="h-4 w-4" />
             </span>
             <div className="min-w-0">
-              <div className="font-mono-data text-[10px] uppercase tracking-[0.2em] text-[#F0E9D6]/55">SC analyser</div>
-              <div id="scanner-console-heading" className="mt-1 text-sm font-semibold text-[#F0E9D6]">Live process display</div>
+              <div className="font-mono-data text-[10px] uppercase tracking-[0.2em] text-[#f3f2eb]/70">HARRY · Resonance</div>
+              <div id="scanner-console-heading" className="mt-1 text-sm font-semibold text-[#f3f2eb]">Live process display</div>
             </div>
           </div>
           <div className="scanner-console-meta">
@@ -47,43 +42,22 @@ export default function ScannerAnalyzer({ progress }) {
 
         <div className="mt-6 grid grid-cols-[1fr_auto] items-end gap-5">
           <div>
-            <div className="font-mono-data text-[10px] uppercase tracking-[0.18em] text-[#F0E9D6]/55">Current state</div>
-            <h2 className="mt-2 max-w-xs text-xl font-semibold leading-tight text-[#F0E9D6]">{view.headline}</h2>
+            <div className="font-mono-data text-[10px] uppercase tracking-[0.18em] text-[#f3f2eb]/70">Current state</div>
+            <h2 className="mt-2 max-w-xs text-xl font-semibold leading-tight text-[#f3f2eb]">{view.headline}</h2>
           </div>
           <div className="text-right">
             <ChromaticText className="scanner-counter font-mono-data" data-testid={SCAN.progressPercent}>
               {view.counter}
             </ChromaticText>
-            <div className="mt-1 font-mono-data text-[10px] uppercase tracking-[0.16em] text-[#F0E9D6]/55">{view.counterLabel}</div>
+            <div className="mt-1 font-mono-data text-[10px] uppercase tracking-[0.16em] text-[#f3f2eb]/70">{view.counterLabel}</div>
           </div>
         </div>
 
-        <div
-          className="scanner-spectrum mt-6"
-          data-active={view.isActive ? "true" : "false"}
-          aria-hidden="true"
-        >
-          <div className="scanner-spectrum-grid" />
-          <div className="scanner-spectrum-bars">
-            {SPECTRUM_HEIGHTS.map((height, index) => (
-              <span
-                key={`${height}-${index}`}
-                className="scanner-spectrum-bar"
-                style={{
-                  "--spectrum-height": `${height}%`,
-                  "--spectrum-texture": `url("${rainbowBarAsset}")`,
-                  "--spectrum-duration": `${4.8 + (index % 5) * 0.42}s`,
-                  "--spectrum-delay": `${index * -0.16}s`,
-                }}
-              />
-            ))}
-          </div>
-          <div className="scanner-sweep-line" />
-        </div>
+        <HarryActivity progress={progress} />
 
         <div className="mt-5" data-testid={SCAN.uploadProgress}>
           <div className="flex items-center justify-between gap-4 font-mono-data text-[10px] uppercase tracking-[0.13em]">
-            <span className="text-[#F0E9D6]/55">{view.meterLabel}</span>
+            <span className="text-[#f3f2eb]/70">{view.meterLabel}</span>
             <span className="text-[#8DEFE4]">Transfer telemetry</span>
           </div>
           <div
@@ -102,7 +76,7 @@ export default function ScannerAnalyzer({ progress }) {
         {view.serverPercent != null && (
           <div className="mt-4" data-testid={SCAN.serverProgress}>
             <div className="flex items-center justify-between gap-4 font-mono-data text-[10px] uppercase tracking-[0.13em]">
-              <span className="text-[#F0E9D6]/55">Completed pipeline milestones</span>
+              <span className="text-[#f3f2eb]/70">Completed pipeline milestones</span>
               <span className="text-[#D9A8E8]">{view.serverPercent}%</span>
             </div>
             <div
@@ -119,7 +93,7 @@ export default function ScannerAnalyzer({ progress }) {
         )}
 
         <div
-          className="mt-5 min-h-[4.25rem] rounded-md border border-white/[0.08] bg-white/[0.025] p-4 text-xs leading-5 text-[#F0E9D6]/62"
+          className="mt-5 min-h-[4.25rem] rounded-md border border-white/[0.08] bg-white/[0.025] p-4 text-xs leading-5 text-[#f3f2eb]/70"
           data-testid={SCAN.progressDetail}
         >
           {view.detail}
@@ -148,7 +122,7 @@ export default function ScannerAnalyzer({ progress }) {
           })}
         </ol>
 
-        <div className="mt-5 flex items-start gap-2 border-t border-white/10 pt-4 text-[10px] leading-4 text-[#F0E9D6]/52">
+        <div className="mt-5 flex items-start gap-2 border-t border-white/10 pt-4 text-[10px] leading-4 text-[#f3f2eb]/70">
           <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#8DEFE4]" aria-hidden="true" />
           {view.serverPercent != null
             ? "Analysis percentage reports completed pipeline milestones—not elapsed time, an ETA, confidence or accuracy."

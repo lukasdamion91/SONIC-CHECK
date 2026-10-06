@@ -2,8 +2,8 @@ import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FileAudio, FileText, Loader2, ShieldAlert, Upload } from "lucide-react";
 import { toast } from "sonner";
-import ChromaticText from "@/components/ChromaticText";
 import ScannerAnalyzer from "@/components/ScannerAnalyzer";
+import ScanResultsOverview from "@/components/ScanResultsOverview";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -106,9 +106,9 @@ export default function NewScan() {
       onFailed: failSubmission,
       onRecoveryStarted: (reason) => {
         const notice = reason === "pending_timeout"
-          ? "The maximum upload-response wait ended. SonicCheck stopped waiting for that response and is checking the owner-scoped durable record. Do not start another screen yet."
+          ? "The maximum upload-response wait ended. SonicCheck stopped waiting for that response and is checking the owner-scoped durable record. Do not start another analysis yet."
           : reason === "user_stop"
-            ? "SonicCheck stopped waiting for the upload response and is checking the owner-scoped durable record. Do not start another screen yet."
+            ? "SonicCheck stopped waiting for the upload response and is checking the owner-scoped durable record. Do not start another analysis yet."
             : "The upload response was interrupted. SonicCheck is checking the owner-scoped durable record before it is safe to retry.";
         setReconciling(true);
         setReconciliationNotice(notice);
@@ -138,6 +138,7 @@ export default function NewScan() {
         });
         const report = parseScanProgressResponse(data, progressId);
         if (!report) {
+          dispatchScanProgress({ type: "COMPONENT_TELEMETRY_UNAVAILABLE" });
           // Invalid optional telemetry must not discard the owner-scoped
           // reconciliation handle while the authoritative POST is unresolved.
           schedule(SCAN_RECONCILIATION_RETRY_MS);
@@ -153,6 +154,7 @@ export default function NewScan() {
           progressPercent: report.progressPercent,
           stage: report.stage,
           state: report.state,
+          componentActivity: report.componentActivity,
         });
 
         if (report.state === "completed") {
@@ -163,8 +165,8 @@ export default function NewScan() {
         }
         if (report.state === "failed") {
           const message = report.errorCode
-            ? `The server stopped this evidence screen (${report.errorCode}).`
-            : "The server stopped this evidence screen before a result was stored.";
+            ? `The server stopped this analysis (${report.errorCode}).`
+            : "The server stopped this analysis before a result was stored.";
           if (!activePoll.recovery.handleProgress(report, message)) failSubmission(message, report.state);
           return;
         }
@@ -172,6 +174,7 @@ export default function NewScan() {
         schedule(report.retryAfterMs);
       } catch (pollError) {
         if (activePoll.controller.signal.aborted) return;
+        dispatchScanProgress({ type: "COMPONENT_TELEMETRY_UNAVAILABLE" });
         const status = pollError?.response?.status;
         const retry = scanPollFailureDecision({
           status,
@@ -231,11 +234,11 @@ export default function NewScan() {
     event.preventDefault();
     setError("");
     if (ambiguousOutcome) {
-      setError("Check the dashboard for the prior submission before starting another evidence screen.");
+      setError("Check the dashboard for the prior submission before starting another analysis.");
       return;
     }
     if (!form.lyrics.trim() && !audioFile) {
-      setError("Add an audio file, lyrics, or both before starting the screen.");
+      setError("Add an audio file, lyrics, or both before starting the analysis.");
       return;
     }
     const audioValidationError = audioUploadValidationError(audioFile);
@@ -338,37 +341,23 @@ export default function NewScan() {
 
   return (
     <main className="new-scan-page mx-auto max-w-7xl px-6 py-14">
-      <div className="relative z-10 max-w-4xl">
-        <div className="eyebrow">New evidence screen</div>
-        <h1 className="mt-4 font-display text-5xl text-[#F0E9D6] sm:text-6xl">
-          Submit <ChromaticText>private material.</ChromaticText>
-        </h1>
-        <p className="mt-5 leading-7 text-[#F0E9D6]/62">Provide decoded audio, lyrics or both. SONIC CHECK will preserve each available channel as method-labelled candidate evidence.</p>
-      </div>
-
-      <form onSubmit={submit} aria-busy={submitting} className="relative z-10 mt-10 grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(20rem,0.62fr)] lg:items-start">
-        <div className="scan-intake-panel space-y-6 rounded-xl border border-white/10 p-6 sm:p-8">
-          <div className="grid gap-5 sm:grid-cols-2">
-            <div>
-              <Label htmlFor="title" className="text-[#F0E9D6]/78">Work title</Label>
-              <Input id="title" data-testid={SCAN.titleInput} required disabled={submitting} value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} placeholder="Unreleased demo" className="mt-2 border-white/10 bg-[#17171C] text-[#F0E9D6]" />
-            </div>
-            <div>
-              <Label htmlFor="artist" className="text-[#F0E9D6]/78">Creator / artist</Label>
-              <Input id="artist" data-testid={SCAN.artistInput} disabled={submitting} value={form.artist_name} onChange={(event) => setForm({ ...form, artist_name: event.target.value })} placeholder="Creator name" className="mt-2 border-white/10 bg-[#17171C] text-[#F0E9D6]" />
-            </div>
-          </div>
-
+      <div className="sc-analysis-flow relative z-10">
+      <form onSubmit={submit} aria-busy={submitting} className="sc-audio-upload-form">
+        <section className="scan-intake-panel sc-audio-upload-panel space-y-6 rounded-xl border p-6 sm:p-8" aria-labelledby="audio-upload-heading">
+          <header>
+            <h1 id="audio-upload-heading" className="sc-audio-upload-heading">AUDIO UPLOAD</h1>
+            <p className="mt-3 text-sm">Choose your track, then start the analysis.</p>
+          </header>
           <div>
-            <div className="flex items-center justify-between gap-4">
-              <Label htmlFor="audio" className="text-[#F0E9D6]/78">Audio file</Label>
-              <span className="text-[10px] uppercase tracking-widest text-[#F0E9D6]/38 font-mono-data">WAV · AIFF · FLAC · MP3 · M4A</span>
+            <div className="space-y-2">
+              <Label htmlFor="audio" className="text-[#f3f2eb]/78">Audio file</Label>
+              <p className="sc-audio-formats">WAV <span>(.wav)</span> · AIFF <span>(.aiff, .aif)</span> · FLAC <span>(.flac)</span> · MP3 <span>(.mp3)</span> · M4A <span>(.m4a)</span></p>
             </div>
-            <label htmlFor="audio" data-disabled={submitting ? "true" : "false"} className="audio-drop-zone mt-2 flex min-h-32 cursor-pointer items-center justify-center rounded-lg border border-dashed border-white/15 bg-[#17171C] p-6 text-center hover:border-[#9DB8F0]/45">
+            <label htmlFor="audio" data-disabled={submitting ? "true" : "false"} className="audio-drop-zone sc-audio-upload-picker mt-3 flex min-h-32 cursor-pointer items-center justify-center rounded-lg border border-dashed border-white/15 bg-[#101b25] p-6 text-center hover:border-[#9DB8F0]/45">
               <div>
-                {audioFile ? <FileAudio className="mx-auto h-7 w-7 text-[#D4FF00]" /> : <Upload className="mx-auto h-7 w-7 text-[#9DB8F0]" />}
-                <div className="mt-3 text-sm text-[#F0E9D6]">{audioFile ? audioFile.name : "Choose an audio file"}</div>
-                <div className="mt-1 text-xs text-[#F0E9D6]/42">Audio files up to {AUDIO_UPLOAD_LIMIT_LABEL}. File size and decodability are checked before a credit is consumed.</div>
+                {audioFile ? <FileAudio className="mx-auto h-7 w-7 text-[#bcebd8]" /> : <Upload className="mx-auto h-7 w-7 text-[#9DB8F0]" />}
+                <div className="mt-3 text-sm text-[#f3f2eb]">{audioFile ? audioFile.name : "Choose an audio file"}</div>
+                <div className="mt-1 text-xs text-[#f3f2eb]/70">Up to {AUDIO_UPLOAD_LIMIT_LABEL}. Your file must decode successfully before analysis.</div>
               </div>
             </label>
             <input id="audio" data-testid={SCAN.audioFileInput} disabled={submitting} type="file" accept="audio/wav,audio/x-wav,audio/aiff,audio/flac,audio/mpeg,audio/mp4,.wav,.aiff,.aif,.flac,.mp3,.m4a" className="sr-only" onChange={(event) => {
@@ -387,6 +376,17 @@ export default function NewScan() {
             }} />
           </div>
 
+          <div className="grid gap-5 sm:grid-cols-2">
+            <div>
+              <Label htmlFor="title" className="text-[#f3f2eb]/78">Work title</Label>
+              <Input id="title" data-testid={SCAN.titleInput} required disabled={submitting} value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} placeholder="Unreleased demo" className="mt-2 border-white/10 bg-[#101b25] text-[#f3f2eb]" />
+            </div>
+            <div>
+              <Label htmlFor="artist" className="text-[#f3f2eb]/78">Creator / artist</Label>
+              <Input id="artist" data-testid={SCAN.artistInput} disabled={submitting} value={form.artist_name} onChange={(event) => setForm({ ...form, artist_name: event.target.value })} placeholder="Creator name" className="mt-2 border-white/10 bg-[#101b25] text-[#f3f2eb]" />
+            </div>
+          </div>
+
           {user?.role === "admin" && (
             <div className="rounded-xl border border-violet-300/20 bg-violet-300/[0.045] p-4">
               <label htmlFor="candidate-shadow" className="flex items-start gap-3">
@@ -402,7 +402,7 @@ export default function NewScan() {
                 />
                 <span>
                   <span className="block text-sm font-medium text-violet-100">Run V37 eight-channel research diagnostic</span>
-                  <span id="candidate-shadow-detail" className="mt-1 block text-xs leading-5 text-[#F0E9D6]/48">
+                  <span id="candidate-shadow-detail" className="mt-1 block text-xs leading-5 text-[#f3f2eb]/70">
                     Administrator-only and audio-only. This adds retrieval time and stores diagnostic shadow evidence; it does not change the verdict, candidate ranking, provider calls, payment state or entitlement use.
                   </span>
                 </span>
@@ -411,68 +411,77 @@ export default function NewScan() {
             </div>
           )}
 
-          <div>
-            <Label htmlFor="lyrics" className="text-[#F0E9D6]/78">Lyrics</Label>
-            <Textarea id="lyrics" data-testid={SCAN.lyricsInput} disabled={submitting} value={form.lyrics} onChange={(event) => setForm({ ...form, lyrics: event.target.value })} placeholder="Paste the submitted lyrics here…" className="mt-2 min-h-48 border-white/10 bg-[#17171C] text-[#F0E9D6]" />
-            <p className="mt-2 text-xs text-[#F0E9D6]/42">Exact phrase overlap and Lyric Order Recovery compare available reference text. Lyrics are not automatically transcribed from audio.</p>
-            <details className="mt-4 rounded-xl border border-white/10 p-4 text-[#F0E9D6]/75">
+          <details className="sc-upload-options">
+            <summary>Optional lyrics and reference text</summary>
+            <div className="pt-4">
+            <Label htmlFor="lyrics" className="text-[#f3f2eb]/78">Lyrics</Label>
+            <Textarea id="lyrics" data-testid={SCAN.lyricsInput} disabled={submitting} value={form.lyrics} onChange={(event) => setForm({ ...form, lyrics: event.target.value })} placeholder="Paste the submitted lyrics here…" className="mt-2 min-h-48 border-white/10 bg-[#101b25] text-[#f3f2eb]" />
+            <p className="mt-2 text-xs text-[#f3f2eb]/70">Exact phrase overlap and Lyric Order Recovery compare available reference text. Lyrics are not automatically transcribed from audio.</p>
+            <details className="mt-4 rounded-xl border border-white/10 p-4 text-[#f3f2eb]/75">
               <summary className="cursor-pointer text-sm">Compare with a reference lyric text</summary>
-              <p className="mt-3 text-xs leading-5 text-[#F0E9D6]/50">Optional: supply a text you own or have permission to compare. This compares the two supplied texts; it does not search a catalogue. The full reference text is not stored; measurements and short exact-match evidence are retained with the scan. Rescans need the reference supplied again.</p>
+              <p className="mt-3 text-xs leading-5 text-[#f3f2eb]/70">Optional: supply a text you own or have permission to compare. This compares the two supplied texts; it does not search a catalogue. The full reference text is not stored; measurements and short exact-match evidence are retained with the scan. Rescans need the reference supplied again.</p>
               <Label htmlFor="reference-lyrics-title" className="mt-4 block text-sm">Reference title</Label>
-              <Input id="reference-lyrics-title" disabled={submitting} maxLength={200} value={form.reference_lyrics_title} onChange={(event) => setForm({ ...form, reference_lyrics_title: event.target.value })} className="mt-2 border-white/10 bg-[#17171C]" />
+              <Input id="reference-lyrics-title" disabled={submitting} maxLength={200} value={form.reference_lyrics_title} onChange={(event) => setForm({ ...form, reference_lyrics_title: event.target.value })} className="mt-2 border-white/10 bg-[#101b25]" />
               <Label htmlFor="reference-lyrics" className="mt-4 block text-sm">Reference lyrics</Label>
-              <Textarea id="reference-lyrics" disabled={submitting} maxLength={20000} value={form.reference_lyrics} onChange={(event) => setForm({ ...form, reference_lyrics: event.target.value })} className="mt-2 min-h-36 border-white/10 bg-[#17171C]" />
+              <Textarea id="reference-lyrics" disabled={submitting} maxLength={20000} value={form.reference_lyrics} onChange={(event) => setForm({ ...form, reference_lyrics: event.target.value })} className="mt-2 min-h-36 border-white/10 bg-[#101b25]" />
               <label className="mt-3 flex items-start gap-3 text-xs leading-5"><input type="checkbox" disabled={submitting} checked={form.reference_lyrics_authorized} onChange={(event) => setForm({ ...form, reference_lyrics_authorized: event.target.checked })} className="mt-1" />I have permission to submit this reference text for comparison and retain the resulting evidence.</label>
             </details>
-          </div>
+            </div>
+          </details>
 
-          <div>
-            <Label className="text-[#F0E9D6]/78">Regional context</Label>
+          <details className="sc-upload-options">
+            <summary>Regional context · {form.region}</summary>
+            <div className="pt-4">
+            <Label className="text-[#f3f2eb]/78">Regional context</Label>
             <Select disabled={submitting} value={form.region} onValueChange={(region) => setForm({ ...form, region })}>
-              <SelectTrigger data-testid={SCAN.regionSelect} className="mt-2 border-white/10 bg-[#17171C] text-[#F0E9D6]"><SelectValue /></SelectTrigger>
-              <SelectContent>{regions.map((region) => <SelectItem key={region.code} value={region.code}>{region.name} ({region.code})</SelectItem>)}</SelectContent>
+              <SelectTrigger data-testid={SCAN.regionSelect} className="mt-2 border-white/10 bg-[#101b25] text-[#f3f2eb]"><SelectValue /></SelectTrigger>
+              <SelectContent className="sc-product-popover">{regions.map((region) => <SelectItem key={region.code} value={region.code}>{region.name} ({region.code})</SelectItem>)}</SelectContent>
             </Select>
-            <p className="mt-2 text-xs text-[#F0E9D6]/42">This records context only. No fixed legal threshold or regional conclusion is applied.</p>
-          </div>
+            <p className="mt-2 text-xs text-[#f3f2eb]/70">This records context only. No fixed legal threshold or regional conclusion is applied.</p>
+            </div>
+          </details>
 
           {reconciliationNotice && <div role="status" className="flex gap-3 rounded-lg border border-amber-300/20 bg-amber-300/5 p-4 text-sm leading-6 text-amber-100"><ShieldAlert className="h-5 w-5 shrink-0" />{reconciliationNotice}</div>}
           {error && <div role="alert" className="flex gap-3 rounded-lg border border-red-400/20 bg-red-400/5 p-4 text-sm text-red-200"><ShieldAlert className="h-5 w-5 shrink-0" />{error}</div>}
 
           <div className={`grid gap-3 ${submitting && !reconciling ? "sm:grid-cols-[1fr_auto]" : ""}`}>
-            <Button type="submit" data-testid={SCAN.submitBtn} disabled={submitting || ambiguousOutcome} className="h-12 w-full bg-[#D4FF00] text-[#1C1C22] hover:bg-[#D4FF00]/85">
+            <Button type="submit" data-testid={SCAN.submitBtn} disabled={submitting || ambiguousOutcome} className="h-12 w-full bg-[#bcebd8] text-[#101216] hover:bg-[#bcebd8]/85">
               {submitting
-                ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />{reconciling ? "Checking stored status…" : "Evidence screen in progress…"}</>
-                : ambiguousOutcome ? "Check dashboard before another screen" : "Start evidence screen"}
+                ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />{reconciling ? "Checking stored status…" : "Analysis in progress…"}</>
+                : ambiguousOutcome ? "Check dashboard before retrying" : "Start analysis"}
             </Button>
             {submitting && !reconciling && (
-              <Button type="button" onClick={stopWaitingAndReconcile} variant="outline" className="h-12 border-white/15 bg-transparent text-[#F0E9D6] hover:bg-white/10">
+              <Button type="button" onClick={stopWaitingAndReconcile} variant="outline" className="h-12 border-white/15 bg-transparent text-[#f3f2eb] hover:bg-white/10">
                 Cancel wait &amp; check status
               </Button>
             )}
             {ambiguousOutcome && (
-              <Link to="/app"><Button type="button" variant="outline" className="h-12 w-full border-white/15 bg-transparent text-[#F0E9D6] hover:bg-white/10">Open dashboard</Button></Link>
+              <Link to="/app"><Button type="button" variant="outline" className="h-12 w-full border-white/15 bg-transparent text-[#f3f2eb] hover:bg-white/10">Open dashboard</Button></Link>
             )}
           </div>
-        </div>
+        </section>
+      </form>
 
-        <aside className="space-y-5">
-          <ScannerAnalyzer progress={scanProgress} />
-          <div className="rounded-lg border border-white/10 bg-[#24242C] p-6">
+      <ScannerAnalyzer progress={scanProgress} />
+      <ScanResultsOverview pending={submitting} />
+
+      <aside className="sc-analysis-notes grid gap-5 md:grid-cols-2" aria-label="Storage and account details">
+          <div className="rounded-lg border border-white/10 bg-[#141e2b] p-6">
             <FileText className="h-6 w-6 text-[#9DB8F0]" />
-            <h2 className="mt-5 font-semibold text-[#F0E9D6]">What is stored</h2>
-            <ul className="mt-4 space-y-3 text-sm leading-6 text-[#F0E9D6]/56">
+            <h2 className="mt-5 font-semibold text-[#f3f2eb]">What is stored</h2>
+            <ul className="mt-4 space-y-3 text-sm leading-6 text-[#f3f2eb]/70">
               <li>• Evidence input provenance and hashes</li>
               <li>• Source and method availability</li>
               <li>• Candidate references and review context</li>
               <li>• Versioned limitations and interpretation</li>
             </ul>
           </div>
-          <div className="rounded-lg border border-[#D4FF00]/20 bg-[#D4FF00]/5 p-6">
-            <div className="text-[10px] uppercase tracking-widest text-[#D4FF00] font-mono-data">Entitlement use</div>
-            <p className="mt-3 text-sm leading-6 text-[#F0E9D6]/65">A credit or monthly allocation is consumed only after analysis succeeds and the evidence record is stored.</p>
+          <div className="rounded-lg border border-[#bcebd8]/20 bg-[#bcebd8]/5 p-6">
+            <div className="text-[10px] uppercase tracking-widest text-[#bcebd8] font-mono-data">Entitlement use</div>
+            <p className="mt-3 text-sm leading-6 text-[#f3f2eb]/70">A credit or monthly allocation is consumed only after analysis succeeds and the evidence record is stored.</p>
           </div>
-        </aside>
-      </form>
+      </aside>
+      </div>
     </main>
   );
 }

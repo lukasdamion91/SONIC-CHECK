@@ -14,6 +14,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import ResonanceSymbol from "@/components/ResonanceSymbol";
+import ScanResultsOverview from "@/components/ScanResultsOverview";
 import RelationalSpecificity from "@/components/RelationalSpecificity";
 import BetaEvidence from "@/components/BetaEvidence";
 import { relationalScoreView } from "@/lib/relationalScorePresentation.mjs";
@@ -58,22 +60,22 @@ const statuses = {
   INCONCLUSIVE: {
     label: "Inconclusive — source coverage incomplete",
     icon: FileSearch,
-    className: "border-white/15 bg-white/5 text-[#F0E9D6]/65",
+    className: "border-white/15 bg-white/5 text-[#f3f2eb]/70",
   },
 };
 
 function Metric({ label, value, suffix = "", note }) {
   return (
-    <div className="rounded-xl border border-white/10 bg-[#17171C] p-5">
-      <div className="text-[10px] uppercase tracking-[0.15em] text-[#F0E9D6]/40 font-mono-data">{label}</div>
-      <div className="mt-3 text-3xl font-semibold text-[#F0E9D6]">{value ?? "—"}{value != null && suffix}</div>
-      {note && <div className="mt-2 text-xs leading-5 text-[#F0E9D6]/42">{note}</div>}
+    <div className="rounded-xl border border-white/10 bg-[#101b25] p-5">
+      <div className="text-[10px] uppercase tracking-[0.15em] text-[#f3f2eb]/70 font-mono-data">{label}</div>
+      <div className="mt-3 text-3xl font-semibold text-[#f3f2eb]">{value ?? "—"}{value != null && suffix}</div>
+      {note && <div className="mt-2 text-xs leading-5 text-[#f3f2eb]/70">{note}</div>}
     </div>
   );
 }
 
 const coverageStateClasses = {
-  not_submitted: "border-white/12 bg-white/[0.035] text-[#F0E9D6]/55",
+  not_submitted: "border-white/12 bg-white/[0.035] text-[#f3f2eb]/70",
   searched_no_candidate: "border-sky-300/20 bg-sky-300/5 text-sky-100/75",
   unavailable_degraded: "border-amber-300/20 bg-amber-300/5 text-amber-100/75",
   candidate_evidence: "border-amber-300/25 bg-amber-300/8 text-amber-100",
@@ -92,18 +94,18 @@ const emptyComparisonState = (baselineScanId) => ({
 
 function ChannelCoverage({ rows }) {
   return (
-    <section className="mt-6 rounded-2xl border border-white/10 bg-[#202027] p-6 sm:p-8">
+    <section className="mt-6 rounded-2xl border border-white/10 bg-[#122b40] p-6 sm:p-8">
       <div className="eyebrow">Channel coverage</div>
-      <h2 className="mt-2 text-xl font-semibold text-[#F0E9D6]">What was and was not checked</h2>
+      <h2 className="mt-2 text-xl font-semibold text-[#f3f2eb]">What was and was not checked</h2>
       <div className="mt-5 overflow-x-auto">
         <table className="w-full min-w-[680px] border-separate border-spacing-y-2 text-left text-xs">
-          <thead className="text-[9px] uppercase tracking-widest text-[#F0E9D6]/38 font-mono-data">
+          <thead className="text-[9px] uppercase tracking-widest text-[#f3f2eb]/70 font-mono-data">
             <tr><th className="px-3 py-2">Channel</th><th className="px-3 py-2">Input</th><th className="px-3 py-2">Outcome</th><th className="px-3 py-2">Coverage</th></tr>
           </thead>
           <tbody>
             {rows.map((row) => (
-              <tr key={row.key} className="bg-[#17171C] text-[#F0E9D6]/62">
-                <th scope="row" className="rounded-l-xl px-3 py-4 font-medium text-[#F0E9D6]/82">{row.channel}</th>
+              <tr key={row.key} className="bg-[#101b25] text-[#f3f2eb]/70">
+                <th scope="row" className="rounded-l-xl px-3 py-4 font-medium text-[#f3f2eb]/82">{row.channel}</th>
                 <td className="px-3 py-4">{row.input}</td>
                 <td className="px-3 py-4"><span className={`inline-flex rounded-full border px-2.5 py-1 ${coverageStateClasses[row.state]}`}>{row.outcome}</span></td>
                 <td className="rounded-r-xl px-3 py-4 leading-5">{row.coverage}</td>
@@ -215,7 +217,7 @@ export default function ScanResult() {
   const status = statuses[result.screening_status] || {
     label: "Legacy evidence record — interpret under its original method version",
     icon: FileSearch,
-    className: "border-white/15 bg-white/5 text-[#F0E9D6]/65",
+    className: "border-white/15 bg-white/5 text-[#f3f2eb]/70",
   };
   const StatusIcon = status.icon;
   const similarity = result.similarity_analysis || {};
@@ -446,55 +448,69 @@ export default function ScanResult() {
   };
 
   if (error) return <div className="mx-auto max-w-2xl px-6 py-24 text-center text-red-200">{error}</div>;
-  if (!scan) return <div className="grid min-h-[65vh] place-items-center"><Loader2 className="h-7 w-7 animate-spin text-[#F0E9D6]/45" /></div>;
+  if (!scan) return <div className="grid min-h-[65vh] place-items-center"><Loader2 className="h-7 w-7 animate-spin text-[#f3f2eb]/70" /></div>;
 
   return (
     <main className="mx-auto max-w-7xl px-6 py-12" data-testid={SCAN.resultCard}>
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <Link to="/app" className="inline-flex items-center gap-2 text-sm text-[#F0E9D6]/55 hover:text-[#F0E9D6]"><ArrowLeft className="h-4 w-4" />Dashboard</Link>
+        <Link to="/app" className="inline-flex items-center gap-2 text-sm text-[#f3f2eb]/70 hover:text-[#f3f2eb]"><ArrowLeft className="h-4 w-4" />Dashboard</Link>
         <div className="flex flex-wrap gap-2">
-          {activeReportDownload ? (
-            <a href={activeReportDownload.href} download={activeReportDownload.filename} className="inline-flex items-center rounded-md border border-white/15 px-4 py-2 text-sm font-medium text-[#F0E9D6] hover:bg-white/10">
-              <Download className="mr-2 h-4 w-4" />Save verified PDF
-            </a>
-          ) : <Button onClick={downloadReport} disabled={Boolean(action) || !reportAvailable} title={reportAvailable ? "Prepare PDF with integrity checks" : (integrityError || "Report access unavailable")} variant="outline" className="border-white/15 bg-transparent text-[#F0E9D6] hover:bg-white/10">
-            {action === "report" ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}{reportAvailable ? "PDF report" : "Report unavailable"}
-          </Button>}
-          <Button onClick={createBadge} disabled={Boolean(action) || !accessPolicy.can_create_badge} title={accessPolicy.can_create_badge ? "Publish a public evidence-record link" : "Public sharing unavailable"} variant="outline" className="border-white/15 bg-transparent text-[#F0E9D6] hover:bg-white/10">
+          <Button onClick={createBadge} disabled={Boolean(action) || !accessPolicy.can_create_badge} title={accessPolicy.can_create_badge ? "Publish a public evidence-record link" : "Public sharing unavailable"} variant="outline" className="border-white/15 bg-transparent text-[#f3f2eb] hover:bg-white/10">
             {action === "badge" ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Share2 className="mr-2 h-4 w-4" />}{accessPolicy.can_create_badge ? "Share record" : "Sharing unavailable"}
           </Button>
-          <Button data-testid={SCAN.deleteBtn} onClick={remove} disabled={Boolean(action)} variant="ghost" className="text-red-200 hover:bg-red-400/10 hover:text-red-100"><Trash2 className="h-4 w-4" /></Button>
+          <Button aria-label="Delete evidence record" data-testid={SCAN.deleteBtn} onClick={remove} disabled={Boolean(action)} variant="ghost" className="text-red-200 hover:bg-red-400/10 hover:text-red-100"><Trash2 className="h-4 w-4" /></Button>
         </div>
       </div>
-      {activeReportDownload && <p className="mt-3 text-sm text-[#F0E9D6]/60">Your PDF is ready. The save link stays available while you view this record; saving it again does not use another report credit.</p>}
-      {activeReportFailure && <p role="alert" className="mt-3 text-sm text-red-200">{activeReportFailure}</p>}
+      <section className="sc-result-upload" data-scan-section="upload" aria-labelledby="sc-uploaded-heading">
+        <div className="sc-product-overline">01 · Submitted file</div>
+        <h2 id="sc-uploaded-heading">AUDIO UPLOAD</h2>
+        <p>{scan.audio_filename || (result.scan_modes?.audio || result.evidence?.provenance?.audio?.submitted ? "Audio submitted for this scan" : "No audio filename recorded for this scan")}</p>
+        <Link to="/app/scan/new">Upload audio for a new analysis</Link>
+      </section>
 
-      <section className="mt-8 rounded-2xl border border-white/10 bg-[#202027] p-7 sm:p-10">
+      <section className="sc-result-harry" data-scan-section="harry" aria-labelledby="sc-result-harry-heading">
+        <div className="sc-product-overline">02 · Analysis</div>
+        <h2 id="sc-result-harry-heading">HARRY · Resonance</h2>
+        <ResonanceSymbol />
         <div className="flex flex-wrap items-start justify-between gap-8">
-          <div>
+          <div className="sc-result-heading">
             <div className="eyebrow">Evidence record</div>
-            <h1 className="mt-4 font-display text-5xl text-[#F0E9D6]">{scan.title}</h1>
-            <div className="mt-3 text-sm text-[#F0E9D6]/50">{scan.artist_name || "Unknown creator"} · {new Date(scan.created_at).toLocaleString("en-AU")}</div>
+            <h1 className="mt-4 font-display text-5xl text-[#f3f2eb]">{scan.title}</h1>
+            <div className="mt-3 text-sm text-[#f3f2eb]/70">{scan.artist_name || "Unknown creator"} · {new Date(scan.created_at).toLocaleString("en-AU")}</div>
           </div>
           <div data-testid={SCAN.verdictBadge} className={`inline-flex max-w-sm items-center gap-2 rounded-full border px-4 py-2 text-xs uppercase tracking-widest font-mono-data ${status.className}`}>
             <StatusIcon className="h-4 w-4 shrink-0" />{status.label}
           </div>
         </div>
-        <p className="mt-8 max-w-4xl text-lg leading-8 text-[#F0E9D6]/66">{result.screening_summary || "This record predates the current screening-summary schema. Review it under the listed analysis version."}</p>
+        <p className="mt-8 max-w-4xl text-lg leading-8 text-[#f3f2eb]/70">{result.screening_summary || "This record predates the current screening-summary schema. Review it under the listed analysis version."}</p>
 
-        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      </section>
+
+      <ScanResultsOverview result={result}
+        reportControls={activeReportDownload ? (
+          <a href={activeReportDownload.href} download={activeReportDownload.filename}>
+            <Download aria-hidden="true" />Save verified PDF
+          </a>
+        ) : <Button onClick={downloadReport} disabled={Boolean(action) || !reportAvailable} title={reportAvailable ? "Prepare PDF with integrity checks" : (integrityError || "Report access unavailable")}>
+          {action === "report" ? <Loader2 className="animate-spin" aria-hidden="true" /> : <Download aria-hidden="true" />}{action === "report" ? "Preparing PDF…" : "Download PDF report"}
+        </Button>}
+        reportNote={<>
+          {activeReportDownload ? <p>Your PDF is ready. Saving this verified file again does not use another report credit.</p>
+            : <p>{reportAvailable ? "Download the report for this saved scan. Its result and file integrity are checked before saving." : "Report download is unavailable for this account or saved scan."}</p>}
+          {activeReportFailure && <p role="alert" className="mt-3 text-red-200">{activeReportFailure}</p>}
+          {integrityError && <p role="alert" className="mt-3 text-amber-100">PDF download is disabled because the locally loaded analysis result could not be prepared for the report consistency checks. {integrityError}</p>}
+        </>}
+      />
+
+      <section className="mt-6 rounded-2xl border border-white/10 bg-[#122b40] p-6 sm:p-8" aria-label="Stored method summary">
+        <h2 className="text-xl font-semibold text-[#f3f2eb]">Additional scan details</h2>
+        <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Metric label="Similarity signal" value={similarity.similarity_signal?.value_percent} suffix="%" note="Method-specific signal, not a probability." />
-          <Metric label="Aggregate evidence score" value={aggregateScore?.value} suffix="/100" note={`${aggregateScore?.band || "Coverage dependent"}${aggregateScore?.channel_coverage_percent != null ? ` · ${aggregateScore.channel_coverage_percent}% weighted channel coverage` : ""}`} />
+          {!relationalScore && <Metric label="Historical aggregate evidence score" value={aggregateScore?.value} suffix="/100" note="Stored under this scan's original method; not a six-category score." />}
           <Metric label="Candidates" value={matches.length} note="Named candidate-evidence rows." />
           <Metric label="Regional context" value={result.region || scan.region} note={result.regional_context || "Context recorded only."} />
         </div>
       </section>
-
-      {integrityError && (
-        <div className="mt-5 rounded-xl border border-amber-300/20 bg-amber-300/5 p-4 text-sm leading-6 text-amber-100/75">
-          PDF download is disabled because the locally loaded analysis result could not be prepared for the report consistency checks. {integrityError}
-        </div>
-      )}
 
       <ChannelCoverage rows={channelCoverageRows} />
       <RecordingProviderCoverage result={result} />
@@ -502,10 +518,10 @@ export default function ScanResult() {
       <BetaEvidence result={result} />
       <FeatureInventory result={result} />
 
-      <section className="mt-6 rounded-2xl border border-white/10 bg-[#202027] p-6 sm:p-8">
+      <section className="mt-6 rounded-2xl border border-white/10 bg-[#122b40] p-6 sm:p-8">
         <div className="eyebrow">{ANALYZER_IDENTITY} diagnostics</div>
-        <h2 className="mt-2 text-xl font-semibold text-[#F0E9D6]">Coverage bounds, sensitivity and retrieval consensus</h2>
-        <p className="mt-3 max-w-4xl text-xs leading-5 text-[#F0E9D6]/48">
+        <h2 className="mt-2 text-xl font-semibold text-[#f3f2eb]">Coverage bounds, sensitivity and retrieval consensus</h2>
+        <p className="mt-3 max-w-4xl text-xs leading-5 text-[#f3f2eb]/70">
           These diagnostics describe the evidence returned by this run. They do not change screening status and are not a confidence interval, probability or accuracy estimate.
         </p>
 
@@ -515,29 +531,29 @@ export default function ScanResult() {
           </div>
         )}
 
-        {relationalScore?.valid && <p className="mt-3 text-xs leading-5 text-[#F0E9D6]/55">V34, V35 and V36 retain their original three-channel scoring basis. The versioned aggregate is shown above.</p>}
+        {relationalScore?.valid && <p className="mt-3 text-xs leading-5 text-[#f3f2eb]/70">V34, V35 and V36 retain their original three-channel scoring basis. The versioned aggregate is shown above.</p>}
         <div className="mt-5 grid gap-4 lg:grid-cols-2">
-          <div className="rounded-xl border border-white/10 bg-[#17171C] p-5">
-            <div className="text-[10px] uppercase tracking-[0.15em] text-[#F0E9D6]/40 font-mono-data">V34 · structural missingness</div>
+          <div className="rounded-xl border border-white/10 bg-[#101b25] p-5">
+            <div className="text-[10px] uppercase tracking-[0.15em] text-[#f3f2eb]/70 font-mono-data">V34 · structural missingness</div>
             {v34?.available ? (
               <>
-                <div className="mt-3 text-2xl font-semibold text-[#F0E9D6]">{v34.lower}–{v34.upper}/100</div>
-                <p className="mt-2 text-xs leading-5 text-[#F0E9D6]/48">Observed {v34.observed}/100 · {v34.unresolved}% of fixed channel weight unresolved. The selected entity and exact-linkage projection are held fixed.</p>
+                <div className="mt-3 text-2xl font-semibold text-[#f3f2eb]">{v34.lower}–{v34.upper}/100</div>
+                <p className="mt-2 text-xs leading-5 text-[#f3f2eb]/70">Observed {v34.observed}/100 · {v34.unresolved}% of fixed channel weight unresolved. The selected entity and exact-linkage projection are held fixed.</p>
               </>
             ) : (
-              <p className="mt-3 text-xs leading-5 text-[#F0E9D6]/48">Envelope unavailable: {v34UnavailableDetail}.</p>
+              <p className="mt-3 text-xs leading-5 text-[#f3f2eb]/70">Envelope unavailable: {v34UnavailableDetail}.</p>
             )}
           </div>
 
-          <div className="rounded-xl border border-white/10 bg-[#17171C] p-5">
-            <div className="text-[10px] uppercase tracking-[0.15em] text-[#F0E9D6]/40 font-mono-data">V36 · single-channel loss</div>
+          <div className="rounded-xl border border-white/10 bg-[#101b25] p-5">
+            <div className="text-[10px] uppercase tracking-[0.15em] text-[#f3f2eb]/70 font-mono-data">V36 · single-channel loss</div>
             {v36?.available ? (
               <>
-                <div className="mt-3 text-lg font-semibold text-[#F0E9D6]">{String(v36.reviewStability || "evaluated").replaceAll("_", " ")}</div>
-                <p className="mt-2 text-xs leading-5 text-[#F0E9D6]/48">{v36.evaluated} of {v36.possible} observable channel-loss scenarios evaluated{v36.maximumChange != null ? ` · maximum entity-score movement ${v36.maximumChange} points` : ""}. Counterfactual shadow diagnostic only.</p>
+                <div className="mt-3 text-lg font-semibold text-[#f3f2eb]">{String(v36.reviewStability || "evaluated").replaceAll("_", " ")}</div>
+                <p className="mt-2 text-xs leading-5 text-[#f3f2eb]/70">{v36.evaluated} of {v36.possible} observable channel-loss scenarios evaluated{v36.maximumChange != null ? ` · maximum entity-score movement ${v36.maximumChange} points` : ""}. Counterfactual shadow diagnostic only.</p>
               </>
             ) : (
-              <p className="mt-3 text-xs leading-5 text-[#F0E9D6]/48">Diagnostic unavailable: {v36UnavailableDetail}.</p>
+              <p className="mt-3 text-xs leading-5 text-[#f3f2eb]/70">Diagnostic unavailable: {v36UnavailableDetail}.</p>
             )}
           </div>
         </div>
@@ -552,24 +568,24 @@ export default function ScanResult() {
                 <Metric label="Channel support" value={v37.multiChannelCandidates} note={`Majority ${v37.majorityChannelCandidates} · all eight ${v37.allChannelCandidates}.`} />
                 <Metric label="Mean set overlap" value={v37.meanPairwiseJaccard == null ? "—" : `${(v37.meanPairwiseJaccard * 100).toFixed(1)}%`} note={`${v37.observedPairCount} non-empty channel pair${v37.observedPairCount === 1 ? "" : "s"}; descriptive only.`} />
               </div>
-              <p className="mt-3 text-xs leading-5 text-[#F0E9D6]/48">Profiles checked {v37.profileCount} · 305-frame eligible {v37.frameEligibleProfileCount}. Candidate identifiers are deliberately omitted from this view.</p>
+              <p className="mt-3 text-xs leading-5 text-[#f3f2eb]/70">Profiles checked {v37.profileCount} · 305-frame eligible {v37.frameEligibleProfileCount}. Candidate identifiers are deliberately omitted from this view.</p>
             </>
           ) : v37?.valid ? (
-            <p className="mt-3 text-xs leading-5 text-[#F0E9D6]/48">
+            <p className="mt-3 text-xs leading-5 text-[#f3f2eb]/70">
               {v37.requested
                 ? `The administrator shadow abstained (${String(v37.reason).replaceAll("_", " ")}); no consensus metrics were calculated.`
                 : "The administrator-only eight-channel shadow was not requested; no eight-channel retrieval ran and no consensus metrics were calculated."}
             </p>
           ) : (
-            <p className="mt-3 text-xs leading-5 text-[#F0E9D6]/48">Diagnostic unavailable: {v37UnavailableDetail}.</p>
+            <p className="mt-3 text-xs leading-5 text-[#f3f2eb]/70">Diagnostic unavailable: {v37UnavailableDetail}.</p>
           )}
-          <p className="mt-3 text-[11px] leading-5 text-[#F0E9D6]/40">{v37?.limitation || "Retrieval-view agreement is not correctness, accuracy, originality, infringement, clearance or legal evidence."}</p>
+          <p className="mt-3 text-[11px] leading-5 text-[#f3f2eb]/70">{v37?.limitation || "Retrieval-view agreement is not correctness, accuracy, originality, infringement, clearance or legal evidence."}</p>
         </div>
 
         <div className="mt-4 rounded-xl border border-violet-300/15 bg-violet-300/[0.035] p-5">
           <div className="text-[10px] uppercase tracking-[0.15em] text-violet-100/60 font-mono-data">V35 · multi-view consistency</div>
-          <p className="mt-2 text-xs leading-5 text-[#F0E9D6]/48">Compare this record with another owned scan only when both are views of the same underlying source and the named transform is identity-preserving. SONIC CHECK records this as your assertion; it does not infer or verify source identity.</p>
-          <div className="mt-4 grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
+          <p className="mt-2 text-xs leading-5 text-[#f3f2eb]/70">Compare this record with another owned scan only when both are views of the same underlying source and the named transform is identity-preserving. SONIC CHECK records this as your assertion; it does not infer or verify source identity.</p>
+          <div className="mt-4 grid min-w-0 gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
             <select
               value={activeComparison.comparisonScanId}
               disabled={activeComparison.pendingRequestId != null}
@@ -581,7 +597,7 @@ export default function ScanResult() {
                     : current
                 ));
               }}
-              className="h-10 rounded-md border border-white/15 bg-[#17171C] px-3 text-xs text-[#F0E9D6]"
+              className="h-10 w-full min-w-0 rounded-md border border-white/15 bg-[#101b25] px-3 text-xs text-[#f3f2eb]"
             >
               <option value="">Choose owned comparison record</option>
               {activeComparison.records.map((record) => <option key={record.id} value={record.id}>{record.title || "Untitled"} · {record.created_at ? new Date(record.created_at).toLocaleDateString("en-AU") : "stored scan"}</option>)}
@@ -599,12 +615,12 @@ export default function ScanResult() {
               }}
               maxLength={128}
               placeholder="Transform, e.g. lossless-remux"
-              className="h-10 rounded-md border border-white/15 bg-[#17171C] px-3 text-xs text-[#F0E9D6] placeholder:text-[#F0E9D6]/30"
+              className="h-10 w-full min-w-0 rounded-md border border-white/15 bg-[#101b25] px-3 text-xs text-[#f3f2eb] placeholder:text-[#f3f2eb]/30"
             />
             <Button onClick={runMultiviewComparison} disabled={activeComparison.pendingRequestId != null || !activeComparison.comparisonScanId || !activeComparison.transform.trim()} variant="outline" className="border-violet-200/20 bg-transparent text-violet-100 hover:bg-violet-200/10">{activeComparison.pendingRequestId != null ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}Compare views</Button>
           </div>
           {activeComparison.error && <p className="mt-3 text-xs leading-5 text-red-200">{activeComparison.error}</p>}
-          {v35 && <div className="mt-4 rounded-lg border border-white/10 bg-[#17171C] p-4 text-xs leading-5 text-[#F0E9D6]/58"><span className="font-mono-data text-[#F0E9D6]/82">{v35.status.replaceAll("_", " ")}</span> · {v35.identityPreservingViews} declared views · {v35.exactDivergenceCount} exact divergence{v35.exactDivergenceCount === 1 ? "" : "s"}{v35.minimumExactJaccard != null ? ` · minimum exact-set overlap ${Math.round(v35.minimumExactJaccard * 100)}%` : ""}. Diagnostic only; no provider call, ranking change, match decision or legal conclusion.</div>}
+          {v35 && <div className="mt-4 rounded-lg border border-white/10 bg-[#101b25] p-4 text-xs leading-5 text-[#f3f2eb]/70"><span className="font-mono-data text-[#f3f2eb]/82">{v35.status.replaceAll("_", " ")}</span> · {v35.identityPreservingViews} declared views · {v35.exactDivergenceCount} exact divergence{v35.exactDivergenceCount === 1 ? "" : "s"}{v35.minimumExactJaccard != null ? ` · minimum exact-set overlap ${Math.round(v35.minimumExactJaccard * 100)}%` : ""}. Diagnostic only; no provider call, ranking change, match decision or legal conclusion.</div>}
         </div>
       </section>
 
@@ -613,34 +629,34 @@ export default function ScanResult() {
       <ResearchPairDiagnostic key={`${user?.id || "unknown"}:${id}`} scanId={id} ownedScans={activeComparison.records} />
 
       {badgeUrl && (
-        <div className="mt-5 flex flex-wrap items-center gap-3 rounded-xl border border-[#D4FF00]/20 bg-[#D4FF00]/5 p-4 text-sm text-[#F0E9D6]/70">
-          <ExternalLink className="h-4 w-4 text-[#D4FF00]" /><a href={badgeUrl} target="_blank" rel="noreferrer" className="min-w-0 flex-1 truncate hover:underline">{badgeUrl}</a>
+        <div className="mt-5 flex flex-wrap items-center gap-3 rounded-xl border border-[#bcebd8]/20 bg-[#bcebd8]/5 p-4 text-sm text-[#f3f2eb]/70">
+          <ExternalLink className="h-4 w-4 text-[#bcebd8]" /><a href={badgeUrl} target="_blank" rel="noreferrer" className="min-w-0 flex-1 truncate hover:underline">{badgeUrl}</a>
           <Button size="sm" variant="ghost" onClick={() => navigator.clipboard?.writeText(badgeUrl)}><Copy className="mr-2 h-4 w-4" />Copy</Button>
           <Button size="sm" variant="ghost" onClick={unpublishBadge} disabled={Boolean(action)} className="text-amber-100 hover:bg-amber-300/10"><Link2Off className="mr-2 h-4 w-4" />Unpublish</Button>
         </div>
       )}
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[1.3fr_0.7fr]">
-        <section className="rounded-2xl border border-white/10 bg-[#202027] p-6 sm:p-8">
+        <section className="rounded-2xl border border-white/10 bg-[#122b40] p-6 sm:p-8">
           <div className="eyebrow">Candidate evidence</div>
-          <h2 className="mt-2 text-xl font-semibold text-[#F0E9D6]">Matched references</h2>
+          <h2 className="mt-2 text-xl font-semibold text-[#f3f2eb]">Matched references</h2>
           {matches.length === 0 ? (
-            <div className="mt-6 rounded-xl border border-dashed border-white/15 p-8 text-sm leading-6 text-[#F0E9D6]/52">No candidate row was returned by the available recording-identity or lyric channels. This is limited to the sources actually searched.</div>
+            <div className="mt-6 rounded-xl border border-dashed border-white/15 p-8 text-sm leading-6 text-[#f3f2eb]/70">No candidate row was returned by the available recording-identity or lyric channels. This is limited to the sources actually searched.</div>
           ) : (
             <div className="mt-6 space-y-4">
               {matches.map((match, index) => {
                 const recordingDetails = recordingCandidateDetails(match);
                 return (
-                <article key={`${match.reference_id || "candidate"}-${index}`} data-testid={SCAN.matchRow} className="rounded-xl border border-white/10 bg-[#17171C] p-5">
+                <article key={`${match.reference_id || "candidate"}-${index}`} data-testid={SCAN.matchRow} className="rounded-xl border border-white/10 bg-[#101b25] p-5">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
-                      <h3 className="font-semibold text-[#F0E9D6]">{match.reference_title || "Candidate reference"}</h3>
-                      <div className="mt-1 text-xs text-[#F0E9D6]/45">{match.reference_artist || "Unknown creator"} · {match.analysis_type?.replaceAll("_", " ") || "evidence channel"}</div>
+                      <h3 className="font-semibold text-[#f3f2eb]">{match.reference_title || "Candidate reference"}</h3>
+                      <div className="mt-1 text-xs text-[#f3f2eb]/70">{match.reference_artist || "Unknown creator"} · {match.analysis_type?.replaceAll("_", " ") || "evidence channel"}</div>
                     </div>
-                    <span className="rounded-full border border-white/15 px-3 py-1 text-[9px] uppercase tracking-widest text-[#F0E9D6]/55 font-mono-data">human review</span>
+                    <span className="rounded-full border border-white/15 px-3 py-1 text-[9px] uppercase tracking-widest text-[#f3f2eb]/70 font-mono-data">human review</span>
                   </div>
                   {recordingDetails && (
-                    <div className="mt-3 text-xs leading-5 text-[#F0E9D6]/55">
+                    <div className="mt-3 text-xs leading-5 text-[#f3f2eb]/70">
                       <p>{recordingDetails.provider} · {recordingDetails.scoreLabel}</p>
                       {recordingDetails.identifier && <p className="break-all font-mono-data">Provider identifier: {recordingDetails.identifier}</p>}
                       <p>{recordingDetails.interpretation}</p>
@@ -648,8 +664,8 @@ export default function ScanResult() {
                   )}
                   {(match.matched_snippet || match.your_snippet) && (
                     <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                      <div className="rounded-lg bg-white/[0.035] p-3 text-xs leading-5 text-[#F0E9D6]/55"><span className="block text-[9px] uppercase tracking-widest text-[#F0E9D6]/35 font-mono-data">Reference evidence</span>{match.matched_snippet || "—"}</div>
-                      <div className="rounded-lg bg-white/[0.035] p-3 text-xs leading-5 text-[#F0E9D6]/55"><span className="block text-[9px] uppercase tracking-widest text-[#F0E9D6]/35 font-mono-data">Submitted evidence</span>{match.your_snippet || "—"}</div>
+                      <div className="rounded-lg bg-white/[0.035] p-3 text-xs leading-5 text-[#f3f2eb]/70"><span className="block text-[9px] uppercase tracking-widest text-[#f3f2eb]/70 font-mono-data">Reference evidence</span>{match.matched_snippet || "—"}</div>
+                      <div className="rounded-lg bg-white/[0.035] p-3 text-xs leading-5 text-[#f3f2eb]/70"><span className="block text-[9px] uppercase tracking-widest text-[#f3f2eb]/70 font-mono-data">Submitted evidence</span>{match.your_snippet || "—"}</div>
                     </div>
                   )}
                 </article>
@@ -661,28 +677,28 @@ export default function ScanResult() {
         </section>
 
         <aside className="space-y-6">
-          <div className="rounded-2xl border border-white/10 bg-[#24242C] p-6">
+          <div className="rounded-2xl border border-white/10 bg-[#141e2b] p-6">
             <div className="eyebrow">Method identity</div>
             <dl className="mt-5 space-y-4 text-sm">
-              <div><dt className="text-[#F0E9D6]/38">Analysis version</dt><dd className="mt-1 break-all text-[#F0E9D6]/68 font-mono-data">{result.analysis_version || "legacy"}</dd></div>
-              <div><dt className="text-[#F0E9D6]/38">Analyzer</dt><dd className="mt-1 break-all text-[#F0E9D6]/68 font-mono-data">{analyzerLabel || "legacy or unverified"}</dd></div>
-              <div><dt className="text-[#F0E9D6]/38">Result schema</dt><dd className="mt-1 break-all text-[#F0E9D6]/68 font-mono-data">{result.result_schema_version || "legacy"}</dd></div>
-              <div><dt className="text-[#F0E9D6]/38">Composition manifest</dt><dd className="mt-1 break-all text-[#F0E9D6]/68 font-mono-data">{composition.reference_manifest_version || "not used"}</dd></div>
+              <div><dt className="text-[#f3f2eb]/70">Analysis version</dt><dd className="mt-1 break-all text-[#f3f2eb]/70 font-mono-data">{result.analysis_version || "legacy"}</dd></div>
+              <div><dt className="text-[#f3f2eb]/70">Analyzer</dt><dd className="mt-1 break-all text-[#f3f2eb]/70 font-mono-data">{analyzerLabel || "legacy or unverified"}</dd></div>
+              <div><dt className="text-[#f3f2eb]/70">Result schema</dt><dd className="mt-1 break-all text-[#f3f2eb]/70 font-mono-data">{result.result_schema_version || "legacy"}</dd></div>
+              <div><dt className="text-[#f3f2eb]/70">Composition manifest</dt><dd className="mt-1 break-all text-[#f3f2eb]/70 font-mono-data">{composition.reference_manifest_version || "not used"}</dd></div>
             </dl>
           </div>
 
           {provenanceRows.length > 0 && (
-            <div className="rounded-2xl border border-white/10 bg-[#24242C] p-6">
+            <div className="rounded-2xl border border-white/10 bg-[#141e2b] p-6">
               <div className="eyebrow">Input provenance</div>
               <dl className="mt-5 space-y-4 text-xs">
-                {provenanceRows.map(([label, value]) => <div key={label}><dt className="text-[#F0E9D6]/38">{label}</dt><dd className="mt-1 break-all text-[#F0E9D6]/62 font-mono-data">{value}</dd></div>)}
+                {provenanceRows.map(([label, value]) => <div key={label}><dt className="text-[#f3f2eb]/70">{label}</dt><dd className="mt-1 break-all text-[#f3f2eb]/70 font-mono-data">{value}</dd></div>)}
               </dl>
             </div>
           )}
 
           <div className="rounded-2xl border border-amber-300/18 bg-amber-300/5 p-6">
             <div className="eyebrow !text-amber-200">Interpretation limits</div>
-            <ul className="mt-4 space-y-3 text-xs leading-5 text-[#F0E9D6]/60">
+            <ul className="mt-4 space-y-3 text-xs leading-5 text-[#f3f2eb]/70">
               {(limitations.length ? limitations : [
                 "Candidate evidence requires qualified human review.",
                 "No result establishes authorship, ownership or legal clearance.",

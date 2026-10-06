@@ -275,7 +275,8 @@ test("result source gates actions by API capabilities and preserves interpretati
   assert.match(resultSource, /disabled=\{Boolean\(action\) \|\| !accessPolicy\.can_create_badge\}/u);
   assert.match(resultSource, /icon: FileSearch/u);
   assert.doesNotMatch(resultSource, /icon: CheckCircle2/u);
-  assert.match(resultSource, /Aggregate evidence score/u);
+  assert.match(resultSource, /<ScanResultsOverview result=\{result\}/u);
+  assert.match(await source("../src/components/ScanResultsOverview.jsx"), /Overall aggregate score/u);
   assert.doesNotMatch(resultSource, /label="Evidence confidence"/u);
   assert.match(await source("../src/components/CompositionAnalysis.jsx"), /measurement quality proxy/u);
   assert.match(resultSource, /No result establishes authorship, ownership or legal clearance/u);

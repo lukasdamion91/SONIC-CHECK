@@ -15,7 +15,7 @@ import {
   verifyResearchPairRecordIntegrity,
 } from "@/lib/researchPairPresentation.mjs";
 
-const inputClass = "h-10 w-full rounded-md border border-white/15 bg-[#17171C] px-3 text-sm text-[#F0E9D6]";
+const inputClass = "h-10 w-full rounded-md border border-white/15 bg-[#101b25] px-3 text-sm text-[#f3f2eb]";
 const buttonClass = "border-teal-200/20 bg-transparent text-teal-100 hover:bg-teal-200/10";
 
 function requestMessage(error) {
@@ -40,33 +40,33 @@ function downloadBlob(blob, filename) {
 
 function Metrics({ rows }) {
   return <dl className="mt-4 grid gap-3 sm:grid-cols-2">{rows.map(([label, value]) => <div key={label}>
-    <dt className="text-xs text-[#F0E9D6]/50">{label}</dt>
-    <dd className="mt-1 break-words text-sm text-[#F0E9D6]/90">{value}</dd>
+    <dt className="text-xs text-[#f3f2eb]/70">{label}</dt>
+    <dd className="mt-1 break-words text-sm text-[#f3f2eb]/90">{value}</dd>
   </div>)}</dl>;
 }
 
 function LaneResult({ id, result, canonicalProfileSource }) {
   const view = researchLaneView(id, result, canonicalProfileSource);
-  return <article className="rounded-xl border border-white/10 bg-[#17171C] p-5">
-    <h3 className="font-medium text-[#F0E9D6]">{view.name}</h3>
+  return <article className="rounded-xl border border-white/10 bg-[#101b25] p-5">
+    <h3 className="font-medium text-[#f3f2eb]">{view.name}</h3>
     <p className="mt-2 break-words text-xs text-teal-100">{view.status}</p>
-    {view.methodId && <p className="mt-1 break-all text-xs text-[#F0E9D6]/45">{view.methodId}</p>}
+    {view.methodId && <p className="mt-1 break-all text-xs text-[#f3f2eb]/70">{view.methodId}</p>}
     {view.reasons.length > 0 && <p className="mt-2 break-words text-xs text-amber-100">{view.reasons.join(" · ")}</p>}
     {view.metrics.length > 0 && <Metrics rows={view.metrics} />}
     {view.components.map((component) => <div key={component.name} className="mt-4 rounded-lg border border-white/10 p-3">
-      <h4 className="text-sm capitalize text-[#F0E9D6]">{component.name}</h4>
-      <p className="mt-1 text-xs text-[#F0E9D6]/60">{component.status}</p>
+      <h4 className="text-sm capitalize text-[#f3f2eb]">{component.name}</h4>
+      <p className="mt-1 text-xs text-[#f3f2eb]/70">{component.status}</p>
       {component.reasons.length > 0 && <p className="mt-1 text-xs text-amber-100">{component.reasons.join(" · ")}</p>}
       <Metrics rows={component.metrics} />
     </div>)}
-    {view.fragments?.length > 0 && <div className="mt-4 overflow-x-auto"><table className="w-full min-w-[480px] text-left text-xs text-[#F0E9D6]/70">
+    {view.fragments?.length > 0 && <div className="mt-4 overflow-x-auto"><table className="w-full min-w-[480px] text-left text-xs text-[#f3f2eb]/70">
       <caption className="mb-2 text-left">Selected passage intervals in canonical profile order</caption>
       <thead><tr>{["Fragment", "Matched atoms", "Normalized support", view.profileALabel, view.profileBLabel].map((label) => <th key={label} className="px-2 py-2">{label}</th>)}</tr></thead>
       <tbody>{view.fragments.map((fragment, index) => <tr key={index} className="border-t border-white/10">
         <th scope="row" className="px-2 py-2">{index + 1}</th><td className="px-2 py-2">{fragment.matchedAtoms}</td><td className="px-2 py-2">{fragment.normalisedSeconds} s</td><td className="px-2 py-2">{fragment.profileA}</td><td className="px-2 py-2">{fragment.profileB}</td>
       </tr>)}</tbody>
     </table></div>}
-    {view.notes.map((note) => <p key={note} className="mt-4 text-xs leading-5 text-[#F0E9D6]/55">{note}</p>)}
+    {view.notes.map((note) => <p key={note} className="mt-4 text-xs leading-5 text-[#f3f2eb]/70">{note}</p>)}
   </article>;
 }
 
@@ -228,12 +228,12 @@ export default function ResearchPairDiagnostic({ scanId, ownedScans = [] }) {
     }
   }
 
-  return <section aria-labelledby="research-pair-heading" className="mt-6 rounded-2xl border border-teal-300/20 bg-[#202027] p-6 sm:p-8">
+  return <section aria-labelledby="research-pair-heading" className="mt-6 rounded-2xl border border-teal-300/20 bg-[#122b40] p-6 sm:p-8">
     <div className="eyebrow">HARRY · Research continuation</div>
-    <h2 id="research-pair-heading" className="mt-2 text-xl font-semibold text-[#F0E9D6]">Compare two private recordings</h2>
-    <p className="mt-3 text-sm leading-6 text-[#F0E9D6]/65">Select saved scans owned by your account. Both need retained private audio of at most 90 seconds and 16 MiB per file. S5.4 needs at least 10 seconds per input; component comparison needs aligned equal durations and usable primary evidence. Four-fragment support needs at least 60 normalized matched seconds.</p>
-    <p className="mt-2 text-xs leading-5 text-[#F0E9D6]/55">These local diagnostics make no paid-provider call and do not change the scan score or screening decision. They are candidate continuations of S5.4–S5.6; independent scientific validation remains unfinished. Every completed comparison is bound to a client request identifier, side-specific input custody and two SHA-256 seals.</p>
-    <div aria-live="polite" className="mt-4 rounded-lg border border-white/10 p-4 text-sm text-[#F0E9D6]/70">
+    <h2 id="research-pair-heading" className="mt-2 text-xl font-semibold text-[#f3f2eb]">Compare two private recordings</h2>
+    <p className="mt-3 text-sm leading-6 text-[#f3f2eb]/70">Select saved scans owned by your account. Both need retained private audio of at most 90 seconds and 16 MiB per file. S5.4 needs at least 10 seconds per input; component comparison needs aligned equal durations and usable primary evidence. Four-fragment support needs at least 60 normalized matched seconds.</p>
+    <p className="mt-2 text-xs leading-5 text-[#f3f2eb]/70">These local diagnostics make no paid-provider call and do not change the scan score or screening decision. They are candidate continuations of S5.4–S5.6; independent scientific validation remains unfinished. Every completed comparison is bound to a client request identifier, side-specific input custody and two SHA-256 seals.</p>
+    <div aria-live="polite" className="mt-4 rounded-lg border border-white/10 p-4 text-sm text-[#f3f2eb]/70">
       {capabilityLoading ? "Checking runtime availability…" : capabilityView.summary}
       <div className="mt-1 text-xs">Runtime mode: {capabilityView.mode}</div>
       {capabilityView.reasons.length > 0 && <p className="mt-2 break-words text-xs">{capabilityView.reasons.join(" · ")}</p>}
@@ -242,37 +242,37 @@ export default function ResearchPairDiagnostic({ scanId, ownedScans = [] }) {
     </div>
 
     {capabilityView.researchVisibilityAllowed && <div className="mt-4 rounded-lg border border-white/10 p-4">
-      <h3 className="text-sm font-semibold text-[#F0E9D6]/90">Administrator research process observations</h3>
-      <p className="mt-2 text-xs leading-5 text-[#F0E9D6]/55">Configuration and source checks do not prove execution or accuracy. Deployment provenance: {diagnosticText(researchRuntime?.deployment_provenance)}.</p>
+      <h3 className="text-sm font-semibold text-[#f3f2eb]/90">Administrator research process observations</h3>
+      <p className="mt-2 text-xs leading-5 text-[#f3f2eb]/70">Configuration and source checks do not prove execution or accuracy. Deployment provenance: {diagnosticText(researchRuntime?.deployment_provenance)}.</p>
       {runtimeError && <p className="mt-2 text-xs text-amber-100">{runtimeError}</p>}
-      <div className="mt-3 overflow-x-auto"><table className="w-full min-w-[620px] text-left text-xs text-[#F0E9D6]/70">
+      <div className="mt-3 overflow-x-auto"><table className="w-full min-w-[620px] text-left text-xs text-[#f3f2eb]/70">
         <thead><tr>{["Method", "Configured mode", "Effective status", "Execution observed"].map((label) => <th key={label} className="px-2 py-2">{label}</th>)}</tr></thead>
         <tbody>{researchRuntimeRows(researchRuntime).map((row) => <tr key={row.id} className="border-t border-white/10">
           <th scope="row" className="px-2 py-3">{row.name}</th><td className="px-2 py-3">{row.mode}</td><td className="break-words px-2 py-3">{row.effectiveStatus}</td><td className="px-2 py-3">{row.executionState}</td>
         </tr>)}</tbody>
       </table></div>
-      {researchRuntimeRows(researchRuntime).some((row) => row.blockers.length > 0) && <details className="mt-3 text-xs text-[#F0E9D6]/60">
+      {researchRuntimeRows(researchRuntime).some((row) => row.blockers.length > 0) && <details className="mt-3 text-xs text-[#f3f2eb]/70">
         <summary className="cursor-pointer">Recorded blockers and continuation work</summary>
         <ul className="mt-3 space-y-2">{researchRuntimeRows(researchRuntime).flatMap((row) => row.blockers.map((blocker) => <li key={`${row.id}:${blocker.reason}:${blocker.continuation}`} className="break-words">{row.name}: {blocker.reason} · {blocker.continuation}</li>))}</ul>
       </details>}
     </div>}
 
     <form onSubmit={runComparison} className="mt-5 space-y-4">
-      <p className="break-all text-xs text-[#F0E9D6]/55">First scan: {scanId}</p>
-      <label className="block text-sm text-[#F0E9D6]/80">Second saved scan with retained private audio
+      <p className="break-all text-xs text-[#f3f2eb]/70">First scan: {scanId}</p>
+      <label className="block text-sm text-[#f3f2eb]/80">Second saved scan with retained private audio
         <select className={`mt-2 ${inputClass}`} value={selectableScans.some((scan) => scan.id === rightScanId) ? rightScanId : ""} disabled={Boolean(pending)} onChange={(event) => { setRightScanId(event.target.value); setRecord(null); setError(""); }}>
           <option value="">Choose one of your eligible saved scans</option>
           {selectableScans.map((scan) => <option key={scan.id} value={scan.id}>{scan.title || "Untitled"} · {scan.id}</option>)}
         </select>
       </label>
-      <label className="block text-xs text-[#F0E9D6]/65">Or enter your saved scan ID
+      <label className="block text-xs text-[#f3f2eb]/70">Or enter your saved scan ID
         <input className={`mt-2 ${inputClass}`} value={rightScanId} disabled={Boolean(pending)} maxLength={128} onChange={(event) => { setRightScanId(event.target.value); setRecord(null); setError(""); }} placeholder="Second scan ID" autoComplete="off" />
       </label>
       <fieldset disabled={Boolean(pending)} className="space-y-3">
-        <legend className="mb-3 text-sm text-[#F0E9D6]/80">Comparison methods</legend>
-        {RESEARCH_PAIR_LANES.map((lane) => <label key={lane.id} className="flex items-start gap-3 rounded-lg border border-white/10 p-3 text-sm text-[#F0E9D6]/80">
+        <legend className="mb-3 text-sm text-[#f3f2eb]/80">Comparison methods</legend>
+        {RESEARCH_PAIR_LANES.map((lane) => <label key={lane.id} className="flex items-start gap-3 rounded-lg border border-white/10 p-3 text-sm text-[#f3f2eb]/80">
           <input type="checkbox" checked={lanes.includes(lane.id)} onChange={(event) => { setLanes((current) => event.target.checked ? [...current, lane.id] : current.filter((id) => id !== lane.id)); setRecord(null); }} className="mt-1" />
-          <span>{lane.name}<span className="mt-1 block text-xs leading-5 text-[#F0E9D6]/50">{lane.description}</span></span>
+          <span>{lane.name}<span className="mt-1 block text-xs leading-5 text-[#f3f2eb]/70">{lane.description}</span></span>
         </label>)}
       </fieldset>
       <Button type="submit" disabled={!capabilityView.canRun || Boolean(pending) || !rightScanId.trim() || !lanes.length || rightScanId.trim() === scanId} variant="outline" className={buttonClass}>{pending === "compare" && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Run selected comparisons</Button>
@@ -280,13 +280,13 @@ export default function ResearchPairDiagnostic({ scanId, ownedScans = [] }) {
 
     <div className="mt-5 grid gap-4 border-t border-white/10 pt-5 lg:grid-cols-2">
       <div>
-        <label className="block text-xs text-[#F0E9D6]/65">Reconcile a request identifier
+        <label className="block text-xs text-[#f3f2eb]/70">Reconcile a request identifier
           <input className={`mt-2 ${inputClass}`} value={requestIdToReconcile} disabled={Boolean(pending)} maxLength={36} onChange={(event) => setRequestIdToReconcile(event.target.value)} placeholder="xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx" autoComplete="off" />
         </label>
         <Button type="button" onClick={retrieveRequest} disabled={Boolean(pending) || !requestIdToReconcile.trim()} size="sm" variant="outline" className={`mt-3 ${buttonClass}`}>{pending === "reconcile" && <Loader2 className="mr-2 h-3 w-3 animate-spin" />}Reconcile request</Button>
       </div>
       <div>
-        <label className="block text-xs text-[#F0E9D6]/65">Reopen a saved receipt by record ID
+        <label className="block text-xs text-[#f3f2eb]/70">Reopen a saved receipt by record ID
           <input className={`mt-2 ${inputClass}`} value={savedRecordId} disabled={Boolean(pending)} maxLength={128} onChange={(event) => setSavedRecordId(event.target.value)} placeholder="Comparison record ID" autoComplete="off" />
         </label>
         <Button type="button" onClick={retrieveRecord} disabled={Boolean(pending) || !savedRecordId.trim()} size="sm" variant="outline" className={`mt-3 ${buttonClass}`}>{pending === "retrieve" && <Loader2 className="mr-2 h-3 w-3 animate-spin" />}Load saved receipt</Button>
@@ -294,7 +294,7 @@ export default function ResearchPairDiagnostic({ scanId, ownedScans = [] }) {
     </div>
     {error && <p role="alert" className="mt-4 text-sm leading-6 text-red-200">{error}</p>}
     {record && <div className="mt-6 space-y-4" aria-live="polite">
-      <div className="rounded-lg border border-teal-300/20 p-4 text-sm text-[#F0E9D6]/75">
+      <div className="rounded-lg border border-teal-300/20 p-4 text-sm text-[#f3f2eb]/75">
         <h3 className="flex items-center gap-2 font-semibold"><ShieldCheck className="h-4 w-4 text-teal-200" />Verified sealed comparison · {record.status}</h3>
         <p className="mt-2 break-all text-xs">Record ID: {record.id}</p>
         <p className="mt-1 break-all text-xs">Request ID: {record.request_id}</p>

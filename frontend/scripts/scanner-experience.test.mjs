@@ -1,5 +1,4 @@
 import assert from "node:assert/strict";
-import { createHash } from "node:crypto";
 import { readdir, readFile } from "node:fs/promises";
 import test from "node:test";
 
@@ -310,7 +309,7 @@ test("scanner markup exposes progress and reduced-motion accessibility", async (
   assert.match(newScan, /activePoll\?\.recovery\.start\(requestError, activePoll\.progressId\)/);
   assert.match(newScan, /Cancel wait &amp; check status/);
   assert.match(newScan, /disabled=\{submitting \|\| ambiguousOutcome\}/);
-  assert.match(newScan, /Check dashboard before another screen/);
+  assert.match(newScan, /Check dashboard before retrying/);
   assert.match(newScan, /SCAN_POST_PENDING_TIMEOUT_MS/);
   assert.match(newScan, /scanPollFailureDecision/);
   assert.doesNotMatch(newScan, /handleTelemetryUnavailable/);
@@ -359,15 +358,14 @@ test("scanner exposes one source-owned accessible analyzer identity", async () =
   assert.match(occurrences[0], /\/constants\/analyzerIdentity\.mjs$/u);
 });
 
-test("scanner bars use the exact uploaded SONIC rainbow texture", async () => {
-  const [analyzer, asset] = await Promise.all([
+test("scanner uses the original Resonance sculpture and explicit component activity", async () => {
+  const [analyzer, symbol, landing] = await Promise.all([
     source("../src/components/ScannerAnalyzer.jsx"),
-    readFile(new URL("../public/brand/sonic-rainbow-bar.png", import.meta.url)),
+    source("../src/components/ResonanceSymbol.jsx"),
+    source("../src/pages/Landing.jsx"),
   ]);
-
-  assert.match(analyzer, /\/brand\/sonic-rainbow-bar\.png/);
-  assert.equal(
-    createHash("sha256").update(asset).digest("hex"),
-    "0bf91f5bd1aeac84ee3335b03ae8c0ecf544347eec800c0ab5a3c3c32b7d5933",
-  );
+  assert.match(analyzer, /<HarryActivity progress=\{progress\}/);
+  assert.match(symbol, /assets\/resonance-sculpture.webp/);
+  assert.match(landing, /assets\/resonance-sculpture.webp/);
+  assert.doesNotMatch(analyzer, /SPECTRUM_HEIGHTS|rainbowBarAsset/);
 });
