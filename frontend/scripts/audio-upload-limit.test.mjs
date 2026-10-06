@@ -30,5 +30,5 @@ test("selection and submission enforce the shared limit before FormData or netwo
   assert.ok(validation < source.indexOf("new FormData()", submit));
   assert.ok(validation < source.indexOf('api.post("/scans/upload"', submit));
   assert.match(source, /audioUploadValidationError\(nextAudioFile\)/u);
-  assert.match(source, /Audio files up to \{AUDIO_UPLOAD_LIMIT_LABEL\}/u);
+  assert.match(source, /Up to \{AUDIO_UPLOAD_LIMIT_LABEL\}/u);
 });

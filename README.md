@@ -1,6 +1,6 @@
 # SONIC CHECK web
 
-This repository contains the converged SONIC CHECK web experience for RC-0.
+This repository contains the SONIC CHECK web experience, currently in controlled beta.
 It intentionally exposes two product components on one canonical host:
 
 1. A public landing, account-entry and customer-policy surface at `/`, `/join`,
@@ -10,6 +10,16 @@ It intentionally exposes two product components on one canonical host:
 
 The public verification route at `/verify/:badgeId` is the only intentional
 shareable evidence surface outside authentication.
+
+## Repository guide
+
+- [Frontend development](frontend/README.md)
+- [Current beta acceptance](docs/BETA_ACCEPTANCE_CURRENT.md)
+- [Repository cleanup and recovery](operations/REPOSITORY_CLEANUP_2026-10-06.md)
+- [Active pull requests](https://github.com/lukasdamion91/SONIC-CHECK/pulls)
+
+Dated RC-0 and V-series records preserve earlier observations; use the current
+acceptance register and live pull-request checks for outstanding work.
 
 ## Living operating authority
 

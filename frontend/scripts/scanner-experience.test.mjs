@@ -309,7 +309,7 @@ test("scanner markup exposes progress and reduced-motion accessibility", async (
   assert.match(newScan, /activePoll\?\.recovery\.start\(requestError, activePoll\.progressId\)/);
   assert.match(newScan, /Cancel wait &amp; check status/);
   assert.match(newScan, /disabled=\{submitting \|\| ambiguousOutcome\}/);
-  assert.match(newScan, /Check dashboard before another screen/);
+  assert.match(newScan, /Check dashboard before retrying/);
   assert.match(newScan, /SCAN_POST_PENDING_TIMEOUT_MS/);
   assert.match(newScan, /scanPollFailureDecision/);
   assert.doesNotMatch(newScan, /handleTelemetryUnavailable/);

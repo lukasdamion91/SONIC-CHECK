@@ -9,6 +9,7 @@ const percent = (value) => typeof value === "number" && Number.isFinite(value) &
 const near = (a, b, tolerance = 0.001) => typeof a === "number" && Number.isFinite(a) && Math.abs(a - b) <= tolerance;
 
 export function relationalScoreView(similarity = {}) {
+  if (!similarity || typeof similarity !== "object") return null;
   if (!Object.hasOwn(similarity, "aggregate_evidence_score")) return null;
   const score = similarity.aggregate_evidence_score;
   const diagnostic = similarity.relational_specificity;
@@ -27,7 +28,8 @@ export function relationalScoreView(similarity = {}) {
   let total = 0;
   let coverage = 0;
   for (const [index, component] of score.components.entries()) {
-    if (component.modality !== MODALITIES[index] || component.base_weight !== WEIGHTS[index]
+    if (!component || typeof component !== "object"
+      || component.modality !== MODALITIES[index] || component.base_weight !== WEIGHTS[index]
       || typeof component.checked !== "boolean") return invalid;
     if (component.checked) {
       if (!percent(component.signal_percent) || component.scored_entity_group_id !== score.scored_entity_group_id

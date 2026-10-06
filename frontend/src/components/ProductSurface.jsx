@@ -4,6 +4,8 @@ import "@/Product.css";
 /** Scope the studio identity to the product; the approved landing stays intact. */
 export default function ProductSurface({ children }) {
   const { pathname } = useLocation();
-  const product = pathname === "/app" || pathname.startsWith("/app/") || ["/login", "/join"].includes(pathname);
+  // React Router accepts case variants and trailing slashes for these routes.
+  const path = pathname.toLowerCase().replace(/\/+$/, "") || "/";
+  const product = path === "/app" || path.startsWith("/app/") || ["/login", "/join"].includes(path);
   return <div className={product ? "sc-product" : undefined}>{children}</div>;
 }

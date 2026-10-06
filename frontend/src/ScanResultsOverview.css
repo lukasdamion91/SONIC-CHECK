@@ -1,0 +1,67 @@
+.sc-scan-overview { display: grid; gap: 24px; min-width: 0; margin-top: 24px; }
+.sc-scan-overview > section { min-width: 0; border: 1px solid #40515e; border-radius: 4px; padding: 28px; background: #141e2b; }
+.sc-scan-overview h2 { margin: 8px 0 14px; font-size: clamp(1.55rem, 3vw, 2rem); font-weight: 700; color: #f3f2eb; }
+.sc-scan-overview h3 { font-size: 1.05rem; line-height: 1.4; font-weight: 700; }
+.sc-summary-note { font-size: 1rem; line-height: 1.6; color: #c3cdd5; }
+.sc-category-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 20px; }
+.sc-category-card { min-width: 0; padding: 18px; background: #101216; border-top: 2px solid var(--category-colour); }
+.sc-category-title { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; }
+.sc-category-title h3 { flex: 1 1 155px; margin: 0; color: #f3f2eb; }
+.sc-category-title > span { color: var(--category-colour); font-size: .85rem; white-space: nowrap; }
+.sc-category-signal { margin-top: 14px; font: 700 2rem/1.25 Arial, sans-serif; color: #f3f2eb; }
+.sc-category-signal small { margin-left: 4px; font-size: .9rem; color: #c3cdd5; }
+.sc-category-signal > span { font-size: 1.05rem; color: #c3cdd5; }
+.sc-category-card p { color: #c3cdd5; font-size: .9rem; margin-top: 10px; }
+.sc-category-meter { height: 5px; margin-top: 14px; background: #343a40; }
+.sc-category-meter > span { display: block; height: 100%; background: var(--category-colour); }
+.sc-scan-overview > .sc-overall-score { background: #bcebd8; color: #101216; border-color: #bcebd8; border-top-width: 6px; }
+.sc-overall-score h2, .sc-overall-score .sc-product-overline { color: #101216; }
+.sc-score-heading { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.sc-score-method { border: 1px solid #705c35; border-left-width: 3px; padding: 3px 8px; font-size: .85rem; }
+.sc-score-value { margin: 24px 0; font: 900 clamp(4.5rem, 15vw, 7rem)/1 Arial, sans-serif; letter-spacing: -.065em; }
+.sc-score-value small { font-size: .3em; margin-left: 10px; letter-spacing: -.03em; }
+.sc-score-value.sc-score-empty { font-size: clamp(1.85rem, 6vw, 3rem); line-height: 1.15; letter-spacing: -.035em; }
+/* Deeper variants keep the chromatic hero readable on the mint card. */
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  .sc-overall-score :is(h2, .sc-score-value:not(.sc-score-empty)) { background: linear-gradient(105deg, #665018 0%, #07524d 20%, #293f72 42%, #624174 64%, #7b3655 82%, #665018 100%); background-size: 300% 100%; background-position: 0% 50%; -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent; animation: sc-product-chromatic-shift 8s linear infinite alternate; }
+}
+.sc-overall-score > p { font-size: 1rem; line-height: 1.6; }
+.sc-score-coverage { display: flex; flex-wrap: wrap; gap: 4px 20px; border-top: 1px solid #719887; margin-top: 18px; padding-top: 14px; font-size: .95rem; }
+.sc-overall-score .sc-score-limit { margin-top: 14px; font-size: .9rem; }
+.sc-scan-overview > .sc-report-download { position: relative; border: 2px solid #bcebd8; background: #101216; }
+.sc-report-download::after { content: ""; position: absolute; right: 19px; bottom: -2px; width: 39px; height: 2px; background: #b99b60; transform: rotate(-.6deg); pointer-events: none; }
+.sc-report-action { margin: 20px 0 12px; }
+.sc-report-action :is(button, a) { display: inline-flex; justify-content: center; align-items: center; gap: 10px; width: 100%; min-height: 58px; height: auto; padding: 14px 20px; white-space: normal; background: #bcebd8; color: #101216; border: 1px solid #bcebd8; border-radius: 4px; font: 700 1.1rem/1.4 SCAdvent, Arial, sans-serif; }
+.sc-report-action :is(button, a):hover { background: #d8f6e9; color: #101216; }
+.sc-report-action button:disabled { opacity: .65; }
+.sc-report-action svg { width: 20px; height: 20px; flex-shrink: 0; }
+.sc-guide-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; margin-top: 22px; }
+.sc-guide-grid article { min-width: 0; border-top: 1px solid #40515e; padding-top: 18px; }
+.sc-guide-grid h3 { display: flex; gap: 9px; align-items: baseline; }
+.sc-guide-grid h3 > span { display: inline-block; width: 7px; height: 7px; flex-shrink: 0; border-radius: 50%; }
+.sc-guide-grid p { font-size: 1rem; color: #c3cdd5; line-height: 1.65; margin-top: 10px; }
+.sc-guide-grid strong { color: #f3f2eb; }
+.sc-result-upload { margin-top: 24px; padding: 24px; background: #bcebd8; color: #101216; border-radius: 4px; }
+.sc-product .sc-result-upload :is(h2, .sc-product-overline) { color: #101216; }
+.sc-result-upload h2 { font-size: 1.5rem; font-weight: 800; }
+.sc-result-upload p { margin-top: 8px; overflow-wrap: anywhere; }
+.sc-result-upload a { display: inline-block; margin-top: 14px; text-decoration: underline; font-weight: 700; }
+.sc-result-harry { margin-top: 24px; padding: 28px; background: #122b40; border: 1px solid #40515e; border-radius: 4px; }
+.sc-result-harry .sc-resonance-symbol { width: min(240px, 100%); margin: 0 auto; }
+.sc-result-harry h2 { font-size: 1.8rem; font-weight: 700; }
+@media (max-width: 650px) {
+  .sc-scan-overview > section, .sc-result-harry, .sc-result-upload { padding: 20px 16px; }
+  .sc-category-grid, .sc-guide-grid { grid-template-columns: minmax(0, 1fr); }
+  .sc-category-card { padding: 16px; }
+}
+@media (forced-colors: active) {
+  .sc-scan-overview > section, .sc-category-card, .sc-result-upload, .sc-result-harry { background: Canvas; color: CanvasText; border: 1px solid CanvasText; }
+  .sc-scan-overview :is(h2, h3, p, span, small, .sc-product-overline), .sc-product .sc-result-upload :is(h2, .sc-product-overline) { color: CanvasText; }
+  .sc-report-action :is(button, a) { background: ButtonFace; color: ButtonText; border-color: ButtonText; }
+  .sc-overall-score :is(h2, .sc-score-value:not(.sc-score-empty), .sc-score-empty) { animation: none; background: none; color: CanvasText; -webkit-text-fill-color: CanvasText; }
+  .sc-score-method { border-color: CanvasText; }
+  .sc-report-download::after { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sc-overall-score :is(h2, .sc-score-value:not(.sc-score-empty), .sc-score-empty) { animation: none; background-position: 50% 50%; }
+}

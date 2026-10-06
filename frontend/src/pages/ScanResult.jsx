@@ -15,6 +15,7 @@ import {
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import ResonanceSymbol from "@/components/ResonanceSymbol";
+import ScanResultsOverview from "@/components/ScanResultsOverview";
 import RelationalSpecificity from "@/components/RelationalSpecificity";
 import BetaEvidence from "@/components/BetaEvidence";
 import { relationalScoreView } from "@/lib/relationalScorePresentation.mjs";
@@ -454,25 +455,24 @@ export default function ScanResult() {
       <div className="flex flex-wrap items-center justify-between gap-4">
         <Link to="/app" className="inline-flex items-center gap-2 text-sm text-[#f3f2eb]/70 hover:text-[#f3f2eb]"><ArrowLeft className="h-4 w-4" />Dashboard</Link>
         <div className="flex flex-wrap gap-2">
-          {activeReportDownload ? (
-            <a href={activeReportDownload.href} download={activeReportDownload.filename} className="inline-flex items-center rounded-md border border-white/15 px-4 py-2 text-sm font-medium text-[#f3f2eb] hover:bg-white/10">
-              <Download className="mr-2 h-4 w-4" />Save verified PDF
-            </a>
-          ) : <Button onClick={downloadReport} disabled={Boolean(action) || !reportAvailable} title={reportAvailable ? "Prepare PDF with integrity checks" : (integrityError || "Report access unavailable")} variant="outline" className="border-white/15 bg-transparent text-[#f3f2eb] hover:bg-white/10">
-            {action === "report" ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}{reportAvailable ? "PDF report" : "Report unavailable"}
-          </Button>}
           <Button onClick={createBadge} disabled={Boolean(action) || !accessPolicy.can_create_badge} title={accessPolicy.can_create_badge ? "Publish a public evidence-record link" : "Public sharing unavailable"} variant="outline" className="border-white/15 bg-transparent text-[#f3f2eb] hover:bg-white/10">
             {action === "badge" ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Share2 className="mr-2 h-4 w-4" />}{accessPolicy.can_create_badge ? "Share record" : "Sharing unavailable"}
           </Button>
           <Button aria-label="Delete evidence record" data-testid={SCAN.deleteBtn} onClick={remove} disabled={Boolean(action)} variant="ghost" className="text-red-200 hover:bg-red-400/10 hover:text-red-100"><Trash2 className="h-4 w-4" /></Button>
         </div>
       </div>
-      {activeReportDownload && <p className="mt-3 text-sm text-[#f3f2eb]/70">Your PDF is ready. The save link stays available while you view this record; saving it again does not use another report credit.</p>}
-      {activeReportFailure && <p role="alert" className="mt-3 text-sm text-red-200">{activeReportFailure}</p>}
+      <section className="sc-result-upload" data-scan-section="upload" aria-labelledby="sc-uploaded-heading">
+        <div className="sc-product-overline">01 · Submitted file</div>
+        <h2 id="sc-uploaded-heading">AUDIO UPLOAD</h2>
+        <p>{scan.audio_filename || (result.scan_modes?.audio || result.evidence?.provenance?.audio?.submitted ? "Audio submitted for this scan" : "No audio filename recorded for this scan")}</p>
+        <Link to="/app/scan/new">Upload audio for a new analysis</Link>
+      </section>
 
-      <section className="mt-8 rounded-2xl border border-white/10 bg-[#122b40] p-7 sm:p-10">
+      <section className="sc-result-harry" data-scan-section="harry" aria-labelledby="sc-result-harry-heading">
+        <div className="sc-product-overline">02 · Analysis</div>
+        <h2 id="sc-result-harry-heading">HARRY · Resonance</h2>
+        <ResonanceSymbol />
         <div className="flex flex-wrap items-start justify-between gap-8">
-          <div className="sc-result-emblem"><ResonanceSymbol /></div>
           <div className="sc-result-heading">
             <div className="eyebrow">Evidence record</div>
             <h1 className="mt-4 font-display text-5xl text-[#f3f2eb]">{scan.title}</h1>
@@ -484,19 +484,33 @@ export default function ScanResult() {
         </div>
         <p className="mt-8 max-w-4xl text-lg leading-8 text-[#f3f2eb]/70">{result.screening_summary || "This record predates the current screening-summary schema. Review it under the listed analysis version."}</p>
 
-        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      </section>
+
+      <ScanResultsOverview result={result}
+        reportControls={activeReportDownload ? (
+          <a href={activeReportDownload.href} download={activeReportDownload.filename}>
+            <Download aria-hidden="true" />Save verified PDF
+          </a>
+        ) : <Button onClick={downloadReport} disabled={Boolean(action) || !reportAvailable} title={reportAvailable ? "Prepare PDF with integrity checks" : (integrityError || "Report access unavailable")}>
+          {action === "report" ? <Loader2 className="animate-spin" aria-hidden="true" /> : <Download aria-hidden="true" />}{action === "report" ? "Preparing PDF…" : "Download PDF report"}
+        </Button>}
+        reportNote={<>
+          {activeReportDownload ? <p>Your PDF is ready. Saving this verified file again does not use another report credit.</p>
+            : <p>{reportAvailable ? "Download the report for this saved scan. Its result and file integrity are checked before saving." : "Report download is unavailable for this account or saved scan."}</p>}
+          {activeReportFailure && <p role="alert" className="mt-3 text-red-200">{activeReportFailure}</p>}
+          {integrityError && <p role="alert" className="mt-3 text-amber-100">PDF download is disabled because the locally loaded analysis result could not be prepared for the report consistency checks. {integrityError}</p>}
+        </>}
+      />
+
+      <section className="mt-6 rounded-2xl border border-white/10 bg-[#122b40] p-6 sm:p-8" aria-label="Stored method summary">
+        <h2 className="text-xl font-semibold text-[#f3f2eb]">Additional scan details</h2>
+        <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Metric label="Similarity signal" value={similarity.similarity_signal?.value_percent} suffix="%" note="Method-specific signal, not a probability." />
-          <Metric label="Aggregate evidence score" value={aggregateScore?.value} suffix="/100" note={`${aggregateScore?.band || "Coverage dependent"}${aggregateScore?.channel_coverage_percent != null ? ` · ${aggregateScore.channel_coverage_percent}% weighted channel coverage` : ""}`} />
+          {!relationalScore && <Metric label="Historical aggregate evidence score" value={aggregateScore?.value} suffix="/100" note="Stored under this scan's original method; not a six-category score." />}
           <Metric label="Candidates" value={matches.length} note="Named candidate-evidence rows." />
           <Metric label="Regional context" value={result.region || scan.region} note={result.regional_context || "Context recorded only."} />
         </div>
       </section>
-
-      {integrityError && (
-        <div className="mt-5 rounded-xl border border-amber-300/20 bg-amber-300/5 p-4 text-sm leading-6 text-amber-100/75">
-          PDF download is disabled because the locally loaded analysis result could not be prepared for the report consistency checks. {integrityError}
-        </div>
-      )}
 
       <ChannelCoverage rows={channelCoverageRows} />
       <RecordingProviderCoverage result={result} />
@@ -571,7 +585,7 @@ export default function ScanResult() {
         <div className="mt-4 rounded-xl border border-violet-300/15 bg-violet-300/[0.035] p-5">
           <div className="text-[10px] uppercase tracking-[0.15em] text-violet-100/60 font-mono-data">V35 · multi-view consistency</div>
           <p className="mt-2 text-xs leading-5 text-[#f3f2eb]/70">Compare this record with another owned scan only when both are views of the same underlying source and the named transform is identity-preserving. SONIC CHECK records this as your assertion; it does not infer or verify source identity.</p>
-          <div className="mt-4 grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
+          <div className="mt-4 grid min-w-0 gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
             <select
               value={activeComparison.comparisonScanId}
               disabled={activeComparison.pendingRequestId != null}
@@ -583,7 +597,7 @@ export default function ScanResult() {
                     : current
                 ));
               }}
-              className="h-10 rounded-md border border-white/15 bg-[#101b25] px-3 text-xs text-[#f3f2eb]"
+              className="h-10 w-full min-w-0 rounded-md border border-white/15 bg-[#101b25] px-3 text-xs text-[#f3f2eb]"
             >
               <option value="">Choose owned comparison record</option>
               {activeComparison.records.map((record) => <option key={record.id} value={record.id}>{record.title || "Untitled"} · {record.created_at ? new Date(record.created_at).toLocaleDateString("en-AU") : "stored scan"}</option>)}
@@ -601,7 +615,7 @@ export default function ScanResult() {
               }}
               maxLength={128}
               placeholder="Transform, e.g. lossless-remux"
-              className="h-10 rounded-md border border-white/15 bg-[#101b25] px-3 text-xs text-[#f3f2eb] placeholder:text-[#f3f2eb]/30"
+              className="h-10 w-full min-w-0 rounded-md border border-white/15 bg-[#101b25] px-3 text-xs text-[#f3f2eb] placeholder:text-[#f3f2eb]/30"
             />
             <Button onClick={runMultiviewComparison} disabled={activeComparison.pendingRequestId != null || !activeComparison.comparisonScanId || !activeComparison.transform.trim()} variant="outline" className="border-violet-200/20 bg-transparent text-violet-100 hover:bg-violet-200/10">{activeComparison.pendingRequestId != null ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}Compare views</Button>
           </div>

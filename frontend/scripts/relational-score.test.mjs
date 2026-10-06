@@ -24,4 +24,5 @@ for (const [name, mutate] of Object.entries({
   zeroAsMissing: (s) => { s.aggregate_evidence_score.components[0].signal_percent = 0; },
   nonfinite: (s) => { s.aggregate_evidence_score.components[3].signal_percent = NaN; },
   missingTerm: (s) => { s.aggregate_evidence_score.components.pop(); },
+  malformedTerm: (s) => { s.aggregate_evidence_score.components[0] = null; },
 })) test(`rejects ${name}`, () => { const data = fixture(); mutate(data); assert.equal(relationalScoreView(data).valid, false); });

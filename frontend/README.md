@@ -29,7 +29,7 @@ paid checkout.
 
 ## Analyzer identity
 
-The scanner displays the build-owned analyzer mark `HARRY_V36`. Its single
+The scanner displays the build-owned analyzer mark `HARRY_V37`. Its single
 runtime source is `src/constants/analyzerIdentity.mjs`, so a future analyzer
 revision changes one value. API responses and other runtime metadata do not
 relabel the interface. `SONIC CHECK` remains the product and legal namespace;
