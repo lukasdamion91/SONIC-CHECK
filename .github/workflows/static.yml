@@ -78,7 +78,7 @@ jobs:
           path: |
             frontend/build-verification.json
             frontend/deployment-privacy.json
-          retention-days: 30
+          retention-days: 90
 
       - name: Enforce build and privacy verification
         if: always() && (steps.routing_verification.outcome != 'success' || steps.privacy_verification.outcome != 'success')
@@ -89,7 +89,7 @@ jobs:
         with:
           name: sonic-check-pages
           path: frontend/build
-          retention-days: 7
+          retention-days: 90
 
   verify-api:
     # Check every built web candidate, including main pushes and manual runs.
@@ -128,7 +128,7 @@ jobs:
           name: sonic-check-api-release-gate
           path: api-release-verification.json
           if-no-files-found: error
-          retention-days: 30
+          retention-days: 90
 
       - name: Verify beta runtime and catalogue binding
         run: node frontend/scripts/verify-beta-release.mjs
@@ -139,7 +139,7 @@ jobs:
         with:
           name: sonic-check-beta-release-verification
           path: beta-release-verification.json
-          retention-days: 30
+          retention-days: 90
 
       - name: Enforce API release gate
         if: always() && steps.api_release.outcome != 'success'
@@ -188,7 +188,7 @@ jobs:
         with:
           name: sonic-check-deployment-privacy-reverification
           path: deployment-privacy-reverification.json
-          retention-days: 30
+          retention-days: 90
 
       - name: Enforce deployment-byte reverification
         if: always() && steps.deployment_privacy_reverification.outcome != 'success'
@@ -203,6 +203,7 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           path: frontend/build
+          retention-days: 90
 
       - name: Refuse stale main deployment
         run: |
@@ -239,7 +240,7 @@ jobs:
         with:
           name: sonic-check-deployment-truth
           path: deployment-truth.json
-          retention-days: 30
+          retention-days: 90
 
       - name: Enforce truthful deployment result
         if: steps.truth.outcome != 'success'
