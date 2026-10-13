@@ -1,10 +1,11 @@
 # Workflow and review governance
 
-SC-FOUNDER-GOV/2026-09-23.1 controls this subtree. Read
+LDJ-GOV/2026-10-11.1 controls this subtree. Read
 [../GOVERNANCE.md](../GOVERNANCE.md) and the root AGENTS.md in full.
-Luke's current delegation permits GitHub branch/commit/push/PR/squash/merge
-and deployment actions in the launch workstream without exact-revision manual
-approval. Check actual publishing, deployment, evidence, privacy and cost
-effects and retain rollback. Reserved section 7 decisions still require Luke.
+Remote writes, PR publication, externally triggered CI, merge and deployment
+require applicable specific Founder approval. Check automatic effects and
+approval continuity; a changed session alone does not require approval again.
+Material changes or unmet conditions require renewed review of the affected
+action. Preserve all evidence and scientific gates.
 Do not relabel skipped CI as passing tests or claim these instructions change
 GitHub or hosting permissions by themselves.

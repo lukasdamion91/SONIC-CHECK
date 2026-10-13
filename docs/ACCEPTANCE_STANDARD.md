@@ -40,7 +40,8 @@ requirements have no current acceptance authority. A historical replay result
 must never be imported as a current launch blocker solely for that requirement.
 The historical benchmark replay explicitly uses its captured evaluator.
 
-This policy applies immediately to project work. The 23 September governance
-revision delegates in-scope repository and deployment actions; evidence and
-scientific gates still apply. Source integrity and retained historical results
-do not imply live deployment.
+This policy applies immediately to project work. LDJ-GOV/2026-10-11.1 and
+applicable current express Founder instructions govern execution. Publication,
+externally triggered CI, merge, deployment and activation require applicable
+specific approval. Evidence and scientific requirements are unchanged. Source
+integrity and historical results do not imply live deployment or approval.

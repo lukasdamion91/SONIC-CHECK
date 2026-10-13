@@ -1,0 +1,15 @@
+{
+  "schema": "soniccheck-governance-routing/1",
+  "governance_id": "LDJ-GOV/2026-10-11.1",
+  "scope": "SONIC CHECK / HARRY",
+  "standard_adopted_on": "2026-10-11",
+  "source_sha256": "c5eef7db214cd8756f19b68ed42974a324702288bb00d12a8daac03185cad6e0",
+  "source_bytes": 36750,
+  "source_location": "Founder-controlled private source; see docs/FOUNDER_AUTHORITY_CURRENT.md",
+  "repository_application_status": "PROPOSED_NOT_PUBLISHED",
+  "release_approval_granted_by_record": false,
+  "historical_evidence_sha256": {
+    "operations/governance/ADOPTION.json": "ccef03fc1cc64fc25d87a08821d03624150d77429bb014cffd07cf837b68dc8a",
+    "docs/GOVERNANCE_AUTONOMY_2026-09-23.md": "4aa34970360d4361f34cde35af9aa98565c5b6b1c78660639fe93c136c647ca2"
+  }
+}

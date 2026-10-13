@@ -1,11 +1,11 @@
 # SONIC CHECK project governance
 
-SC-FOUNDER-GOV/2026-09-23.1 is the controlling project governance.
+LDJ-GOV/2026-10-11.1 is the controlling project governance.
 Read the repository-root GOVERNANCE.md in full and follow AGENTS.md,
 OPERATING_GUIDE.md and docs/WORKFLOW.md. These apply to every project task.
-Luke's 23 September delegation permits repository and deployment actions
-within the launch-development workstream. Check applicable CI, evidence,
-privacy, downstream effects and rollback. Reserve spending, disputed rights,
-security/access changes, destructive loss and commercial launch for Luke.
+Reversible preparation is authorised within the Founder-directed task.
+Consequential actions require specific Founder approval. Verify scope,
+conditions, automatic effects and existing approval continuity before execution.
+Historical blanket permissions do not independently supply authority.
 Do not fabricate progress, hide failures or inactive capabilities, silently
 reduce scope, discard research or promote unsupported claims.

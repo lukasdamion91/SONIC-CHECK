@@ -1,6 +1,6 @@
 # HARRY and V-series research governance
 
-SC-FOUNDER-GOV/2026-09-23.1 controls this subtree. Read
+LDJ-GOV/2026-10-11.1 controls this subtree. Read
 [../../GOVERNANCE.md](../../GOVERNANCE.md) in full and follow root AGENTS.md.
 Research methods, experiments, rejected challengers, benchmarks, catalogue
 expansion and forensic-certification development remain subject to the
