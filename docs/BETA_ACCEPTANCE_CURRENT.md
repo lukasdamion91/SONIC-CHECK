@@ -25,9 +25,11 @@ successor pair, update that exact API commit/runtime manifest, deploy the accept
 API, then pass the existing live-API gate before website deployment. No such
 deployment is claimed by this preparation.
 
-Apply SC-FOUNDER-GOV/2026-09-23.1, SC-ACCEPTANCE-2026-09-22.1 and Luke's current
-direct instructions. Autonomous preparation is authorised. Reserved public
-commercial launch, spending and payment activation remain separate decisions.
+Apply LDJ-GOV/2026-10-11.1, SC-ACCEPTANCE-2026-09-22.1 and applicable
+current express Founder instructions. Reversible preparation is authorised
+within scope. Consequential actions require applicable specific approval,
+including remote writes, CI, merge, deployment, rollback, provider exercise,
+spending and activation. Verify approval continuity across sessions.
 Mandatory independent adjudication and reviewer quorums are not launch gates.
 
 Local claims checks, 300 operational tests, production build, routing and static

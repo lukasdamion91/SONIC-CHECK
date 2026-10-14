@@ -1,23 +1,25 @@
-## Delegated action record and reserved decisions
+## Founder review and approval record
 
-Controlling governance: SC-FOUNDER-GOV/2026-09-23.1 (root GOVERNANCE.md).
+Controlling governance: LDJ-GOV/2026-10-11.1 (root GOVERNANCE.md).
 
-- Candidate SHA / exact diff:
-- Delegated scope or specific Founder approval reference for a reserved action:
-- Destination and action (preparation / push / PR / merge / deploy / other):
-- Automatic downstream effects checked:
-- Objective, exact change and affected files:
-- Practical and scientific/analytical effect:
-- Provider, privacy and financial implications:
-- Tests actually run / NOT RUN checks:
-- Known failures, limitations and inactive functionality:
-- Regression risk and rollback:
-- Recommendation and precise reserved Founder decision, if any:
+- Decision: requested objective and exact action or named sequence:
+- Candidate: reviewed SHA / exact content, affected files and destination:
+- Impact: practical, scientific, provider, privacy and financial effects:
+- Automatic CI, deployment, provider and charge effects:
+- Evidence: tests actually run, NOT RUN checks, failures and limitations:
+- Safeguards: risks, conditions, rollback/recovery and authority to use it:
+- Recommendation and exact Founder decision required:
+- Existing approval evidence, scope/conditions and continuity check:
+- Already-performed actions checked to prevent duplicate effects:
+- Material changes since review or unmet conditions:
 
-In-scope repository actions may proceed under the 23 September delegation
-after applicable checks. A reserved decision without specific approval remains
-READY_FOR_FOUNDER_MANUAL_REVIEW. An open PR or green CI does not prove scientific
-acceptance, rights, deployment or launch readiness.
+Reversible preparation is distinct from consequential execution. Pushes, PR
+publication, externally triggered CI, merge, deployment, rollback and other
+consequential actions require applicable specific Founder approval. A defined
+sequence may be approved once and remains applicable across sessions while its
+reviewed scope and conditions remain unchanged. Historical blanket permissions
+and passing checks do not grant authority. This template records evidence;
+it cannot create consent or certify readiness.
 
 ## Founder instruction and acceptance criteria
 

@@ -1,6 +1,6 @@
 # SONIC CHECK Delivery Workflow
 
-Governance revision: **SC-FOUNDER-GOV/2026-09-23.1**.
+Governance revision: **LDJ-GOV/2026-10-11.1**.
 Acceptance amendment: [SC-ACCEPTANCE-2026-09-22.1](ACCEPTANCE_STANDARD.md).
 Independent adjudication is not a permissible mandatory acceptance requirement.
 Read [../GOVERNANCE.md](../GOVERNANCE.md) and
@@ -10,9 +10,10 @@ They govern all development and operations, not only release preparation.
 ## 1. Establish the instruction and scope
 
 Record what Luke requested, the repositories and starting revisions, outcome,
-exclusions, financial limits and delegated actions. Apply the 23 September
-authority record for GitHub and launch-development work. Keep reserved
-financial, rights, security and commercial-launch decisions distinct.
+exclusions, financial limits and applicable approvals. Read the complete adopted
+Standard and docs/FOUNDER_AUTHORITY_CURRENT.md. Historical blanket delegation
+does not authorise remote or production action. Verify approval continuity and
+whether previously approved actions already occurred.
 
 ## 2. Inspect and prepare
 
@@ -31,25 +32,26 @@ evidence descriptions; neither authorises release nor implies completion.
 
 ## 4. Maintain the action record
 
-Record every applicable item in GOVERNANCE.md section 8: objective, change,
-revision, effects, provider/privacy/cost implications, tests and failures,
-limitations, risk and rollback. Stop at READY_FOR_FOUNDER_MANUAL_REVIEW only
-for a reserved action without specific Founder approval.
+Use the Standard section 5 review headings: Decision, Candidate, Impact,
+Evidence, Safeguards and Recommendation. Include exact scope, automatic effects,
+tests, failures, privacy/cost effects, recovery and the requested decision.
+READY_FOR_FOUNDER_MANUAL_REVIEW describes preparation, not passing acceptance.
 
 ## 5. Validate scope, gates and downstream effects
 
-Before a push, PR, merge or deployment, check the delegated scope, actual
-candidate, CI, automatic workflow and hosting effects. A materially changed
-candidate requires a fresh gate check and action record. Specific approval is
-required for the reserved decisions in governance section 7. A green check
-does not prove scientific performance or rights.
+Before remote writes, externally triggered CI, merge, deployment or rollback,
+verify the applicable specific Founder approval, candidate, conditions and
+automatic effects. A material change or unmet condition pauses that action;
+continue independent preparation. CI does not prove scientific performance,
+rights or approval. Reuse evidence only while its validity conditions apply.
 
-## 6. Apply within delegated or specific authority
+## 6. Apply only the approved sequence
 
-Use the recorded destination and checked candidate without bundling unrelated
-work. The delegated GitHub actions can proceed without a new exact-candidate
-approval. Do not manufacture or bypass an evidence gate or claim a written rule
-is technologically enforced when it is not.
+Use the reviewed destination and content without unrelated changes. Approval
+can persist across sessions and cover explicitly named conditional sequences.
+Publication or CI alone does not authorise merge or deployment. Verify resulting
+identifiers against reviewed content when they could not exist before execution.
+Do not bypass a gate or claim wording is a technical access control.
 
 ## 7. Verify what actually happened
 
@@ -60,7 +62,7 @@ NOT RUN. Retain both unsuccessful attempts and successful correction evidence.
 
 ## 8. Handoff and preservation
 
-Use governance section 26: requested, delivered, evidence, not delivered,
+Use adopted Standard section 12: requested, delivered, evidence, not delivered,
 failures, inactive functionality, external dependencies, costs, recommended
 next action and founder decision required. COMPLETE is limited to the actual
 requested scope satisfied under the applicable approvals.

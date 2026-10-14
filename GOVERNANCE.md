@@ -1,763 +1,162 @@
-# SONIC CHECK
-
-## SUPERSEDING FOUNDER GOVERNANCE & OPERATING STANDARD
-
-**Governance ID:** `SC-FOUNDER-GOV/2026-09-23.1` (amends `SC-FOUNDER-GOV/2026-09-11.1`)
-**Status:** **FOUNDER APPROVED — CONTROLLING PROJECT GOVERNANCE**
-**Effective date:** 23 September 2026 — direct Founder amendment to the 12 September installation
-**Project:** SONIC CHECK / HARRY
-**Founder authority:** Damion Lukas
-**Document character:** Controlling project governance under explicit Founder approval
-
-**Professional name update, 3 October 2026:** The Founder directs use of
-**Damion Lukas** for all work-related branding and signatory requirements.
-See [docs/PROFESSIONAL_IDENTITY.md](docs/PROFESSIONAL_IDENTITY.md). Earlier
-references to Luke Damion identify the same Founder; this naming update does
-not change delegated authority, reserved decisions or historical evidence.
-
-**Current direct-founder amendment, 22 September 2026:** Independent adjudication
-is abolished and banned as a mandatory SONIC CHECK threshold, evidence or launch
-standard. [SC-ACCEPTANCE-2026-09-22.1](docs/ACCEPTANCE_STANDARD.md) governs current
-acceptance. Older independent-review requirements have no current authority.
-
-**Current direct-founder amendment, 23 September 2026:** Luke authorises
-ChatGPT/Codex to pull, branch, commit, push, open and update PRs, squash, merge,
-deploy and roll back repository changes in the authorised SONIC CHECK launch
-workstream using its judgment. This instruction supersedes the exact-candidate
-manual approval requirement for those actions and their ordinary CI/hosting
-effects. It also authorises progress on the catalogue, held-out, audio
-retrieval, HOEL, lyrics and authenticated-flow components under section 7.
-Evidence and rights gates remain facts to establish, not process holds to
-waive. [The 23 September authority record](docs/GOVERNANCE_AUTONOMY_2026-09-23.md)
-states the scope and retained limits. Earlier governance and receipts remain
-historical evidence.
-
----
-
-# 1. PURPOSE
-
-This document establishes the controlling governance framework for all work undertaken in relation to SONIC CHECK and its HARRY analyzer.
-
-It is intended to ensure that development is conducted with complete operational candour, evidentiary integrity, founder control, preservation of research, accurate reporting, and an unambiguous separation between preparing work and authorising consequential action.
-
-This governance is introduced following material failures in prior project execution, including instances of incomplete work being represented too broadly, research or implemented functionality not being converted into the requested operational capability, insufficient disclosure of inactive or shadow functionality, and inadequate distinction between technical restrictions and Founder-authorised restrictions.
-
-The purpose of this document is corrective and prospective.
-
-It does not rewrite historical evidence.
-
-It establishes how SONIC CHECK must operate from this point forward.
-
----
-
-# 2. GOVERNANCE HIERARCHY
-
-Upon Founder approval, the following hierarchy applies to SONIC CHECK project operations:
-
-### LEVEL 1 — DIRECT FOUNDER INSTRUCTION
-
-An unmistakable current instruction from Luke Damion concerning SONIC CHECK is the highest project-level authority.
-
-### LEVEL 2 — CURRENT DELEGATED SCOPE AND RESERVED DECISIONS
-
-The 23 September Founder instruction grants continuing discretion for the
-specified repository and launch-development actions. Section 7 states the
-delegated scope and the decisions reserved to Luke. Direct Founder instructions
-can expand, narrow or revoke that scope at any time.
-
-### LEVEL 3 — THIS GOVERNANCE STANDARD
-
-`SC-FOUNDER-GOV/2026-09-23.1`
-
-This document controls project execution unless subsequently amended or superseded by the Founder.
-
-### LEVEL 4 — PROJECT OPERATING DOCUMENTS
-
-This includes:
-
-* `OPERATING_GUIDE.md`
-* `docs/WORKFLOW.md`
-* continuity guides;
-* closure ledgers;
-* launch ledgers;
-* provider-governance records;
-* research programmes;
-* validation policies;
-* release procedures; and
-* repository-specific instructions.
-
-These documents remain applicable only to the extent that they do not conflict with Levels 1–3.
-
-### LEVEL 5 — HISTORICAL MATERIAL
-
-Historical V-series documents, research reports, manifests, receipts, branches, PR descriptions, CI results, screenshots, previous instructions and earlier governance revisions remain evidence.
-
-They do **not** independently grant current operational authority.
-
----
-
-# 3. HISTORICAL AUTHORITY AND THE CURRENT DELEGATION
-
-The 11 September governance superseded earlier general autonomous permissions.
-The Founder has now made a new, affirmative delegation on 23 September 2026.
-It is current authority for the actions in section 7, not a revival of an
-unbounded historical permission.
-
-Historical records documenting such authority remain historically accurate and must not be altered merely because the authority has subsequently been superseded.
-
-Those historical permissions cannot be relied upon to extend the new scope.
-
-There is no implied continuing authority arising from:
-
-* earlier autonomous-development instructions outside the current delegation;
-* previous provider-integration authority;
-* a successful test;
-* a green CI result;
-* a previously approved similar change;
-* urgency;
-* project objectives;
-* Founder silence;
-* an assumed preference;
-* or the fact that a change appears technically beneficial.
-
-**Current direct Founder instruction and the bounded delegation in section 7 govern.**
-
----
-
-# 4. ABSOLUTE TRUTH AND TRANSPARENCY REQUIREMENT
-
-All SONIC CHECK operations must be conducted with maximum factual accuracy and operational transparency.
-
-No interaction or collaborator (human or AI)  may knowingly:
-
-* fabricate progress;
-* invent test results;
-* claim a test was performed when it was not;
-* claim a provider was exercised when it was not;
-* claim functionality is integrated when it exists only as research or isolated code;
-* claim code is merged when it exists only on a branch or pull request;
-* claim a merge is deployed;
-* claim a deployment is production-verified without actual verification;
-* conceal a known failure;
-* conceal unfinished work;
-* silently narrow the Founder’s requested scope;
-* misrepresent a technical limitation as Founder policy;
-* invent licensing restrictions;
-* exaggerate provider coverage;
-* describe configured credentials as exercised capability;
-* describe research evidence as production accuracy;
-* or knowingly give the Founder a materially misleading impression of project readiness.
-
-Where evidence is incomplete, the correct status is **UNKNOWN**, **UNVERIFIED**, **NOT RUN**, **PARTIAL**, or **BLOCKED**, as applicable.
-
-Uncertainty must not be converted into certainty for convenience.
-
----
-
-# 5. PROHIBITION ON DECEPTION, COERCION AND FABRICATED AUTHORITY
-
-No project process or AI interactions may use deception, fabricated authority, selective disclosure or coercive framing to obtain Founder approval or to circumvent Founder review.
-
-Recommendations may be made.
-
-Risks may be explained.
-
-Strong technical advice may be given.
-
-However, the final project decision remains the Founder’s unless an action cannot lawfully, safely, technically or contractually be performed.
-
-Where such a barrier exists, it must be identified precisely.
-
-The existence of a barrier does not authorise unrelated work to be abandoned.
-
----
-
-# 6. EXECUTION OBLIGATION
-
-When the Founder directs a task, the objective is the **actual requested outcome**, not the earliest intermediate state that can plausibly be described as progress.
-
-Work should therefore proceed through every technically available stage within
-the delegated scope. Present a reserved decision to the Founder when needed.
-
-Documentation alone is not implementation.
-
-Implementation alone is not runtime integration.
-
-Runtime integration alone is not verification.
-
-Verification alone is not scientific or launch acceptance.
-
-Delegated deployment authority does not prove a deployment occurred.
-
-A task must not be silently abandoned because an intermediate milestone has been reached.
-
-If completion cannot presently be achieved, the task must remain visibly incomplete.
-
----
-
-# 7. DELEGATED LAUNCH-DEVELOPMENT AUTHORITY AND RESERVED DECISIONS
-
-For the Founder-directed SONIC CHECK launch workstream, ChatGPT/Codex may
-autonomously fetch/pull, create branches, commit, push, open/update PRs, squash,
-merge and deploy repository revisions. This includes CI-triggered deployment,
-verification and rollback of a bad revision. It may also conduct and publish
-source-bound research, run authorised local or staging experiments, repair the
-160-item catalogue decision inventory, establish the 1,100-source held-out
-protocol, restore and test full-catalogue audio retrieval, develop and integrate
-HOEL, and test synthetic lyrics and authenticated product flows. It may progress
-through overall HARRY versions without returning for approval of every commit.
-
-Before a production code or catalogue change, identify the exact revision,
-check applicable CI and scientific gates, protect customer data and secrets,
-account for automatic downstream effects, and retain a rollback path. A failed
-gate must be repaired or reported as failed. Production changes may use this
-delegation when their actual effects stay within the authorised workstream and
-the relevant evidence, rights and privacy standards have been met. A deployment
-must be observed before it is called deployed or production verified.
-
-The following decisions remain reserved for specific Founder instruction:
-
-* new expenditure, paid provider usage beyond a verified included entitlement,
-  subscriptions or plan increases, public checkout or paid-traffic activation;
-* production secret or credential rotation, access grants, DNS/ownership changes,
-  deletion of unique evidence or production resources, or repository deletion;
-* a disputed or unverified rights, attribution, identity or cultural-context
-  determination; no such hold is resolved by a heuristic or bulk waiver;
-* changing the scientific acceptance standard or announcing unsupported legal,
-  forensic, performance, certification or public marketing claims; and
-* the public commercial launch decision, including customer-facing claims and
-  exposure beyond the already authorised operating scope.
-
-An existing provider can be examined and used within its documented no-new-cost
-entitlement where terms and privacy permit it. When cost, licence or scope
-cannot be established, retain the hold and continue independent work. This
-delegation does not create credentials, source assets, labels, vector shards,
-ground truth or proof of HOEL benefit.
-
----
-
-# 8. ACTION RECORD AND FOUNDER REVIEW WHEN RESERVED
-
-For a delegated consequential action, maintain a reviewable action record
-containing, where applicable:
-
-1. **Requested objective**
-2. **Exact proposed change**
-3. **Files affected**
-4. **Practical effect**
-5. **Scientific or analytical effect**
-6. **Provider implications**
-7. **Privacy implications**
-8. **Financial implications**
-9. **Tests actually performed**
-10. **Tests not performed**
-11. **Known failures**
-12. **Known limitations**
-13. **Regression risk**
-14. **Rollback method**
-15. **Exact candidate revision or diff**
-16. **Recommended action**
-17. **Delegated authority or the precise reserved Founder decision**
-
-For a reserved decision not yet approved, the correct terminal state is:
-
-**READY FOR FOUNDER MANUAL REVIEW**
-
-It is not:
-
-**COMPLETE**
-
-**DEPLOYED**
-
-or
-
-**PRODUCTION VERIFIED**
-
-unless those states have actually occurred under delegated or specific Founder
-authority.
-
----
-
-# 9. SCOPE CONTROL FOR DELEGATED AND RESERVED ACTIONS
-
-Delegated repository work may evolve as tests and review expose changes.
-Re-run appropriate checks and record the actual revision before a merge or
-deployment. A material change is evaluated against the delegated scope and
-remaining gates; it does not automatically require another manual approval.
-
-Specific Founder approval remains tied to the reviewed action for decisions
-reserved in section 7. A materially changed reserved action must return for
-review. Do not split one reserved action into smaller steps to evade this rule.
-
-If a proposed implementation materially changes after review because of:
-
-* merge conflict;
-* failed test;
-* dependency change;
-* provider change;
-* configuration change;
-* additional code;
-* altered runtime behaviour;
-* changed privacy implications;
-* changed financial implications;
-* or another substantive modification,
-
-the revised implementation must be rechecked against the current delegated
-scope and evidence gates. If it changes a reserved decision, return it to Luke.
-
-Minor non-substantive evidence updates may be presented alongside the candidate but must not be used to disguise substantive changes.
-
----
-
-# 10. STATUS VOCABULARY
-
-SONIC CHECK must use precise operational states.
-
-### `PROPOSED`
-
-A change has been suggested but not authorised for implementation.
-
-### `AUTHORISED_TO_PREPARE`
-
-The Founder has authorised preparation or investigation only. Current delegated
-repository authority may also apply when the action is within section 7.
-
-### `IN_PROGRESS`
-
-Work is actively being prepared.
-
-### `IMPLEMENTED_IN_CANDIDATE`
-
-The code or configuration exists in a candidate workspace, branch or proposed diff.
-
-### `TESTED`
-
-Specified tests have actually run against the identified candidate.
-
-This does not imply all testing has passed.
-
-### `TESTED_PASS`
-
-The identified tests passed.
-
-### `TESTED_FAIL`
-
-One or more identified tests failed.
-
-### `BLOCKED`
-
-A concrete dependency prevents further progress.
-
-The blocker must be identified.
-
-### `READY_FOR_FOUNDER_MANUAL_REVIEW`
-
-The candidate and evidence package are ready for Luke's inspection for a
-reserved decision.
-
-### `FOUNDER_APPROVED`
-
-Luke has explicitly approved the identified reserved action.
-
-### `APPLIED`
-
-The change has been applied to the identified destination under delegated or
-specific Founder authority.
-
-### `MERGED`
-
-The reviewed change exists on the identified canonical branch.
-
-### `DEPLOYED`
-
-The identified revision has been deployed to the identified environment.
-
-### `PRODUCTION_VERIFIED`
-
-The deployed revision and required behaviour have actually been verified in production.
-
-### `COMPLETE`
-
-Every applicable requirement of the Founder’s instruction has been satisfied and the closure evidence contains no undisclosed required work.
-
-### `UNKNOWN`
-
-Available evidence cannot establish the state.
-
-**Unknown must remain unknown until evidence resolves it.**
-
----
-
-# 11. FAILURE DISCLOSURE
-
-Failures are evidence.
-
-They must never be hidden, deleted merely because they are inconvenient, or retrospectively converted into successes.
-
-A failed test must identify:
-
-* what failed;
-* when;
-* against which revision;
-* known or suspected cause;
-* practical impact;
-* corrective action;
-* and whether the correction itself has been verified.
-
-A later successful run may supersede the operational effect of a failure.
-
-It does not erase the historical failure.
-
----
-
-# 12. NO SILENT SUPPRESSION OF RESEARCH OR CAPABILITY
-
-Research, diagnostics, algorithms, catalogues, provider integrations and experimental capabilities must not be silently disabled, suppressed, quarantined, archived or removed from the development trajectory.
-
-Where a capability is:
-
-* disabled;
-* shadow-only;
-* research-only;
-* dormant;
-* rejected;
-* blocked;
-* archived;
-* superseded;
-* excluded;
-* or not production-integrated,
-
-that state and its reason must be disclosed.
-
-Where changing that state is proposed, the action record must state:
-
-* what would become active;
-* why it was inactive;
-* evidence supporting activation;
-* risks;
-* expected benefit;
-* and required safeguards.
-
-No collaborator, ChatGPT or any AI may independently convert a Founder-directed capability into permanent research-only status merely because that collaborator considers such treatment preferable.
-
----
-
-# 13. RESEARCH PRESERVATION
-
-All material SONIC CHECK research should remain explicitly and easily recoverable.
-
-This includes:
-
-* V-series research;
-* HARRY development;
-* experimental methods;
-* benchmarks;
-* negative results;
-* failed experiments;
-* rejected challengers;
-* raw non-sensitive evidence;
-* validation receipts;
-* manifests;
-* test results;
-* historical branches;
-* catalogue research;
-* provider evaluations;
-* and methodological decisions.
-
-Archiving must not be used as a euphemism for deletion.
-
-Where archival is appropriate, the archive should preserve:
-
-* source revision;
-* provenance;
-* reason for archival;
-* relationship to successor work;
-* recovery instructions;
-* and integrity evidence where appropriate.
-
-Unique evidence must not be permanently destroyed without specific Founder approval.
-
----
-
-# 14. HISTORICAL INTEGRITY
-
-Historical evidence can never be rewritten merely to make the project appear cleaner.
-
-If a historical statement is subsequently discovered to be wrong, the preferred approach is an additive correction identifying:
-
-* the original statement;
-* why it was incorrect;
-* the correct state;
-* the evidence supporting the correction;
-* and its practical consequence.
-
-A correction must not falsely imply that the corrected knowledge existed at the earlier date.
-
----
-
-# 15. PROVIDER AND COMMERCIAL CAPABILITY GOVERNANCE
-
-For each external provider, the following facts must remain separate:
-
-* `AUTHORISATION`
-* `CREDENTIALS_PRESENT`
-* `CONFIGURED`
-* `RUNTIME_WIRED`
-* `EXERCISED`
-* `RESULT_RECEIVED`
-* `PRODUCTION_INTEGRATED`
-* `ACTIVE`
-* `PAID_USE_AUTHORISED`
-
-One state must not be inferred from another.
-
-For example:
-
-A credential being present does not prove the provider was called.
-
-A successful provider call does not authorise production activation.
-
-A commercial account does not automatically authorise every provider product.
-
-A licence does not automatically authorise payment collection.
-
-A provider being inactive must not be concealed from the Founder.
-
----
-
-# 16. FUNDED CAPABILITY DISCLOSURE
-
-Where the Founder has purchased, subscribed to or otherwise obtained access to a provider capability relevant to an authorised task, that capability must be considered explicitly.
-
-If it is not used, the reason must be disclosed.
-
-It must not be silently replaced with a weaker synthetic, free or local substitute while representing the task as equivalent.
-
-A synthetic or local substitute may be used for development or testing where appropriate, but it must be labelled accordingly.
-
----
-
-# 17. LICENSING AND RIGHTS
-
-Licensing conclusions must be based on founder written confirmation.
-
-The project must not invent additional licence restrictions.
-
-Equally, it must not invent permission that does not exist.
-
-Founder-supplied agreements, correspondence, screenshots, approvals and provider terms relevant to a task should be considered.
-
-Where authority cannot be established, the correct state is:
-
-**AUTHORITY UNVERIFIED**
-
-rather than either presumed permission or presumed prohibition.
-
----
-
-# 18. CATALOGUE GOVERNANCE
-
-Catalogue records must distinguish:
-
-* discovered material;
-* candidate material;
-* technically processed material;
-* rights-reviewed material;
-* culturally reviewed material;
-* sealed material;
-* indexed material;
-* active production material.
-
-A large source count must not be described as active scanner coverage unless those works are actually available through the production comparison path.
-
-Similarly, legitimate approved catalogue material must not be excluded without an identifiable reason.
-
-Any bulk exclusion or quarantine should maintain:
-
-* member identities;
-* reason codes;
-* decision authority;
-* policy version;
-* date;
-* evidence reference;
-* and recovery/review procedure.
-
-Unrecoverable exclusion authority is now superseded by the founder Luke Damion. 
-
----
-
-# 19. SCIENTIFIC CLAIMS
-
-SONIC CHECK is an evidence and candidate-review system.
-
-Research metrics must be described according to what they actually measure.
-
-No research result may be transformed into an unsupported claim of:
-
-* legal infringement;
-* plagiarism;
-* originality;
-* clearance;
-* forensic certainty;
-* universal detection;
-* global catalogue coverage;
-* or calibrated probability,
-
-unless future evidence genuinely supports such a claim and its use has been separately authorised. 
-
-Conduct and methodology when developing SONIC CHECK should be carried out with the ultimate end goal of becoming forensically certified.
-
-This restriction protects the integrity of SONIC CHECK's work.
-
-It must not be used as justification for concealing legitimate research findings or preventing continued development.
-
----
-
-# 20. SECURITY AND PRIVACY
-
-Raw customer audio, private corpora, provider secrets, access tokens, credentials, confidential agreements and identifying private evidence must not be placed in public repositories or public deployment artefacts.
-
-Security protections must be maintained.
-
-However, security must not be used as a vague explanation for unfinished work.
-
-Where security prevents a requested action, the exact security issue and a viable compliant alternative should be identified and presented to Luke for approval.
-
----
-
-# 21. FINANCIAL AUTHORITY
-
-No new expenditure, subscription, incremental paid provider run, plan increase,
-public checkout activation or financial commitment may be made without specific
-Founder approval. Exercise within a documented existing included entitlement
-is delegated when terms, privacy and quota are verified and no additional
-charge can result.
-
-Existing paid capabilities may be investigated and exercised within that
-verified entitlement. Consequential incremental paid execution must respect
-the Founder's specific financial instructions.
-
-Cost estimates should be disclosed before material expenditure.
-
----
-
-# 22. NO DELETION OR ARCHIVAL WITHOUT DISCLOSURE
-
-No unique SONIC CHECK research, branch, repository, dataset, catalogue, evidence package, workflow artefact or development record will be deliberately deleted or permanently archived without approval from the Founder where the action is consequential.
-
-Before such an action, the Founder should be told:
-
-* what is being affected;
-* why;
-* whether anything unique exists there;
-* what has been migrated;
-* where recovery will remain possible;
-* and what would become unrecoverable.
-
----
-
-# 23. BLOCKERS
-
-A blocker must be concrete.
-
-Valid blocker categories include:
-
-* technical;
-* external service;
-* provider;
-* licensing;
-* privacy;
-* security;
-* platform permission;
-* unavailable evidence;
-* unavailable required data;
-* or explicit Founder hold.
-
-A blocker must not become a general excuse to stop unrelated work.
-
-All independent portions of the authorised task should continue to the review-ready state where technically possible.
-
----
-
-# 24. CORRECTION DUTY
-
-If ChatGPT or another collaborator discovers that an earlier project statement was materially inaccurate, the error must be corrected.
-
-The correction should state:
-
-1. what was previously represented;
-2. what the evidence now establishes;
-3. why the discrepancy occurred if known;
-4. what project decisions were affected;
-5. whether remediation is required.
-
-A correction must not be quietly buried in later documentation.
-
----
-
-# 25. COMPLETION STANDARD
-
-A SONIC CHECK task may be described as **COMPLETE** only when the requested scope has actually been completed.
-
-If the Founder requested research only, research completion may be sufficient.
-
-If the Founder requested integration, research completion is insufficient.
-
-If the Founder requested a candidate for a reserved decision, the task can end
-at `READY_FOR_FOUNDER_MANUAL_REVIEW`.
-
-If delegated or specifically authorised merge or deployment is requested,
-those actions must actually occur before those respective states may be claimed.
-
-No status may be inflated to create an appearance of greater progress.
-
----
-
-# 26. HANDOFF REQUIREMENT
-
-Every substantial development workstream should conclude with a concise truth-based handoff containing:
-
-**Requested**
-
-What Luke asked for.
-
-**Delivered**
-
-What was actually produced.
-
-**Evidence**
-
-Tests, files, revisions and observations supporting the delivery.
-
-**Not delivered**
-
-Anything requested but not completed.
-
-**Failures**
-
-Known failures and their status.
-
-**Inactive functionality**
-
-Relevant functionality remaining disabled, shadow, dormant or research-only.
-
-**External dependencies**
-
-Anything requiring another party or unavailable resource.
-
-**Costs**
-
-Any material cost incurred or anticipated.
-
-**Recommended next action**
-
-The technically preferred continuation.
-
-**Founder decision required**
-
-The precise reserved action awaiting Luke's approval, or `NONE` when the work
-remains within the delegated authority.
-
----
-
-#
+# SONIC CHECK / HARRY governance application
+
+**Controlling standard:** LDJ-GOV/2026-10-11.1, adopted 11 October 2026.
+**Retained internal authority:** LUKE DAMION JOBSON (Luke).
+**Document character:** SONIC CHECK repository routing and application record.
+
+This record applies the adopted Standard to SONIC CHECK / HARRY. It does not
+replace or amend the full Standard, expand its authority or approve publication
+of this candidate. Read the complete approved Standard through its authorised
+private source before project work. Its source identity and historical routing
+are in [docs/FOUNDER_AUTHORITY_CURRENT.md](docs/FOUNDER_AUTHORITY_CURRENT.md).
+Unrelated personal and other-business provisions are not republished here.
+
+Professional branding remains **Damion Lukas**, as recorded in
+[docs/PROFESSIONAL_IDENTITY.md](docs/PROFESSIONAL_IDENTITY.md). The retained
+authority name above identifies the adopted Standard's party; it does not change
+professional branding or executed records.
+
+## 1. Authority and interpretation
+
+Apply the Founder's applicable current express instructions first; then
+Founder-approved standards and amendments; consistent operating documents;
+and historical evidence. Internal authority remains with the Founder.
+Instructions alter the matters they address; consistent safeguards remain.
+Historical blanket permissions, silence, urgency, green CI and approval of a
+similar action do not create authority. A collaborator cannot approve its own
+consequential actions or treat an automated check as superior to an express
+Founder instruction. Actual third-party rights, technical access and factual
+evidence remain execution constraints; identify them precisely without
+inventing permission or restrictions. (Standard sections 1–2.)
+
+## 2. Reversible preparation
+
+A Founder-directed task authorises inspection, research, drafting, isolated
+local candidate edits, evidence preservation and tests within its scope.
+Continue available independent preparation without repeated permission.
+Preparation does not authorise remote publication or live changes. Complete
+available preparation and present a concrete review package. Documentation,
+implementation, integration, verification, approval and deployment are distinct
+states. (Standard section 3.)
+
+## 3. Consequential execution and automatic effects
+
+Unless an applicable express Founder instruction changes the requirement for
+an identified scope, specific Founder approval after personal review is required
+for repository pushes, PR publication, canonical-branch changes, merges,
+releases, externally triggered CI, deployment and rollback. It also applies to
+production configuration, secrets, credentials, access, DNS, provider or capability
+activation/deactivation, authoritative scoring, active catalogues, public claims,
+paid traffic, spending, consequential deletion and archival, recorded licensing
+changes and private disclosures. Provider exercise must be covered by existing
+specific approval. Account access and included quota are not execution authority.
+
+Identify automatic CI, deployment, provider and financial effects in the reviewed
+scope before execution. Neither green CI nor a successful local check grants
+release approval. (Standard section 4.)
+
+## 4. Review, approval continuity and changed candidates
+
+Use one concise review summary: Decision; Candidate; Impact; Evidence;
+Safeguards; Recommendation. Include the exact action or defined sequence,
+reviewed content/revision, files, destination, conditions, automatic effects,
+scientific/provider/privacy/financial effects, actual tests, NOT RUN checks,
+failures, limits, recovery method and the precise decision required. Reuse
+evidence only when its candidate, inputs, environment, method and validity
+conditions still apply. (Standard section 5.)
+
+Approval may cover several explicitly named actions and their conditions.
+Execute only that sequence while its conditions remain satisfied. Approval
+persists across conversations, agents and sessions for the unchanged reviewed
+scope until performed, withdrawn, superseded, expired or invalidated by material
+change or unmet conditions. Verify the action has not already occurred.
+Publication or CI approval does not imply merge, deployment, provider exercise,
+activation, spending or rollback approval. No special approval phrase is required.
+
+Material changes require renewed review for the affected consequential action.
+New evidence for unchanged content is not itself a material candidate change;
+new failures can invalidate approval conditions. A changed commit identifier
+alone proves neither equivalence nor material difference. If an identifier
+cannot exist before an approved operation, define content/effect verification
+in the reviewed sequence. (Standard sections 6–7.)
+
+## 5. Truth, privacy, providers and preservation
+
+Report verified facts, Founder-provided information, third-party statements and
+inference separately. Disclose failures, incomplete or inactive work and
+uncertainty. Use NOT_RUN, UNKNOWN, UNVERIFIED, PARTIAL and BLOCKED accurately;
+READY_FOR_FOUNDER_MANUAL_REVIEW does not mean all checks passed. Completion
+means the requested scope was actually satisfied. (Section 8 and Schedule A.)
+
+Protect customer audio, corpora, private correspondence, agreements, credentials
+and other sensitive evidence. Use only the authorised purpose and destination;
+do not publish private source material merely to document governance. Professional
+names do not silently change executed party names or account identities.
+(Section 9.)
+
+Keep AUTHORISATION, CREDENTIALS_PRESENT, CONFIGURED, RUNTIME_WIRED, EXERCISED,
+RESULT_RECEIVED, PRODUCTION_INTEGRATED, ACTIVE and PAID_USE_AUTHORISED separate.
+Licensing conclusions require Founder written confirmation and available
+supporting evidence; unresolved authority is AUTHORITY_UNVERIFIED. Consider
+purchased capabilities and disclose non-use. Synthetic or local substitutes
+must be labelled. Existing quota does not independently authorise calls, data
+transfer, activation or spending. Specific financial approval and applicable
+entitlement evidence are required. (Section 10.)
+
+Preserve original research, failures, approvals and historical source identity.
+Make corrections additively with dated evidence; never rewrite history as a
+success. Recovery copies do not authorise deletion. Unique-material deletion
+or consequential archival requires specific approval and loss/recovery review.
+Continue independent authorised preparation when a concrete blocker affects
+another action. Handoffs expose delivered work, evidence, unfinished work,
+failures, inactive capabilities, dependencies, costs and the next decision.
+(Sections 11–12.)
+
+## 6. Scientific acceptance and claims
+
+[SC-ACCEPTANCE-2026-09-22.1](docs/ACCEPTANCE_STANDARD.md) remains the acceptance
+standard. Mandatory independent adjudication, minimum reviewer counts, external
+corpus audits, registries and signature quorums cannot be reintroduced through
+older protocols. Owner, developer and automated evidence are eligible; scores
+are not their own truth labels. Preserve input identity, permissions and lineage;
+separate calibration and held-out source families and bytes; freeze candidates,
+protocols, corpora and thresholds before held-out scoring. Numerical targets,
+known failures and missing evidence are unchanged. (Section 14.)
+
+Carry requested research through candidate implementation, runtime integration
+and evaluation. Disclose shadow-only, research-only, dormant and excluded
+capabilities; do not permanently suppress a Founder-directed capability without
+authority. Human review of a customer's result and future certification are
+distinct from mandatory research adjudication. Each software, image-security,
+scientific, provider and production result proves only its identified scope.
+
+Distinguish discovered, candidate, processed, rights/culturally reviewed, sealed,
+indexed and active catalogue records. Source counts do not establish production
+coverage. Preserve exclusion identities, reasons, authority and recovery paths.
+Do not claim infringement, plagiarism, originality, clearance, forensic certainty,
+universal/global detection or calibrated probabilities without support and
+separate authority. Forensic certification remains a development objective,
+not an achieved status. (Section 15.)
+
+## 7. Records, downloads and technical limits
+
+Keep routes, templates and automated checks aligned with the approved authority.
+File labels and wording tests do not prove consent or readiness. Adoption of a
+standard and approval to apply repository changes are separate. Older September
+delegations and the 30 September focused instruction remain historical evidence;
+their conflicting blanket execution authority is superseded. Consistent goals,
+scientific requirements and specific approvals remain governed by current scope
+and approval continuity. (Section 16.)
+
+Schedule B governs downloads/exports of the requested body of work in its
+entirety. Preserve constituents, original identity, history, failures and exact
+bytes; summaries and manifests are not substitutes for originals. Verify against
+the expected scope, disclose gaps, and never label a subset complete. Splitting
+changes packaging, not scope. Local integrity, link creation and recipient-side
+download/opening are separate facts. Privacy and execution approvals still apply.
+
+These documents are operating rules, not hosting access controls. They do not
+change branch protection, Render settings, live scoring, providers, payments or
+other sessions. Historical adoption and receipts remain byte-identical. Runtime,
+image and full CI acceptance must be evaluated for any subsequently published
+candidate; this routing change establishes none of those outcomes.
