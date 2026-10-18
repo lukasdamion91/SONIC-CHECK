@@ -1,13 +1,13 @@
-// Same six colours approved for the landing-page Resonance sculpture.
+// Fluorescent component palette for the founder-selected active HARRY identity.
 // Only explicit component activity may select a colour in the live scanner.
 export const COMPONENT_ACTIVITY_SCHEMA = "soniccheck-component-activity/1.0.0";
 export const HARRY_COMPONENTS = Object.freeze([
-  { id: "recording_identity", label: "Recording identity", colour: "#8defe4" },
-  { id: "lyric_overlap", label: "Exact lyric overlap", colour: "#dfbd79" },
-  { id: "composition_similarity", label: "Composition similarity", colour: "#9db8f0" },
-  { id: "relational_specificity", label: "Relational Specificity", colour: "#a5edbc" },
-  { id: "lyric_order_recovery", label: "Lyric Order Recovery", colour: "#d9a8e8" },
-  { id: "interval_path_specificity", label: "Interval Path Specificity", colour: "#ff9fc7" },
+  { id: "recording_identity", label: "Recording identity", colour: "#20c5ea" },
+  { id: "lyric_overlap", label: "Exact lyric overlap", colour: "#ccff33" },
+  { id: "composition_similarity", label: "Composition similarity", colour: "#3ca1ee" },
+  { id: "relational_specificity", label: "Relational Specificity", colour: "#5ee2c4" },
+  { id: "lyric_order_recovery", label: "Lyric Order Recovery", colour: "#c466dc" },
+  { id: "interval_path_specificity", label: "Interval Path Specificity", colour: "#8a8deb" },
 ].map(Object.freeze));
 
 const STATES = new Set(["waiting", "running", "complete", "skipped", "unavailable", "error"]);

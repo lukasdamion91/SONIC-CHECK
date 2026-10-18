@@ -1,13 +1,13 @@
-import { useState } from "react";
+import { useResonance } from "@/context/ResonanceContext";
 import ResonanceSymbol from "@/components/ResonanceSymbol";
 import { componentActivityView } from "@/lib/componentActivity.mjs";
 
 export default function HarryActivity({ progress }) {
-  const [paused, setPaused] = useState(false);
+  const { paused, togglePaused } = useResonance();
   const view = componentActivityView(progress);
   return (
     <div className="sc-harry-activity">
-      <ResonanceSymbol colours={view.active.map(row => row.colour)} active={view.active.length > 0} paused={paused} />
+      <ResonanceSymbol progress={progress} paused={paused} />
       <div className="sc-harry-caption" role="status" aria-live="polite" aria-atomic="true">
         <h3>{view.label}</h3>
         <p>{view.detail}</p>
@@ -24,7 +24,7 @@ export default function HarryActivity({ progress }) {
           ))}
         </ul>
       </details>
-      <button type="button" className="sc-motion-toggle" aria-pressed={paused} onClick={() => setPaused(value => !value)}>{paused ? "Resume gentle glow" : "Pause gentle glow"}</button>
+      <button type="button" className="sc-motion-toggle" aria-pressed={paused} onClick={togglePaused}>{paused ? "Resume breathing" : "Pause breathing"}</button>
       <span className="sc-reduced-motion-note">Reduced motion is enabled.</span>
     </div>
   );

@@ -64,7 +64,7 @@ export default function Dashboard() {
         </Link>
         </div>
         <figure>
-          <ResonanceSymbol colours={["#dfbd79", "#bcebd8"]} />
+          <ResonanceSymbol />
           <figcaption>Resonance · HARRY</figcaption>
         </figure>
       </div>

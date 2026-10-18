@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SCAN } from "@/constants/testIds";
 import { useAuth } from "@/context/AuthContext";
+import { useResonance } from "@/context/ResonanceContext";
 import { api, formatApiErrorDetail } from "@/lib/api";
 import { AUDIO_UPLOAD_LIMIT_LABEL, audioUploadValidationError } from "@/lib/audioUpload.mjs";
 import { INITIAL_SCAN_PROGRESS, scanProgressReducer, uploadCompletedByEvent } from "@/lib/scanProgress.mjs";
@@ -36,6 +37,9 @@ export default function NewScan() {
   const [ambiguousOutcome, setAmbiguousOutcome] = useState(false);
   const [error, setError] = useState("");
   const [scanProgress, dispatchScanProgress] = useReducer(scanProgressReducer, INITIAL_SCAN_PROGRESS);
+  const { setProgress: publishResonance, release: releaseResonance } = useResonance();
+  useEffect(() => { publishResonance(scanProgress); }, [publishResonance, scanProgress]);
+  useEffect(() => () => releaseResonance(), [releaseResonance]);
   const progressPollRef = useRef(null);
   const activeUploadRef = useRef(null);
   const terminalStateRef = useRef(null);
@@ -67,10 +71,11 @@ export default function NewScan() {
     setReconciliationNotice("");
     setAmbiguousOutcome(false);
     dispatchScanProgress({ type: "COMPLETE" });
+    publishResonance({ phase: "complete", serverState: "completed" });
     void refresh();
     toast.success("Evidence record created");
     navigate(`/app/scans/${scanId}`);
-  }, [abortActiveUpload, navigate, refresh, stopProgressPolling]);
+  }, [abortActiveUpload, navigate, refresh, stopProgressPolling, publishResonance]);
 
   const failSubmission = useCallback((message, state) => {
     if (terminalStateRef.current) return;
@@ -83,8 +88,9 @@ export default function NewScan() {
     setAmbiguousOutcome(["recovery_timeout", "recovery_unavailable"].includes(state));
     setError(message);
     dispatchScanProgress({ type: "FAIL", message, state });
+    publishResonance({ phase: "error", serverState: state || "error" });
     toast.error(message);
-  }, [abortActiveUpload, stopProgressPolling]);
+  }, [abortActiveUpload, stopProgressPolling, publishResonance]);
 
   const startProgressPolling = useCallback((progressId) => {
     if (!progressId || progressPollRef.current?.progressId === progressId) return;

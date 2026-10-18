@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Loader2, ShieldAlert } from "lucide-react";
 import { api, API } from "@/lib/api";
+import ResonanceSymbol from "@/components/ResonanceSymbol";
 
-const asset = (path) => `${process.env.PUBLIC_URL || ""}${path}`;
 const statusLabels = {
   REVIEW_REQUIRED: "Candidate evidence — human review required",
   NO_CANDIDATE_IDENTIFIED: "No candidate identified in searched sources",
@@ -35,7 +35,7 @@ export default function VerifyBadge() {
     <main className="mx-auto max-w-3xl px-6 py-14">
       <div className="rounded-2xl border border-[#D4FF00]/20 bg-[#202027] p-7 sm:p-10">
         <div className="flex items-center gap-4 border-b border-white/10 pb-7">
-          <img src={asset("/brand/logo-icon.png")} alt="" className="h-12 w-12" />
+          <div className="h-12 w-12 shrink-0"><ResonanceSymbol /></div>
           <div><div className="eyebrow">Public evidence record</div><div className="mt-1 text-lg font-semibold text-[#F0E9D6]">SONIC CHECK verification</div></div>
         </div>
 

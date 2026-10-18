@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
+import ResonanceSymbol from "@/components/ResonanceSymbol";
 import { NAV } from "@/constants/testIds";
 import "@/pages/Resonance.css";
 
@@ -43,7 +44,7 @@ export default function Navbar() {
       <a className="sc-skip-link" href="#main-content">Skip to content</a>
       <div className="sc-site-nav">
         <Link to="/" data-testid={NAV.logo} className="sc-site-brand" aria-label="SONIC CHECK home">
-          <img src={asset("/brand/logo-icon.png")} alt="" width="159" height="159" className="sc-site-icon" />
+          <ResonanceSymbol className="sc-site-icon" />
           <img src={asset("/brand/logo-wordmark.png")} alt="SONIC CHECK" width="1102" height="222" className="sc-site-wordmark" />
         </Link>
         <nav className="sc-site-desktop-links" aria-label="Primary navigation">{isSignedIn ? accountLinks : publicLinks}</nav>

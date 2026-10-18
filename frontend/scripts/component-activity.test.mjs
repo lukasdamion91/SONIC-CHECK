@@ -16,7 +16,7 @@ test('completed milestones and missing telemetry never select component colours'
 });
 test('only explicit running components select colours, including actual parallel activity', () => {
   const view = componentActivityView(progress(payload({ recording_identity: 'running', lyric_overlap: 'running', composition_similarity: 'complete', relational_specificity: 'unavailable', lyric_order_recovery: 'skipped', interval_path_specificity: 'error' })));
-  assert.deepEqual(view.active.map(row => row.colour), ['#8defe4', '#dfbd79']);
+  assert.deepEqual(view.active.map(row => row.colour), ['#20c5ea', '#ccff33']);
   assert.match(view.detail, /parallel/);
   assert.deepEqual(view.rows.slice(2).map(row => row.statusLabel), ['Complete', 'Unavailable', 'Skipped', 'Error']);
 });

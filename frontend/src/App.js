@@ -2,6 +2,7 @@ import "@/App.css";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AuthProvider } from "@/context/AuthContext";
 import { Toaster } from "@/components/ui/sonner";
+import { ResonanceProvider } from "@/context/ResonanceContext";
 import ProductSurface from "@/components/ProductSurface";
 import Navbar from "@/components/Navbar";
 import ProtectedRoute, { EntitledRoute } from "@/components/ProtectedRoute";
@@ -34,6 +35,7 @@ function App() {
   return (
     <div className="App min-h-screen">
       <AuthProvider>
+        <ResonanceProvider>
         <BrowserRouter basename={baseName}>
           <ProductSurface>
           <Navbar />
@@ -68,6 +70,7 @@ function App() {
           <Toaster theme="dark" position="top-right" />
           </ProductSurface>
         </BrowserRouter>
+        </ResonanceProvider>
       </AuthProvider>
     </div>
   );
