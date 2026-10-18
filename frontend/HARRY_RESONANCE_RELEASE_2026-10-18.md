@@ -92,3 +92,61 @@ and deployment; do not copy the observed fingerprint into the binding merely
 to make the gate pass. The Render connector currently has no selected workspace
 and requires Founder identification of the workspace before service inspection.
 This checkpoint is integrated and locally validated, not deployed.
+
+## 18 October continuation: reviewed API projection reconciled
+
+The Founder confirmed Render workspace `tea-d9gs02epbkes73c7ega0` (My Workspace,
+info@soniccheck.io). Read-only inspection found API service
+`srv-d9gsukbeo5us73cp5gd0` running deploy `dep-db8a9e6q1p3s73a5lnd0`, live since
+15 October 2026 at 10:03:17 UTC. Its pinned registry image is
+`ghcr.io/lukasdamion91/sonic-check-api-pr103-reviewed@sha256:987f9e276e28db658c12aa2a81bc6b4f78e2bdaf0724a2e7c83d24d3bb5a7696`.
+
+The website's earlier binding predates that API deployment. The following
+independent retained evidence establishes the replacement projection, rather
+than accepting live values without provenance:
+
+- API PR112 source `f77a74fc00802c264a1a0c9bf0d1c2c5a42c926c`, review
+  `3b2743ac5f0426157aca7ef89e43274dfb205e36`, merged in
+  `cfdd1ca052a5b6c0db9f03ea845d55e2a2f77039`.
+- [Accepted Test run 38704574231](https://github.com/lukasdamion91/sonic-check-api/actions/runs/38704574231),
+  attestation artifact `11958004645`, downloaded ZIP SHA-256
+  `e00e342603920537e7bbb7eb3599b5c74fd8e65ed8850335f51044deb3442d54`.
+  Its image privacy and startup receipts both bind application hash
+  `0ef19ebdcae3c6ef39f530f9a08d6704af799577298c9f06b55e954a148c12d5`,
+  99 files and 2,198,842 bytes to image config
+  `634b6b16d955b62f59e1811076b18b8d7cb7bfdb749ff1e2578472a9efe30b35`.
+- [Exact private publication run 38716762631](https://github.com/lukasdamion91/sonic-check-api/actions/runs/38716762631)
+  completed successfully before the Render deployment. Artifact `11961929406`,
+  downloaded ZIP SHA-256
+  `36a272629da642ca37ed2d47adb189f0f653f4227b2cb6e5ab5f5d66be9ec73a`,
+  records the same image config published and pulled by registry digest
+  `987f9e276e28db658c12aa2a81bc6b4f78e2bdaf0724a2e7c83d24d3bb5a7696`.
+  Direct comparison of the downloaded evidence confirms all 43 rootfs layer
+  identities and the image configuration match; publication did not rebuild
+  the image or change its source label. Its privacy replay matches the same
+  application projection.
+- The live Render image reference matches that publication receipt, and the
+  public runtime-privacy endpoint matches that attested application projection.
+
+Only the website's three expected projection values and explanatory comments
+are corrected. The public API still reports the retained release identifier
+`5d5352cb66369a9f4d6c9a0f6d0c70d6c1b88c36`; it is not represented here as the
+newer image's source commit. Its existing equality check remains in force.
+No Render service, image, environment variable, provider, payment gate or API
+source is changed by this website release. This is the minimum binding
+reconciliation needed for the already-authorised website deployment.
+
+The initial hosted website run
+[39100999832](https://github.com/lukasdamion91/SONIC-CHECK/actions/runs/39100999832)
+remains FAILED: the build and 336 tests passed, the beta runtime/catalogue check
+passed, and all 30 API-gate attempts rejected the stale projection. Deploy and
+production verification were skipped. No comparison or acceptance gate is
+removed or relaxed by the correction. The earlier blocked checkpoint above is
+preserved as history; fresh checks on this corrected candidate are required.
+
+Fresh local verification after reconciliation: all 130 deployment-contract
+tests passed with zero failures/skips; the unchanged API-only release probe
+passed on its first attempt. The initial full suite/build and hosted build
+remain the visual integration evidence. The follow-up changes no renderer,
+state handling or workflow; the required hosted full suite/build/API gates
+will execute again on publication before merge/deployment.
