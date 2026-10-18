@@ -7,7 +7,8 @@ import RelationshipsBanner from "@/components/RelationshipsBanner";
 import { api } from "@/lib/api";
 import { commercialLicenseState } from "@/lib/productContract.mjs";
 import { mountResonanceEffects } from "@/lib/resonanceEffects";
-import sculpture from "@/assets/resonance-sculpture.webp";
+import ResonanceSymbol from "@/components/ResonanceSymbol";
+import { useResonance } from "@/context/ResonanceContext";
 import "@/pages/Resonance.css";
 
 const asset = path => `${process.env.PUBLIC_URL || ""}${path}`;
@@ -17,6 +18,7 @@ const RESEARCH_CATALOGUE = { acousticRecords: 7541578, symbolicReferences: 71196
 
 export default function Landing() {
   const rootRef = useRef(null);
+  const { paused, togglePaused } = useResonance();
   const { isSignedIn } = useAuth();
   const [contract, setContract] = useState(null);
   const [catalogue, setCatalogue] = useState(null);
@@ -67,40 +69,14 @@ export default function Landing() {
               <Link className="sc-button sc-button-secondary" to={isSignedIn ? "/app" : "/login"} data-testid={LANDING.heroSecondaryCta}>{isSignedIn ? "My dashboard" : "Log in"}</Link>
               <a className="sc-explore-link" href="#sc4-analyzer">Explore the analyser</a>
             </div>
-<figure className="sc-orbit"><div className="sc-orbit-visual" aria-hidden="true"><div className="sc-orbit-core"><img className="sc-orbit-image" src={sculpture} width="1254" height="1254" alt="" aria-hidden="true" /><div className="sc-neural-field" aria-hidden="true">
-<i style={{"--node-x": "25.28%", "--node-y": "27.91%", "--node-delay": "-1.8s"}}></i>
-<i style={{"--node-x": "51.20%", "--node-y": "10.40%", "--node-delay": "-3.4s"}}></i>
-<i style={{"--node-x": "64.67%", "--node-y": "49.44%", "--node-delay": "-.7s"}}></i>
-<i style={{"--node-x": "82.14%", "--node-y": "53.75%", "--node-delay": "-2.7s"}}></i>
-<i style={{"--node-x": "46.97%", "--node-y": "77.59%", "--node-delay": "-4.4s"}}></i>
-<i style={{"--node-x": "36.44%", "--node-y": "66.03%", "--node-delay": "-.2s"}}></i>
-</div>
-<div className="sc-orbit-tint"></div><div className="sc-orbit-stage-tint"></div></div><span className="sc-neural-halo" aria-hidden="true"></span>
-</div><figcaption><span>SONIC CHECK V37<br />Music evidence analysis</span><span>Six components<br />One contextual view</span></figcaption></figure>
-<div className="sc-orbit-tools" aria-label="Resonance colour and motion preview">
-<div className="sc-orbit-state-row">
-<p className="sc-orbit-state" id="sc4-colour-state" role="status" aria-live="polite">11-colour breathing spectrum · colour preview</p>
-<button className="sc-motion-button" id="sc4-pause-shape" type="button" aria-pressed="false">Pause effects</button>
-</div>
-<details className="sc-stage-preview">
-<summary>Preview analysis-stage colours</summary>
-<p>Preview component colours or play the sequence. No analysis is running.</p>
-<div className="sc-stage-fields">
-<label htmlFor="sc4-stage-select">Colour mode
-        <select id="sc4-stage-select" aria-describedby="sc4-colour-state">
-<option value="ambient">11-colour breathing spectrum</option>
-<option value="recording_identity">Recording identity · teal</option>
-<option value="lyric_overlap">Exact lyric overlap · gold</option>
-<option value="composition_similarity">Composition similarity · blue</option>
-<option value="relational_specificity">Relational Specificity · mint</option>
-<option value="lyric_order_recovery">Lyric Order Recovery · lilac</option>
-<option value="interval_path_specificity">Interval Path Specificity · rose</option>
-</select>
-</label>
-<button className="sc-stage-play" id="sc4-play-stages" type="button" aria-pressed="false">Play stage preview</button>
-</div>
-</details>
-</div>
+<figure className="sc-orbit">
+<ResonanceSymbol />
+<figcaption><span>HARRY · SONIC CHECK</span><span>Nine interwoven knots</span></figcaption>
+</figure>
+<div className="sc-orbit-tools"><div className="sc-orbit-state-row">
+<p className="sc-orbit-state">HARRY resonance · 8-second breath</p>
+<button className="sc-motion-button" type="button" aria-pressed={paused} onClick={togglePaused}>{paused ? "Resume breathing" : "Pause breathing"}</button>
+</div></div>
 </section>
 
 <RelationshipsBanner />
@@ -195,7 +171,7 @@ export default function Landing() {
         <p className="sc-checkout-status">Paid public checkout: {paidOpen ? "API-authorized" : "closed"}.</p>
       </div></section><section className="sc-contact" id="sc4-contact" aria-labelledby="sc4-contact-title"><div className="sc-wrap"><p className="sc-overline">For the people behind the music</p><h2 id="sc4-contact-title">Create with integrity.<br />Release with insight.</h2><p>Planning a release? Ask about SONIC CHECK, discuss beta access, or tell us what would make your evidence review more useful.</p><a className="sc-button" href="mailto:info@soniccheck.io">Let's talk </a></div></section>
 </main>
-<footer className="sc-footer sc-wrap"><img className="sc-rainbow-symbol" src={asset("/brand/sonic-rainbow-bar.png")} alt="" aria-hidden="true" /><div className="sc-footer-top"><a className="sc-brand" href="#sc4-home"><img src={asset("/brand/logo-full.png")} alt="SONIC CHECK" className="sc-footer-logo" /><small>EVIDENCE IN EVERY CONNECTION</small></a><nav className="sc-footer-links" aria-label="Footer navigation"><a href="#sc4-about">About</a><a href="#sc4-analyzer">The science</a><a href="#sc4-faq">FAQ</a><a href="mailto:info@soniccheck.io">Contact</a></nav></div><div className="sc-footer-bottom"><span>Evidence for considered creative decisions.</span><span>© SONIC CHECK</span></div><p className="sc-editorial-note">Screening supports qualified human review. A match or an absence of matches does not establish originality, ownership or clearance.</p></footer>
+<footer className="sc-footer sc-wrap"><img className="sc-rainbow-symbol" src={asset("/brand/sonic-rainbow-bar.png")} alt="" aria-hidden="true" /><div className="sc-footer-top"><a className="sc-brand" href="#sc4-home"><span className="sc-footer-brand-row"><ResonanceSymbol /><img src={asset("/brand/logo-wordmark.png")} alt="SONIC CHECK" className="sc-footer-logo" /></span><small>EVIDENCE IN EVERY CONNECTION</small></a><nav className="sc-footer-links" aria-label="Footer navigation"><a href="#sc4-about">About</a><a href="#sc4-analyzer">The science</a><a href="#sc4-faq">FAQ</a><a href="mailto:info@soniccheck.io">Contact</a></nav></div><div className="sc-footer-bottom"><span>Evidence for considered creative decisions.</span><span>© SONIC CHECK</span></div><p className="sc-editorial-note">Screening supports qualified human review. A match or an absence of matches does not establish originality, ownership or clearance.</p></footer>
 </div>
   );
 }

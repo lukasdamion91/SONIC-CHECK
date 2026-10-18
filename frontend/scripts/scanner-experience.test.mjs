@@ -358,14 +358,15 @@ test("scanner exposes one source-owned accessible analyzer identity", async () =
   assert.match(occurrences[0], /\/constants\/analyzerIdentity\.mjs$/u);
 });
 
-test("scanner uses the original Resonance sculpture and explicit component activity", async () => {
+test("scanner and landing use the shared selected Resonance and explicit component activity", async () => {
   const [analyzer, symbol, landing] = await Promise.all([
     source("../src/components/ScannerAnalyzer.jsx"),
     source("../src/components/ResonanceSymbol.jsx"),
     source("../src/pages/Landing.jsx"),
   ]);
   assert.match(analyzer, /<HarryActivity progress=\{progress\}/);
-  assert.match(symbol, /assets\/resonance-sculpture.webp/);
-  assert.match(landing, /assets\/resonance-sculpture.webp/);
+  assert.match(symbol, /createResonanceRenderer/);
+  assert.match(symbol, /resonanceIdentity/);
+  assert.match(landing, /<ResonanceSymbol/);
   assert.doesNotMatch(analyzer, /SPECTRUM_HEIGHTS|rainbowBarAsset/);
 });

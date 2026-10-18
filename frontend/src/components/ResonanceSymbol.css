@@ -1,0 +1,10 @@
+.sc-harry-identity.sc-resonance-symbol { position: relative; isolation: isolate; display: block; width: 100%; aspect-ratio: 1; mix-blend-mode: normal; mask-image: none; }
+.sc-harry-identity > canvas, .sc-harry-identity > img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.sc-harry-identity > canvas[hidden] { display: none; }
+.sc-site-brand .sc-harry-identity.sc-site-icon { width: 48px; height: 48px; flex: 0 0 48px; }
+#sc-resonance-positioning .sc-orbit .sc-harry-identity { width: min(313.344px, 68%); margin: 0 auto; }
+#sc-resonance-positioning .sc-orbit .sc-harry-identity img { max-height: none; mask-image: none; }
+#sc-resonance-positioning .sc-footer-brand-row { display: flex; align-items: center; gap: 12px; }
+#sc-resonance-positioning .sc-footer-brand-row .sc-harry-identity { width: 62px; flex: 0 0 62px; }
+@media(max-width:650px) { .sc-site-brand .sc-harry-identity.sc-site-icon { width: 38px; height: 38px; flex-basis: 38px; } }
+@media(forced-colors:active) { .sc-harry-identity.sc-resonance-symbol { display: none; } }
