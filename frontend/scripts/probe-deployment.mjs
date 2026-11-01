@@ -7,6 +7,7 @@ import {
   ANALYZER_CAPABILITY_MANIFEST_REVISION,
   ANALYZER_CAPABILITY_MANIFEST_SHA256,
   ANALYZER_API_RELEASE_COMMIT,
+  ANALYZER_API_MUSICBRAINZ_REPLICATION_SEQUENCE,
   ANALYZER_API_RUNTIME_PROJECTION,
   ANALYZER_IDENTITY,
   ANALYZER_IDENTITY_REVISION,
@@ -57,6 +58,7 @@ const EXPECTED_PROVIDER_GATE_KEYS = [
   "acoustid_identification",
   "acrcloud_identification",
   "musicbrainz_metadata",
+  "catalogue_audio_dispatch",
   "payment",
   "secrets_included",
 ];
@@ -105,6 +107,9 @@ const EXPECTED_ACRCLOUD_GATE_KEYS = [
 const EXPECTED_MUSICBRAINZ_GATE_KEYS = [
   "version",
   "provider",
+  "source",
+  "catalogue_generation",
+  "replication_sequence_required",
   "mode",
   "enabled",
   "access_basis",
@@ -116,6 +121,12 @@ const EXPECTED_MUSICBRAINZ_GATE_KEYS = [
   "affects_candidate_generation",
   "affects_confidence",
   "affects_ranking",
+];
+
+const EXPECTED_CATALOGUE_DISPATCH_KEYS = [
+  "version", "mode", "valid", "scope", "source_order", "index_configured",
+  "local_search_mode", "local_scores_calibrated", "gallery_coverage",
+  "external_acoustid_in_catalogue_first",
 ];
 
 const EXPECTED_PAYMENT_GATE_KEYS = [
@@ -343,6 +354,7 @@ function closedProviderPaymentGates(value) {
   const acrcloud = value?.acrcloud_identification;
   const musicbrainz = value?.musicbrainz_metadata;
   const payment = value?.payment;
+  const dispatch = value?.catalogue_audio_dispatch;
   return hasExactKeys(value, EXPECTED_PROVIDER_GATE_KEYS)
     && value?.schema_version === "soniccheck-provider-payment-gates/1.1.0"
     && value?.secrets_included === false
@@ -382,7 +394,10 @@ function closedProviderPaymentGates(value) {
     && acrcloud?.secrets_included === false
     && hasExactKeys(musicbrainz, EXPECTED_MUSICBRAINZ_GATE_KEYS)
     && musicbrainz?.version === "soniccheck-musicbrainz-enrichment/0.3.0"
-    && musicbrainz?.provider === "MusicBrainz WS/2"
+    && musicbrainz?.provider === "MusicBrainz catalogue"
+    && musicbrainz?.source === "postgres"
+    && musicbrainz?.catalogue_generation === null
+    && musicbrainz?.replication_sequence_required === ANALYZER_API_MUSICBRAINZ_REPLICATION_SEQUENCE
     && musicbrainz?.mode === "shadow"
     && musicbrainz?.access_basis === "commercial_approved"
     && musicbrainz?.enabled === true
@@ -394,6 +409,17 @@ function closedProviderPaymentGates(value) {
     && musicbrainz?.affects_candidate_generation === false
     && musicbrainz?.affects_confidence === false
     && musicbrainz?.affects_ranking === false
+    && hasExactKeys(dispatch, EXPECTED_CATALOGUE_DISPATCH_KEYS)
+    && dispatch?.version === "soniccheck-native-catalogue-dispatch/0.1.0-candidate"
+    && dispatch?.mode === "off"
+    && dispatch?.valid === true
+    && dispatch?.scope === "development_candidate"
+    && canonicalJson(dispatch?.source_order) === canonicalJson(["AcoustID", "ACRCloud"])
+    && dispatch?.index_configured === false
+    && dispatch?.local_search_mode === "off"
+    && dispatch?.local_scores_calibrated === false
+    && dispatch?.gallery_coverage === "VERSIONED_SUBSET_ONLY"
+    && dispatch?.external_acoustid_in_catalogue_first === false
     && hasExactKeys(payment, EXPECTED_PAYMENT_GATE_KEYS)
     && payment?.approved === false
     && payment?.approval_revision === null

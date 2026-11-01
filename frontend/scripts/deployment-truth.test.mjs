@@ -284,9 +284,9 @@ const capturedV37ProviderPaymentGates = await readFile(
   new URL("./fixtures/provider-payment-gates.v37-approved.json", import.meta.url),
   "utf8",
 );
-// Synthetic expected snapshot for the reviewed commercial-shadow candidate.
+// Public non-secret observed PostgreSQL metadata / dormant-dispatch snapshot; older fixtures remain preserved.
 const closedProviderPaymentGates = await readFile(
-  new URL("./fixtures/provider-payment-gates.acrcloud-commercial-shadow-candidate.json", import.meta.url),
+  new URL("./fixtures/provider-payment-gates.postgres-dispatch-off.captured-2026-11-01.json", import.meta.url),
   "utf8",
 );
 const deployedApplicationPrivacy = JSON.stringify({
@@ -1329,7 +1329,7 @@ async function probeProviderGateSnapshot(snapshot) {
   });
 }
 
-test("V37 release gates accept the commercial-shadow candidate snapshot", async () => {
+test("V37 release gates accept the observed native PostgreSQL metadata and dormant dispatcher", async () => {
   const snapshot = JSON.parse(closedProviderPaymentGates);
   assert.equal(snapshot.musicbrainz_metadata.access_basis, "commercial_approved");
   assert.equal(snapshot.musicbrainz_metadata.evaluation_only, false);
@@ -1371,6 +1371,72 @@ test("the preserved captured V37 snapshot records disabled ACRCloud and cannot s
   const result = await probeProviderGateSnapshot(captured);
   assert.equal(result.ok, false);
   assert.equal(result.checks.harry_capability_contract.checks.provider_payment_gates_closed, false);
+});
+
+test("the preserved WS/2 candidate cannot satisfy the native PostgreSQL release contract", async () => {
+  const predecessor = JSON.parse(await readFile(
+    new URL("./fixtures/provider-payment-gates.acrcloud-commercial-shadow-candidate.json", import.meta.url), "utf8",
+  ));
+  const result = await probeProviderGateSnapshot(predecessor);
+  assert.equal(result.ok, false);
+  assert.equal(result.checks.harry_capability_contract.checks.provider_payment_gates_closed, false);
+});
+
+test("native metadata and dormant dispatch reject incomplete, substituted or activated contracts", async (t) => {
+  const cases = [
+    ["WS/2 provider", "musicbrainz_metadata", { provider: "MusicBrainz WS/2" }],
+    ["remote source", "musicbrainz_metadata", { source: "ws2" }],
+    ["snapshot source", "musicbrainz_metadata", { source: "snapshot" }],
+    ["unbound generation", "musicbrainz_metadata", { catalogue_generation: "0".repeat(64) }],
+    ["old replication", "musicbrainz_metadata", { replication_sequence_required: 189739 }],
+    ["string replication", "musicbrainz_metadata", { replication_sequence_required: "189740" }],
+    ["missing replication", "musicbrainz_metadata", { replication_sequence_required: null }],
+    ["unknown metadata field", "musicbrainz_metadata", { unexpected: false }],
+    ["development activation", "catalogue_audio_dispatch", { mode: "development" }],
+    ["invalid dispatcher", "catalogue_audio_dispatch", { valid: false }],
+    ["numeric valid", "catalogue_audio_dispatch", { valid: 1 }],
+    ["wrong version", "catalogue_audio_dispatch", { version: "future" }],
+    ["wrong scope", "catalogue_audio_dispatch", { scope: "production" }],
+    ["native source promotion", "catalogue_audio_dispatch", { source_order: ["MetaBrainz catalogue", "ACRCloud"] }],
+    ["provider reordering", "catalogue_audio_dispatch", { source_order: ["ACRCloud", "AcoustID"] }],
+    ["index installation", "catalogue_audio_dispatch", { index_configured: true }],
+    ["numeric index flag", "catalogue_audio_dispatch", { index_configured: 0 }],
+    ["local search activation", "catalogue_audio_dispatch", { local_search_mode: "shadow" }],
+    ["calibration claim", "catalogue_audio_dispatch", { local_scores_calibrated: true }],
+    ["numeric calibration flag", "catalogue_audio_dispatch", { local_scores_calibrated: 0 }],
+    ["coverage claim", "catalogue_audio_dispatch", { gallery_coverage: "GLOBAL" }],
+    ["external source promotion", "catalogue_audio_dispatch", { external_acoustid_in_catalogue_first: true }],
+    ["unknown dispatcher field", "catalogue_audio_dispatch", { unexpected: false }],
+  ];
+  for (const [name, section, patch] of cases) {
+    await t.test(name, async () => {
+      const snapshot = JSON.parse(closedProviderPaymentGates);
+      Object.assign(snapshot[section], patch);
+      const result = await probeProviderGateSnapshot(snapshot);
+      assert.equal(result.ok, false);
+      assert.equal(result.checks.harry_capability_contract.checks.provider_payment_gates_closed, false);
+      assert.equal(result.checks.runtime_application_projection.ok, true);
+      assert.equal(result.checks.api_health.ok, true);
+    });
+  }
+  for (const [section, field] of [
+    ["musicbrainz_metadata", "source"], ["musicbrainz_metadata", "catalogue_generation"],
+    ["musicbrainz_metadata", "replication_sequence_required"],
+    ...Object.keys(JSON.parse(closedProviderPaymentGates).catalogue_audio_dispatch).map((key) => ["catalogue_audio_dispatch", key]),
+  ]) {
+    await t.test(`missing ${section}.${field}`, async () => {
+      const snapshot = JSON.parse(closedProviderPaymentGates);
+      delete snapshot[section][field];
+      const result = await probeProviderGateSnapshot(snapshot);
+      assert.equal(result.checks.harry_capability_contract.checks.provider_payment_gates_closed, false);
+    });
+  }
+  await t.test("missing dispatcher section", async () => {
+    const snapshot = JSON.parse(closedProviderPaymentGates);
+    delete snapshot.catalogue_audio_dispatch;
+    const result = await probeProviderGateSnapshot(snapshot);
+    assert.equal(result.checks.harry_capability_contract.checks.provider_payment_gates_closed, false);
+  });
 });
 
 test("V37 provider gate repair still rejects unsafe, incoherent and incorrectly typed states", async (t) => {
