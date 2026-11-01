@@ -23,6 +23,7 @@ import CompositionAnalysis from "@/components/CompositionAnalysis";
 import FeatureInventory from "@/components/FeatureInventory";
 import RecordingProviderCoverage from "@/components/RecordingProviderCoverage";
 import ResearchPairDiagnostic from "@/components/ResearchPairDiagnostic";
+import SavedAudioDiagnostics from "@/components/SavedAudioDiagnostics";
 import { recordingCandidateDetails } from "@/lib/providerCoveragePresentation.mjs";
 import {
   ANALYZER_CAPABILITY_MANIFEST_REVISION,
@@ -517,6 +518,7 @@ export default function ScanResult() {
       <RelationalSpecificity similarity={similarity} />
       <BetaEvidence result={result} />
       <FeatureInventory result={result} />
+      <SavedAudioDiagnostics extension={result.analysis_extensions} />
 
       <section className="mt-6 rounded-2xl border border-white/10 bg-[#122b40] p-6 sm:p-8">
         <div className="eyebrow">{ANALYZER_IDENTITY} diagnostics</div>
