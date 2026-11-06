@@ -1,0 +1,147 @@
+name: Recover verified SONIC CHECK Pages build
+
+on:
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: Verify the retained bytes, or restore them after Founder approval
+        type: choice
+        options:
+          - verify
+          - restore
+        default: verify
+        required: true
+      expected_main_sha:
+        description: Exact current main commit reviewed for this operation
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
+env:
+  PRIOR_WEB_SHA: b181bff20360ae0d8c2d56ad2d88636fc6d6f3d6
+  PRIOR_API_SHA: c45d067436c23537649b2fb8ed2ea584ffd9270a
+  PRIOR_RUN: "39101807833"
+  EXPECTED_MAIN_SHA: ${{ inputs.expected_main_sha }}
+
+jobs:
+  verify:
+    if: github.repository == 'lukasdamion91/SONIC-CHECK' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Verify exact retained artifact and current source
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          test "$GITHUB_SHA" = "$EXPECTED_MAIN_SHA"
+          test "$GITHUB_SHA" = "$(git ls-remote origin refs/heads/main | cut -f1)"
+          recovery="$RUNNER_TEMP/sonic-pages-recovery"
+          mkdir -p "$recovery" frontend/build
+
+          download_artifact() {
+            local artifact_id="$1" name="$2" digest="$3" url
+            url="$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/actions/artifacts/$artifact_id"
+            curl --fail --silent --show-error --retry 2 --max-time 60 \
+              -H "Authorization: Bearer $GITHUB_TOKEN" "$url" |
+              jq -e --arg name "$name" --arg digest "sha256:$digest" \
+                --arg sha "$PRIOR_WEB_SHA" --arg run "$PRIOR_RUN" '
+                  .name == $name and .digest == $digest and .expired == false
+                  and .workflow_run.head_sha == $sha
+                  and (.workflow_run.id | tostring) == $run
+                ' > /dev/null
+            curl --fail --silent --show-error --location --retry 2 --max-time 60 \
+              -H "Authorization: Bearer $GITHUB_TOKEN" "$url/zip" -o "$recovery/$artifact_id.zip"
+            printf '%s  %s\n' "$digest" "$recovery/$artifact_id.zip" | sha256sum --check
+          }
+
+          download_artifact 12126867004 github-pages 19e53782b327ad7fb2af9863315c8a6bf15ace132484e3d9fafac71ba07b3c19
+          download_artifact 12126817329 sonic-check-deployment-privacy-reverification 0d1e75c073365f80663979468a9f4c7539f3e1bc59f71d1b157303ffdf9c403d
+          unzip -p "$recovery/12126867004.zip" artifact.tar > "$recovery/artifact.tar"
+          printf '%s  %s\n' e5084c1021406ab594b6c3623176e1bffab4f92bc37da4aff8e16c868c480b24 \
+            "$recovery/artifact.tar" | sha256sum --check
+          tar --extract --file "$recovery/artifact.tar" --directory frontend/build \
+            --no-same-owner --no-same-permissions
+          unzip -p "$recovery/12126817329.zip" deployment-privacy-reverification.json \
+            > "$recovery/prior-privacy-receipt.json"
+          node frontend/scripts/verify-pages-build.mjs --expected-commit "$PRIOR_WEB_SHA" --require-auth true
+          node frontend/scripts/verify-deployment-privacy.mjs frontend/build \
+            --expected-receipt "$recovery/prior-privacy-receipt.json" \
+            --output "$recovery/recovery-privacy-receipt.json"
+      - name: Stage the exact original Pages tar in this run
+        if: inputs.operation == 'restore'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: github-pages
+          path: ${{ runner.temp }}/sonic-pages-recovery/artifact.tar
+          if-no-files-found: error
+          retention-days: 7
+
+  restore:
+    if: inputs.operation == 'restore'
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      actions: read
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Require the reviewed main commit and restored API
+        run: |
+          set -euo pipefail
+          test "$GITHUB_SHA" = "$EXPECTED_MAIN_SHA"
+          test "$GITHUB_SHA" = "$(git ls-remote origin refs/heads/main | cut -f1)"
+          curl --fail --silent --show-error --retry 2 --max-time 20 \
+            https://api.soniccheck.io/api/version |
+            jq -e --arg sha "$PRIOR_API_SHA" '.commit_sha == $sha' > /dev/null
+          curl --fail --silent --show-error --retry 2 --max-time 20 \
+            https://api.soniccheck.io/api/healthz | jq -e ' .ok == true ' > /dev/null
+      - name: Restore production Pages
+        id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5
+      - name: Verify public site bytes and restored API
+        run: |
+          set -euo pipefail
+          check_public_file() {
+            local path="$1" digest="$2"
+            for attempt in {1..20}; do
+              if curl --fail --silent --show-error --max-time 8 \
+                "https://soniccheck.io/$path?recovery_check=$GITHUB_RUN_ID-$attempt" \
+                -o "$RUNNER_TEMP/recovered-public-file" &&
+                printf '%s  %s\n' "$digest" "$RUNNER_TEMP/recovered-public-file" | sha256sum --check; then
+                return 0
+              fi
+              sleep 5
+            done
+            return 1
+          }
+
+          check_public_file '' 883312ed0eeb2736dba075c38a7c143a76e0d6abc04aa665d9f0e3381fc5c309
+          check_public_file static/js/main.2f946574.js 705f7146a4b2f6b9c540c2270734526bf25dfe46c5982d0a45066a831853d2c5
+          check_public_file static/css/main.6c14e3f3.css 9d0e0c85654afe26683807d740befbb0e8c83bebd1434f1d395525ebd1a517d2
+          curl --fail --silent --show-error --retry 2 --max-time 20 \
+            https://api.soniccheck.io/api/version |
+            jq -e --arg sha "$PRIOR_API_SHA" '.commit_sha == $sha' > /dev/null
+          curl --fail --silent --show-error --retry 2 --max-time 20 \
+            https://api.soniccheck.io/api/readyz |
+            jq -e '.status == "READY_FOR_LIVE_SMOKE_TEST"' > /dev/null
