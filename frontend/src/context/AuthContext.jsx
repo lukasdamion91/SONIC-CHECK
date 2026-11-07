@@ -9,6 +9,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { api, formatApiErrorDetail, setApiTokenProvider } from "@/lib/api";
@@ -32,8 +33,21 @@ const unavailableValue = {
 };
 
 function ClerkAuthBridge({ children }) {
-  const { isLoaded, isSignedIn, getToken, signOut } = useClerkAuth();
+  const auth = useClerkAuth();
   const { user: clerkUser } = useUser();
+  // An account transition must synchronously discard every private child,
+  // including saved records, pending uploads and in-memory report URLs.
+  return <OwnerAuthBridge key={auth.userId || "signed-out"} auth={auth} clerkUser={clerkUser}>{children}</OwnerAuthBridge>;
+}
+
+function OwnerAuthBridge({ children, auth, clerkUser }) {
+  const { isLoaded, isSignedIn, getToken, signOut } = auth;
+  const requestSequence = useRef(0);
+  const mounted = useRef(false);
+  useEffect(() => {
+    mounted.current = true;
+    return () => { mounted.current = false; requestSequence.current += 1; };
+  }, []);
   const [user, setUser] = useState(null);
   const [error, setError] = useState("");
   const [profileLoading, setProfileLoading] = useState(false);
@@ -44,6 +58,9 @@ function ClerkAuthBridge({ children }) {
   }, [getToken]);
 
   const refresh = useCallback(async () => {
+    if (!mounted.current) return null;
+    const request = ++requestSequence.current;
+    const isCurrent = () => mounted.current && requestSequence.current === request;
     if (!isLoaded || !isSignedIn) {
       setUser(false);
       setError("");
@@ -55,10 +72,13 @@ function ClerkAuthBridge({ children }) {
     try {
       const name = clerkUser?.fullName || clerkUser?.username || "";
       await api.post("/auth/sync", { name });
+      if (!isCurrent()) return null;
       const { data } = await api.get("/auth/me");
+      if (!isCurrent()) return null;
       setUser(data);
       return data;
     } catch (requestError) {
+      if (!isCurrent()) return null;
       setUser(null);
       setError(
         formatApiErrorDetail(requestError?.response?.data?.detail) ||
@@ -66,7 +86,7 @@ function ClerkAuthBridge({ children }) {
       );
       return null;
     } finally {
-      setProfileLoading(false);
+      if (isCurrent()) setProfileLoading(false);
     }
   }, [clerkUser?.fullName, clerkUser?.username, isLoaded, isSignedIn]);
 
