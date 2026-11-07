@@ -4,11 +4,13 @@ on:
   workflow_dispatch:
     inputs:
       operation:
-        description: Verify the retained bytes, or restore them after Founder approval
+        description: Verify bytes/API, or restore the reviewed frontend/API pairing after approval
         type: choice
         options:
           - verify
+          - verify-v90
           - restore
+          - restore-frontend-v90
         default: verify
         required: true
       expected_main_sha:
@@ -33,28 +35,31 @@ jobs:
   verify:
     if: github.repository == 'lukasdamion91/SONIC-CHECK' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     permissions:
       actions: read
       contents: read
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        timeout-minutes: 2
         with:
           persist-credentials: false
       - name: Verify exact retained artifact and current source
+        timeout-minutes: 8
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           test "$GITHUB_SHA" = "$EXPECTED_MAIN_SHA"
-          test "$GITHUB_SHA" = "$(git ls-remote origin refs/heads/main | cut -f1)"
+          recovery_remote_main="$(timeout 40s git ls-remote origin refs/heads/main | cut -f1)"
+          test "$GITHUB_SHA" = "$recovery_remote_main"
           recovery="$RUNNER_TEMP/sonic-pages-recovery"
           mkdir -p "$recovery" frontend/build
 
           download_artifact() {
             local artifact_id="$1" name="$2" digest="$3" url
             url="$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/actions/artifacts/$artifact_id"
-            curl --fail --silent --show-error --retry 2 --max-time 60 \
+            curl --fail --silent --show-error --retry 1 --connect-timeout 10 --max-time 45 --retry-max-time 90 \
               -H "Authorization: Bearer $GITHUB_TOKEN" "$url" |
               jq -e --arg name "$name" --arg digest "sha256:$digest" \
                 --arg sha "$PRIOR_WEB_SHA" --arg run "$PRIOR_RUN" '
@@ -62,7 +67,7 @@ jobs:
                   and .workflow_run.head_sha == $sha
                   and (.workflow_run.id | tostring) == $run
                 ' > /dev/null
-            curl --fail --silent --show-error --location --retry 2 --max-time 60 \
+            curl --fail --silent --show-error --location --retry 1 --connect-timeout 10 --max-time 45 --retry-max-time 90 \
               -H "Authorization: Bearer $GITHUB_TOKEN" "$url/zip" -o "$recovery/$artifact_id.zip"
             printf '%s  %s\n' "$digest" "$recovery/$artifact_id.zip" | sha256sum --check
           }
@@ -80,8 +85,17 @@ jobs:
           node frontend/scripts/verify-deployment-privacy.mjs frontend/build \
             --expected-receipt "$recovery/prior-privacy-receipt.json" \
             --output "$recovery/recovery-privacy-receipt.json"
+      - name: Verify the exact V90 API pairing without changing production
+        if: inputs.operation == 'verify-v90' || inputs.operation == 'restore-frontend-v90'
+        timeout-minutes: 2
+        run: timeout --signal=TERM --kill-after=5s 90s node frontend/scripts/verify-v90-recovery.mjs
+      - name: Verify the V90 beta and catalogue binding without changing production
+        if: inputs.operation == 'verify-v90' || inputs.operation == 'restore-frontend-v90'
+        timeout-minutes: 2
+        run: timeout --signal=TERM --kill-after=5s 75s node frontend/scripts/verify-beta-release.mjs
       - name: Stage the exact original Pages tar in this run
-        if: inputs.operation == 'restore'
+        if: inputs.operation == 'restore' || inputs.operation == 'restore-frontend-v90'
+        timeout-minutes: 2
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: github-pages
@@ -90,10 +104,10 @@ jobs:
           retention-days: 7
 
   restore:
-    if: inputs.operation == 'restore'
+    if: inputs.operation == 'restore' || inputs.operation == 'restore-frontend-v90'
     needs: verify
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 35
     permissions:
       actions: read
       contents: read
@@ -104,44 +118,91 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        timeout-minutes: 2
         with:
           persist-credentials: false
-      - name: Require the reviewed main commit and restored API
+      - name: Require the reviewed current main commit
+        timeout-minutes: 1
         run: |
           set -euo pipefail
           test "$GITHUB_SHA" = "$EXPECTED_MAIN_SHA"
-          test "$GITHUB_SHA" = "$(git ls-remote origin refs/heads/main | cut -f1)"
+          recovery_remote_main="$(timeout 40s git ls-remote origin refs/heads/main | cut -f1)"
+          test "$GITHUB_SHA" = "$recovery_remote_main"
+      - name: Require the prior API for the original paired restore
+        if: inputs.operation == 'restore'
+        timeout-minutes: 3
+        run: |
+          set -euo pipefail
           curl --fail --silent --show-error --retry 2 --max-time 20 \
             https://api.soniccheck.io/api/version |
             jq -e --arg sha "$PRIOR_API_SHA" '.commit_sha == $sha' > /dev/null
           curl --fail --silent --show-error --retry 2 --max-time 20 \
             https://api.soniccheck.io/api/healthz | jq -e ' .ok == true ' > /dev/null
+      - name: Require the exact healthy V90 API before frontend-only restore
+        if: inputs.operation == 'restore-frontend-v90'
+        timeout-minutes: 2
+        run: timeout --signal=TERM --kill-after=5s 90s node frontend/scripts/verify-v90-recovery.mjs
+      - name: Require the V90 beta and catalogue binding before frontend-only restore
+        if: inputs.operation == 'restore-frontend-v90'
+        timeout-minutes: 2
+        run: timeout --signal=TERM --kill-after=5s 75s node frontend/scripts/verify-beta-release.mjs
       - name: Restore production Pages
         id: deployment
+        timeout-minutes: 11
         uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5
-      - name: Verify public site bytes and restored API
+        with:
+          timeout: '600000'
+      - name: Verify the exact restored public site bytes
+        timeout-minutes: 6
         run: |
           set -euo pipefail
           check_public_file() {
             local path="$1" digest="$2"
             for attempt in {1..20}; do
-              if curl --fail --silent --show-error --max-time 8 \
+              if curl --fail --silent --show-error --connect-timeout 5 --max-time 8 \
                 "https://soniccheck.io/$path?recovery_check=$GITHUB_RUN_ID-$attempt" \
-                -o "$RUNNER_TEMP/recovered-public-file" &&
-                printf '%s  %s\n' "$digest" "$RUNNER_TEMP/recovered-public-file" | sha256sum --check; then
+                -o "$RUNNER_TEMP/recovered-public-file-$digest" &&
+                printf '%s  %s\n' "$digest" "$RUNNER_TEMP/recovered-public-file-$digest" | sha256sum --check; then
                 return 0
               fi
-              sleep 5
+              if [ "$attempt" -lt 20 ]; then sleep 5; fi
             done
             return 1
           }
 
-          check_public_file '' 883312ed0eeb2736dba075c38a7c143a76e0d6abc04aa665d9f0e3381fc5c309
-          check_public_file static/js/main.2f946574.js 705f7146a4b2f6b9c540c2270734526bf25dfe46c5982d0a45066a831853d2c5
-          check_public_file static/css/main.6c14e3f3.css 9d0e0c85654afe26683807d740befbb0e8c83bebd1434f1d395525ebd1a517d2
+          # Read-only polling runs concurrently: at most 20*8 + 19*5 = 255
+          # seconds per file, rather than three sequential 255-second loops.
+          check_public_file '' 883312ed0eeb2736dba075c38a7c143a76e0d6abc04aa665d9f0e3381fc5c309 & landing_pid=$!
+          check_public_file static/js/main.2f946574.js 705f7146a4b2f6b9c540c2270734526bf25dfe46c5982d0a45066a831853d2c5 & script_pid=$!
+          check_public_file static/css/main.6c14e3f3.css 9d0e0c85654afe26683807d740befbb0e8c83bebd1434f1d395525ebd1a517d2 & style_pid=$!
+          result=0
+          wait "$landing_pid" || result=1
+          wait "$script_pid" || result=1
+          wait "$style_pid" || result=1
+          exit "$result"
+      - name: Verify the prior API after the original paired restore
+        if: inputs.operation == 'restore'
+        timeout-minutes: 3
+        run: |
+          set -euo pipefail
           curl --fail --silent --show-error --retry 2 --max-time 20 \
             https://api.soniccheck.io/api/version |
             jq -e --arg sha "$PRIOR_API_SHA" '.commit_sha == $sha' > /dev/null
           curl --fail --silent --show-error --retry 2 --max-time 20 \
             https://api.soniccheck.io/api/readyz |
             jq -e '.status == "READY_FOR_LIVE_SMOKE_TEST"' > /dev/null
+      - name: Verify the restored frontend against the exact unchanged V90 API
+        if: inputs.operation == 'restore-frontend-v90'
+        timeout-minutes: 6
+        run: timeout --signal=TERM --kill-after=5s 345s node frontend/scripts/verify-v90-recovery.mjs --after-restore
+      - name: Verify the V90 beta and catalogue binding after frontend-only restore
+        if: inputs.operation == 'restore-frontend-v90'
+        timeout-minutes: 2
+        run: timeout --signal=TERM --kill-after=5s 75s node frontend/scripts/verify-beta-release.mjs
+      - name: Report an unverified restore attempt without retrying deployment
+        if: (failure() || cancelled()) && (steps.deployment.outcome == 'success' || steps.deployment.outcome == 'failure' || steps.deployment.outcome == 'cancelled')
+        timeout-minutes: 1
+        run: |
+          echo 'RESTORE_OUTCOME_UNVERIFIED: Pages may already have changed.'
+          echo 'Inspect public identity and bytes read-only before any separately reviewed retry.'
+          echo 'This workflow does not retry deploy-pages or automatically perform another restore.'
