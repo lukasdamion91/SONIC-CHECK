@@ -10,6 +10,9 @@ const { JSDOM } = require('jsdom');
 const dom = new JSDOM('<!doctype html><html><body></body></html>', { url: 'http://localhost/' });
 globalThis.window = dom.window;
 globalThis.document = dom.window.document;
+// Node 20 has no global navigator; newer Node versions expose a getter.
+// Bind the browser fixture explicitly before importing ReactDOM in either case.
+Object.defineProperty(globalThis, 'navigator', { configurable: true, value: dom.window.navigator });
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 const React = require('react');
 const { act } = React;
