@@ -6,6 +6,11 @@ on:
   pull_request:
     branches: ["main"]
   workflow_dispatch:
+    inputs:
+      expected_main_sha:
+        description: Exact reviewed current main commit to build and deploy
+        type: string
+        required: true
 
 permissions:
   contents: read
@@ -21,6 +26,17 @@ jobs:
       run:
         working-directory: frontend
     steps:
+      - name: Require the reviewed main commit before any manual build
+        if: github.event_name == 'workflow_dispatch'
+        working-directory: ${{ runner.temp }}
+        env:
+          EXPECTED_MAIN_SHA: ${{ inputs.expected_main_sha }}
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = 'refs/heads/main'
+          [[ "$EXPECTED_MAIN_SHA" =~ ^[0-9a-f]{40}$ ]]
+          test "$GITHUB_SHA" = "$EXPECTED_MAIN_SHA"
+
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -206,7 +222,15 @@ jobs:
           retention-days: 90
 
       - name: Refuse stale main deployment
+        env:
+          EXPECTED_MAIN_SHA: ${{ inputs.expected_main_sha }}
         run: |
+          set -euo pipefail
+          if [ "$GITHUB_EVENT_NAME" = 'workflow_dispatch' ]; then
+            test "$GITHUB_REF" = 'refs/heads/main'
+            [[ "$EXPECTED_MAIN_SHA" =~ ^[0-9a-f]{40}$ ]]
+            test "$GITHUB_SHA" = "$EXPECTED_MAIN_SHA"
+          fi
           git fetch --no-tags --force origin main:refs/remotes/origin/main
           test "${GITHUB_SHA}" = "$(git rev-parse refs/remotes/origin/main)"
 
