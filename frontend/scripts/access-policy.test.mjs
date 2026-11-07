@@ -182,7 +182,7 @@ test("only new-record routes use the scan entitlement gate", async () => {
   assert.match(dashboard, /return <Link key=\{scan\.id\} to=\{`\/app\/scans\/\$\{scan\.id\}`\}/);
   assert.match(library, /disabled=\{Boolean\(action\) \|\| !canScan\}/);
   assert.match(library, /const \{ user, refresh \} = useAuth\(\)/);
-  assert.match(library, /await refresh\(\);[\s\S]*navigate\(`/);
+  assert.match(library, /await refreshAfterCreditAttempt\(true, refresh\);[\s\S]*navigate\(`/);
   assert.match(library, /accessPolicy\.can_retain_audio/);
   assert.match(scanResult, /accessPolicy\.can_download_report/);
   assert.match(scanResult, /accessPolicy\.report_credit_will_be_consumed/);

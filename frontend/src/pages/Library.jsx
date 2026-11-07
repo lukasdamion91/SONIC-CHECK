@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { hasScanEntitlement, useAuth } from "@/context/AuthContext";
 import { api, formatApiErrorDetail } from "@/lib/api";
+import { refreshAfterCreditAttempt } from "@/lib/userActions.mjs";
 import { resolveAccessPolicy, scanDenialCopy } from "@/lib/accessPolicy.mjs";
 
 const labels = {
@@ -22,51 +23,69 @@ export default function Library() {
   const [action, setAction] = useState("");
   const [audioUrls, setAudioUrls] = useState({});
   const audioUrlsRef = useRef({});
+  const mounted = useRef(false);
+  const actionPending = useRef(false);
   const canScan = hasScanEntitlement(user);
   const accessPolicy = resolveAccessPolicy(user);
 
   useEffect(() => {
+    let active = true;
     api.get("/library")
-      .then(({ data }) => setItems(data))
-      .catch((requestError) => setError(formatApiErrorDetail(requestError?.response?.data?.detail)))
-      .finally(() => setLoading(false));
+      .then(({ data }) => { if (active) setItems(data); })
+      .catch((requestError) => { if (active) setError(formatApiErrorDetail(requestError?.response?.data?.detail)); })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
   }, []);
 
   useEffect(() => {
-    audioUrlsRef.current = audioUrls;
-  }, [audioUrls]);
-
-  useEffect(() => () => {
-    Object.values(audioUrlsRef.current).forEach((url) => URL.revokeObjectURL(url));
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+      Object.values(audioUrlsRef.current).forEach((url) => URL.revokeObjectURL(url));
+      audioUrlsRef.current = {};
+    };
   }, []);
 
   const loadAudio = async (item) => {
+    if (actionPending.current || audioUrlsRef.current[item.id]) return;
+    actionPending.current = true;
     setAction(`audio:${item.id}`);
     try {
       const response = await api.get(`/scans/${item.id}/audio`, { responseType: "blob" });
+      if (!mounted.current) return;
       const url = URL.createObjectURL(response.data);
-      setAudioUrls((current) => ({ ...current, [item.id]: url }));
+      audioUrlsRef.current = { ...audioUrlsRef.current, [item.id]: url };
+      setAudioUrls(audioUrlsRef.current);
     } catch (requestError) {
-      toast.error(formatApiErrorDetail(requestError?.response?.data?.detail));
+      if (mounted.current) toast.error(formatApiErrorDetail(requestError?.response?.data?.detail));
     } finally {
-      setAction("");
+      actionPending.current = false;
+      if (mounted.current) setAction("");
     }
   };
 
   const rescan = async (item) => {
+    if (actionPending.current) return;
     if (!canScan) {
       toast.error(scanDenialCopy(accessPolicy.scan_denial_reason));
       return;
     }
+    actionPending.current = true;
     setAction(`rescan:${item.id}`);
+    let createdScanId = null;
     try {
       const { data } = await api.post(`/scans/${item.id}/rescan`, { region: user?.region || item.region || "AU" });
-      await refresh();
-      toast.success("New evidence record created");
-      navigate(`/app/scans/${data.id}`);
+      createdScanId = data.id;
     } catch (requestError) {
-      toast.error(formatApiErrorDetail(requestError?.response?.data?.detail));
-      setAction("");
+      if (mounted.current) toast.error(formatApiErrorDetail(requestError?.response?.data?.detail));
+    } finally {
+      await refreshAfterCreditAttempt(true, refresh);
+      if (mounted.current && createdScanId) {
+        toast.success("New evidence record created");
+        navigate(`/app/scans/${createdScanId}`);
+      }
+      actionPending.current = false;
+      if (mounted.current) setAction("");
     }
   };
 
