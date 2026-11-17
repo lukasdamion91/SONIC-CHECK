@@ -63,7 +63,7 @@ export default function Landing() {
 <section className="sc-hero sc-wrap" id="sc4-home" aria-labelledby="sc4-title">
 <p className="sc-overline">Audio analytics for the pre-release stage.</p>
 <h1 className="sc-heading" id="sc4-title">Originality,<br /><span>Verified.</span></h1>
-<p className="sc-hero-intro">Audio analytics for musically minded creators. Our HARRY analyser flags potential similarities to existing works in available reference catalogues, helping you document evidence for qualified human review before release.</p>
+<p className="sc-hero-intro">This is SONIC CHECK, an audio analyser built for the pre-release stage. HARRY helps artists, producers and labels make informed decisions about the music they’re about to share.</p>
 <div className="sc-actions">
               <Link className="sc-button" to={isSignedIn ? "/app/scan/new" : "/join"} data-testid={LANDING.heroCta}>{isSignedIn ? "Open the analyser" : "Join SONIC CHECK"}</Link>
               <Link className="sc-button sc-button-secondary" to={isSignedIn ? "/app" : "/login"} data-testid={LANDING.heroSecondaryCta}>{isSignedIn ? "My dashboard" : "Log in"}</Link>
@@ -82,10 +82,19 @@ export default function Landing() {
 <RelationshipsBanner />
 
 <section className="sc-chapter sc-light" id="sc4-about" aria-labelledby="sc4-about-title"><div className="sc-wrap">
-<div className="sc-chapter-head"><p className="sc-overline">01 / About SONIC CHECK</p><h2 id="sc4-about-title"><span className="sc-chromatic">Built for creators.<br />Before the release.</span></h2></div>
+<div className="sc-chapter-head"><p className="sc-overline">01 / About SONIC CHECK</p><h2 id="sc4-about-title"><span className="sc-chromatic">Built to protect<br />creative integrity.</span></h2></div>
 <div className="sc-about-grid"><p className="sc-about-note">Understand possible similarities before your music reaches the world.</p><div>
-<div className="sc-prose"><div><p>SONIC CHECK is an audio analytics software developer created to assist musically minded creators: songwriters, performers, producers, students and creative teams.</p><p>Designed for the pre-release stage, our HARRY analyser checks submitted audio—and lyrics when supplied—against available reference catalogues. It flags potential similarities to existing recordings and musical works.</p></div><div><p>Candidate matches and alignments can be inspected, documented and referred for qualified human review, helping you make informed decisions about your next steps.</p><p>SONIC CHECK was born from a deep desire to protect creative integrity and intellectual property. Our ambition is to connect creators with relevant evidence from historical and contemporary music worldwide.</p></div></div>
-<p className="sc-founder">Founded by Damion Lukas. Guided by creative respect, accountability and integrity: clear methods, traceable evidence and room for human judgement.</p>
+<div className="sc-prose">
+<div>
+<p>Meet HARRY, short for <strong>Hi Fidelity Recording-Recognition Yield</strong>. It compares submitted audio and supplied lyrics with available references, flagging potential similarities for qualified human review.</p>
+<p>Test your tracks with six weighted components that bring recording, lyric and musical evidence together in one aggregate score for each eligible candidate. The HARRY Orthogonal Evidence Lattice (HOEL) examines where evidence comes from and how observations relate.</p>
+</div>
+<div>
+<p>Follow a flag to the reference and method behind it. That gives you and your team something concrete to listen for, document and review before release.</p>
+<p>Our ambition is to connect creators with relevant evidence from historical and contemporary music worldwide.</p>
+</div>
+</div>
+<p className="sc-founder">Founded by Damion Lukas. Guided by creative respect, accountability and integrity, with clear methods, traceable evidence and room for human judgement.</p>
 </div></div>
 <div className="sc-audiences"><div><h3>For artists &amp; songwriters</h3><p>Check your draft before release.</p></div><div><h3>For producers &amp; teams</h3><p>Document candidate matches for your team.</p></div><div><h3>For students &amp; educators</h3><p>Study how audio and lyric similarity are measured.</p></div></div>
 </div></section>
@@ -94,14 +103,14 @@ export default function Landing() {
 <div className="sc-process-grid">
 <article className="sc-step"><span className="sc-step-num">01 — INPUT</span><h3>Bring your material</h3><p>Supply audio, lyrics or both, with details identifying the work you want to check.</p></article>
 <article className="sc-step"><span className="sc-step-num">02 — ANALYSIS</span><h3>Screen for similarities</h3><p>HARRY compares supported features with available references, keeping recording, lyric and musical evidence distinct.</p></article>
-<article className="sc-step"><span className="sc-step-num">03 — CONTEXT</span><h3>Inspect the flags</h3><p>Examine each candidate similarity, its source and method, and any incomplete evidence.</p></article>
+<article className="sc-step"><span className="sc-step-num">03 — CONTEXT</span><h3>Inspect the flags</h3><p>See why HARRY flagged a similarity, which reference it used and how it made the comparison.</p></article>
 <article className="sc-step"><span className="sc-step-num">04 — REVIEW</span><h3>Document for review</h3><p>Use available reports to preserve findings, reference context and the analysis version for qualified human review.</p></article>
 </div>
 </div></section>
 
 <section className="sc-chapter sc-analyzer" id="sc4-analyzer" aria-labelledby="sc4-analyzer-title"><span id="method" className="sc-anchor" aria-hidden="true"></span><div className="sc-wrap">
 <div className="sc-chapter-head"><p className="sc-overline">03 / HARRY · SONIC CHECK V37</p><h2 id="sc4-analyzer-title">Six checks.<br />One evidence-led review.</h2></div>
-<p className="sc-analyzer-intro">Inside HARRY: six complementary checks for potential similarity. Open a component for its method, useful findings and limitations.</p>
+<p className="sc-analyzer-intro">HARRY brings six complementary checks together across recordings, lyrics and musical structure. Explore each check to see what it measures and how it contributes to the review.</p>
 <div className="sc-analyzer-bar"><p>MODEL ALLOCATIONS · Evidence weights, not accuracy percentages</p><button className="sc-text-button" id="sc4-toggle-methods" type="button" aria-controls="sc4-methods" aria-expanded="false">Expand all six methods +</button></div>
 <div id="sc4-methods"><details className="sc-method" id="sc4-recording_identity" open>
 <summary><span className="sc-method-no">01</span><span><span className="sc-method-title">Recording identity</span><span className="sc-method-question">Does the submitted recording resemble an indexed recording?</span></span><span className="sc-method-tag">18% allocation</span></summary>
@@ -140,6 +149,7 @@ export default function Landing() {
 <article className="sc-scope-item"><h3>Identity &amp; metadata</h3><p>MusicBrainz supplies identifiers and metadata; recordings and lyrics require separate sources.</p></article>
 <article className="sc-scope-item"><h3>Research resources</h3><p>Research datasets support development; their size is separate from active scan coverage.</p></article></div>
 <div className="sc-catalogue-live">
+        <p><strong>November 2026 update.</strong> SONIC CHECK now reports the active composition catalogue alongside the wider programme that discovers and reviews reference sources. The active count shows how many indexed musical profiles HARRY can search for a comparison.</p>
         <p>Active scan catalogue: {typeof activeProfiles === "number" ? `${activeProfiles.toLocaleString("en-AU")} comparison-eligible symbolic profiles` : dataLoaded ? "currently unavailable" : "loading the live release manifest…"}.</p>
         <details><summary>Explore the research inventory</summary>
           <dl className="sc-inventory">
@@ -149,7 +159,7 @@ export default function Landing() {
           </dl>
           <p>Research inventory and active scan coverage are reported separately. The research inventory is dated 22 September 2026; current scan coverage comes from the live release manifest.</p>
         </details>
-      </div><div className="sc-research"><h3>HOEL<br />Understanding related evidence</h3><div><p>HOEL studies shared origins and dependencies between evidence. It is separate from the six scoring components.</p><p>Its catalogue reliability remains unvalidated. SONIC CHECK is a controlled private beta; scientific acceptance is not yet certified.</p></div></div>
+      </div><div className="sc-research"><h3>HOEL<br />Understanding related evidence</h3><div><p>HOEL’s updated evaluation counts a retrieval as a hit when the measurement provides positive support.</p><p>Its catalogue reliability remains unvalidated. SONIC CHECK is a controlled private beta; scientific acceptance is not yet certified.</p></div></div>
 </div></section>
 <section className="sc-chapter" id="sc4-care" aria-labelledby="sc4-care-title"><div className="sc-wrap sc-care-grid"><div><p className="sc-overline">06 / Your work</p><h2 id="sc4-care-title" style={{"marginTop": "20px"}}>Created by you.<br />Treated with care.</h2></div><div><p>You retain your rights in material you submit. Audio and full lyric text are treated as private service inputs, with authenticated account access and operational controls designed around that separation.</p><p>The recording-recognition path determines what a provider receives: a compact fingerprint and duration on one route, or a bounded audio sample on a separately authorised route. Provider activity belongs in the evidence context.</p><p>Sharing a public record is a separate, confirmed action. Public metadata can be visible to anyone with the link; raw audio, full lyrics and account email are not the public record’s content.</p><div className="sc-policy-links"><Link to="/privacy/">Privacy Policy</Link><Link to="/terms/">Terms of Use</Link></div></div></div></section>
 <section className="sc-chapter" id="sc4-faq" aria-labelledby="sc4-faq-title"><div className="sc-wrap sc-faq-grid"><div className="sc-faq-intro"><p className="sc-overline">07 / Good questions</p><h2 id="sc4-faq-title">A little more<br />clarity.</h2></div><div><details className="sc-faq-item"><summary>What does SONIC CHECK do?</summary><p>SONIC CHECK develops audio analytics software for pre-release similarity screening. HARRY compares recording, lyric and musical evidence with available references, highlighting candidates for qualified human review.</p></details>
@@ -157,7 +167,7 @@ export default function Landing() {
 <details className="sc-faq-item"><summary>Does a match mean my work is copied?</summary><p>A match is a reason to inspect the material and context. It is not by itself a determination of copying, authorship, ownership or infringement.</p></details>
 <details className="sc-faq-item"><summary>Does no match mean my work is cleared?</summary><p>No. Searches cover the references available to each method; they do not establish originality or clearance, or that every historical and contemporary work has been checked.</p></details>
 <details className="sc-faq-item"><summary>What do the percentages mean?</summary><p>Component percentages are scoring allocations. Individual results need their method and reference context; neither is an accuracy rate or legal probability.</p></details>
-<details className="sc-faq-item"><summary>Can I keep or share a report?</summary><p>Report tools depend on account entitlement. Publishing a public record is a separate, confirmed choice.</p></details>
+<details className="sc-faq-item"><summary>Can I keep or share a report?</summary><p>Saved scans can show the recording’s frequency spectrum, levels and dynamics alongside the similarity evidence. Report tools depend on account entitlement. Publishing a public record is a separate, confirmed choice.</p></details>
 <details className="sc-faq-item"><summary>Can I use SONIC CHECK now?</summary><p>SONIC CHECK is in controlled private beta. Contact the team about access; registration, scanning and checkout remain separate.</p></details></div></div></section>
 <section className="sc-chapter sc-pricing" id="pricing" aria-labelledby="sc-pricing-title"><div className="sc-wrap">
         <div className="sc-chapter-head"><p className="sc-overline">Access &amp; AUD pricing</p><h2 id="sc-pricing-title">Your next step.<br />On your terms.</h2></div>
@@ -169,7 +179,7 @@ export default function Landing() {
           <Link to={isSignedIn ? "/app/billing" : "/join"} className="sc-button sc-button-secondary">{isSignedIn ? "Plan & billing" : "Join private beta"}</Link>
         </article>)}</div> : <p className="sc-data-status" role="status">{dataLoaded ? "Plan details are currently unavailable. Contact us about beta access." : "Loading current AUD pricing…"}</p>}
         <p className="sc-checkout-status">Paid public checkout: {paidOpen ? "API-authorized" : "closed"}.</p>
-      </div></section><section className="sc-contact" id="sc4-contact" aria-labelledby="sc4-contact-title"><div className="sc-wrap"><p className="sc-overline">For the people behind the music</p><h2 id="sc4-contact-title">Create with integrity.<br />Release with insight.</h2><p>Planning a release? Ask about SONIC CHECK, discuss beta access, or tell us what would make your evidence review more useful.</p><a className="sc-button" href="mailto:info@soniccheck.io">Let's talk </a></div></section>
+      </div></section><section className="sc-contact" id="sc4-contact" aria-labelledby="sc4-contact-title"><div className="sc-wrap"><p className="sc-overline">For the people behind the music</p><h2 id="sc4-contact-title">Create with integrity.<br />Release with insight.</h2><p>A closer listen before release gives your team time to act on what you find. Ask us about beta access for your next project.</p><a className="sc-button" href="mailto:info@soniccheck.io">Let's talk </a></div></section>
 </main>
 <footer className="sc-footer sc-wrap"><img className="sc-rainbow-symbol" src={asset("/brand/sonic-rainbow-bar.png")} alt="" aria-hidden="true" /><div className="sc-footer-top"><a className="sc-brand" href="#sc4-home"><span className="sc-footer-brand-row"><ResonanceSymbol /><img src={asset("/brand/logo-wordmark.png")} alt="SONIC CHECK" className="sc-footer-logo" /></span><small>EVIDENCE IN EVERY CONNECTION</small></a><nav className="sc-footer-links" aria-label="Footer navigation"><a href="#sc4-about">About</a><a href="#sc4-analyzer">The science</a><a href="#sc4-faq">FAQ</a><a href="mailto:info@soniccheck.io">Contact</a></nav></div><div className="sc-footer-bottom"><span>Evidence for considered creative decisions.</span><span>© SONIC CHECK</span></div><p className="sc-editorial-note">Screening supports qualified human review. A match or an absence of matches does not establish originality, ownership or clearance.</p></footer>
 </div>
