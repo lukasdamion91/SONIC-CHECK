@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import test from "node:test";
+import { ANALYZER_API_RELEASE_COMMIT, ANALYZER_API_RUNTIME_PROJECTION } from "../src/constants/analyzerIdentity.mjs";
 import {
   isReviewedV90Binding,
   recoveryFetcher,
@@ -9,6 +10,8 @@ import {
   V90_RECOVERY_PROJECTION,
   verifyV90Recovery,
 } from "./verify-v90-recovery.mjs";
+
+const reviewedBinding = { commit: V90_RECOVERY_API_COMMIT, projection: V90_RECOVERY_PROJECTION };
 
 test("the reviewed binding accepts reordered fields but rejects malformed projections", () => {
   const reversed = Object.fromEntries(Object.entries(V90_RECOVERY_PROJECTION).reverse());
@@ -19,6 +22,7 @@ test("the reviewed binding accepts reordered fields but rejects malformed projec
 });
 
 for (const [name, commit, projection] of [
+  ["the current release binding", ANALYZER_API_RELEASE_COMMIT, ANALYZER_API_RUNTIME_PROJECTION],
   ["a different API source", "c45d067436c23537649b2fb8ed2ea584ffd9270a", V90_RECOVERY_PROJECTION],
   ["changed application bytes", V90_RECOVERY_API_COMMIT, { ...V90_RECOVERY_PROJECTION, application_bytes_scanned: 3471930 }],
   ["changed file count", V90_RECOVERY_API_COMMIT, { ...V90_RECOVERY_PROJECTION, application_files_checked: 108 }],
@@ -38,6 +42,7 @@ for (const [name, commit, projection] of [
 test("verify mode runs only the bounded API gate and leaves the website unprobed", async () => {
   const calls = [];
   const result = await verifyV90Recovery({
+    ...reviewedBinding,
     apiProbe: async (options) => { calls.push(options); return { ok: true }; },
     webProbe: () => { throw new Error("website probe must not run before restoration"); },
   });
@@ -51,6 +56,7 @@ test("verify mode runs only the bounded API gate and leaves the website unprobed
 test("any failed API gate prevents after-restore web success from masking it", async () => {
   for (const failure of ["deployed_commit", "runtime_application_projection", "api_readiness", "provider_payment_gates_closed"]) {
     const result = await verifyV90Recovery({
+      ...reviewedBinding,
       afterRestore: true,
       apiProbe: async () => ({ ok: false, checks: { [failure]: { ok: false } } }),
       webProbe: () => { throw new Error("must stop after failed API gate"); },
@@ -64,6 +70,7 @@ test("any failed API gate prevents after-restore web success from masking it", a
 test("after-restore checks the V90 API first and requires the exact retained web stamp", async () => {
   const calls = [];
   const result = await verifyV90Recovery({
+    ...reviewedBinding,
     afterRestore: true,
     apiProbe: async () => { calls.push("api"); return { ok: true }; },
     webProbe: async (options) => { calls.push("web"); assert.equal(options.expectedCommit, RETAINED_RECOVERY_WEB_COMMIT); return { ok: true }; },
@@ -75,6 +82,7 @@ test("after-restore checks the V90 API first and requires the exact retained web
 
 test("failed public web checks leave recovery unverified", async () => {
   const result = await verifyV90Recovery({
+    ...reviewedBinding,
     afterRestore: true,
     apiProbe: async () => ({ ok: true }),
     webProbe: async () => ({ ok: false, checks: { landing: { ok: false } } }),
@@ -85,7 +93,10 @@ test("failed public web checks leave recovery unverified", async () => {
 
 test("transport failure produces a failed receipt without a blind retry", async () => {
   let attempts = 0;
-  const result = await verifyV90Recovery({ apiProbe: async () => { attempts++; throw new Error("offline"); } });
+  const result = await verifyV90Recovery({
+    ...reviewedBinding,
+    apiProbe: async () => { attempts++; throw new Error("offline"); },
+  });
   assert.equal(result.ok, false);
   assert.equal(result.failure, "RECOVERY_CHECK_ERROR");
   assert.equal(attempts, 1);
@@ -93,6 +104,7 @@ test("transport failure produces a failed receipt without a blind retry", async 
 
 test("a nonresponsive API probe hits the total deadline and never proceeds to the website", async () => {
   const result = await verifyV90Recovery({
+    ...reviewedBinding,
     afterRestore: true,
     timeoutMs: 15,
     apiProbe: () => new Promise(() => {}),
@@ -105,6 +117,7 @@ test("a nonresponsive API probe hits the total deadline and never proceeds to th
 test("a nonresponsive post-restore website fails without repeating API verification", async () => {
   let apiCalls = 0;
   const result = await verifyV90Recovery({
+    ...reviewedBinding,
     afterRestore: true,
     timeoutMs: 15,
     apiProbe: async () => { apiCalls++; return { ok: true }; },
@@ -118,6 +131,7 @@ test("a nonresponsive post-restore website fails without repeating API verificat
 test("the recovery deadline aborts retry waits so no retry timer outlives the command budget", async () => {
   let retryStopped = false;
   const result = await verifyV90Recovery({
+    ...reviewedBinding,
     afterRestore: true,
     timeoutMs: 15,
     apiProbe: async () => ({ ok: true }),
@@ -135,6 +149,7 @@ test("the real web retry loop exits its process after deadline, rather than leav
   const source = `
     import { verifyV90Recovery } from ${JSON.stringify(new URL("./verify-v90-recovery.mjs", import.meta.url).href)};
     const result = await verifyV90Recovery({
+      ...${JSON.stringify(reviewedBinding)},
       afterRestore: true, timeoutMs: 20,
       apiProbe: async () => ({ ok: true }),
       fetcher: async () => { throw new Error("controlled offline"); },
